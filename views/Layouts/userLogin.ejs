@@ -1,0 +1,196 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title><%= title || 'Login' %></title>
+  <link rel="stylesheet" href="/styles/userLogin.css">
+</head>
+<body>
+  <div class="container">
+    <div class="register-card">
+      <h1 class="title">Sign in to your account</h1>
+
+      <!-- Success Message (if any) -->
+      <% if (typeof successMessage !== 'undefined' && successMessage) { %>
+        <div class="success-message"><%= successMessage %></div>
+      <% } %>
+
+      <!-- Login Form -->
+      <form class="register-form" id="loginForm">
+        <!-- Email Field -->
+        <div class="form-group">
+          <label for="email" class="form-label">Email address</label>
+          <input
+            type="email"
+            id="email"
+            name="email"
+            class="form-input <%= (typeof errors !== 'undefined' && errors.email) ? 'error' : '' %>"
+            placeholder="Enter your email"
+            value="<%= (typeof formData !== 'undefined' && formData.email) ? formData.email : '' %>"
+            required
+          >
+          <span class="error-message" id="email-error">
+            <%= (typeof errors !== 'undefined' && errors.email) ? errors.email : '' %>
+          </span>
+        </div>
+
+        <!-- Password Field -->
+        <div class="form-group">
+          <label for="password" class="form-label">Password</label>
+          <input
+            type="password"
+            id="password"
+            name="password"
+            class="form-input <%= (typeof errors !== 'undefined' && errors.password) ? 'error' : '' %>"
+            placeholder="Enter your password"
+            required
+          >
+          <span class="error-message" id="password-error">
+            <%= (typeof errors !== 'undefined' && errors.password) ? errors.password : '' %>
+          </span>
+        </div>
+
+        <!-- General Error -->
+        <div class="error-message" id="general-error">
+          <%= (typeof errors !== 'undefined' && errors.general) ? errors.general : '' %>
+        </div>
+
+        <!-- Submit Button -->
+        <button type="submit" class="signup-btn" id="submitBtn">
+          <span class="btn-text">Login</span>
+          <div class="loading-spinner" id="loadingSpinner" style="display: none;"></div>
+        </button>
+
+        <div class="divider"><span>or</span></div>
+
+        <!-- Google Button -->
+        <button type="button" class="google-btn">
+          Sign in with Google
+        </button>
+
+        <!-- Links -->
+        <div class="signin-link">
+          Don't have an account? <a href="/user/register" class="link">Register</a>
+        </div>
+        <div class="signin-link">
+          Don't remember your password? <a href="/user/forgot-password" class="link">Forget password</a>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <script>
+    document.addEventListener('DOMContentLoaded', function() {
+      const form = document.getElementById('loginForm');
+      const submitBtn = document.getElementById('submitBtn');
+      const btnText = document.querySelector('.btn-text');
+      const spinner = document.getElementById('loadingSpinner');
+      
+      const emailInput = document.getElementById('email');
+      const passwordInput = document.getElementById('password');
+      const emailError = document.getElementById('email-error');
+      const passwordError = document.getElementById('password-error');
+      const generalError = document.getElementById('general-error');
+
+      // Clear errors on input
+      emailInput.addEventListener('input', function() {
+        clearFieldError('email');
+      });
+
+      passwordInput.addEventListener('input', function() {
+        clearFieldError('password');
+      });
+
+      // Form submission
+      form.addEventListener('submit', async function(e) {
+        e.preventDefault();
+        
+        clearAllErrors();
+        setLoadingState(true);
+
+        try {
+          const formData = new FormData(form);
+          
+          const response = await fetch('/user/login', {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+              'X-Requested-With': 'XMLHttpRequest'
+            },
+            body: JSON.stringify({
+              email: formData.get('email'),
+              password: formData.get('password')
+            }),
+            credentials: 'include'
+          });
+
+          const result = await response.json();
+
+          if (result.success) {
+            // Success - redirect
+            window.location.href = result.redirect || '/user';
+          } else {
+            // Handle errors
+            if (result.errors) {
+              displayErrors(result.errors);
+            } else {
+              showGeneralError('Login failed. Please try again.');
+            }
+          }
+
+        } catch (error) {
+          console.error('Login error:', error);
+          showGeneralError('Network error. Please check your connection and try again.');
+        } finally {
+          setLoadingState(false);
+        }
+      });
+
+      function clearAllErrors() {
+        emailError.textContent = '';
+        passwordError.textContent = '';
+        generalError.textContent = '';
+        
+        emailInput.classList.remove('error');
+        passwordInput.classList.remove('error');
+      }
+
+      function clearFieldError(fieldName) {
+        const errorElement = document.getElementById(fieldName + '-error');
+        const inputElement = document.getElementById(fieldName);
+        
+        if (errorElement) errorElement.textContent = '';
+        if (inputElement) inputElement.classList.remove('error');
+        
+        // Also clear general error when user starts typing
+        generalError.textContent = '';
+      }
+
+      function displayErrors(errors) {
+        Object.keys(errors).forEach(function(field) {
+          const errorElement = document.getElementById(field + '-error');
+          const inputElement = document.getElementById(field);
+          
+          if (field === 'general') {
+            generalError.textContent = errors[field];
+          } else if (errorElement && inputElement) {
+            errorElement.textContent = errors[field];
+            inputElement.classList.add('error');
+          }
+        });
+      }
+
+      function showGeneralError(message) {
+        generalError.textContent = message;
+      }
+
+      function setLoadingState(loading) {
+        submitBtn.disabled = loading;
+        btnText.style.opacity = loading ? '0' : '1';
+        spinner.style.display = loading ? 'block' : 'none';
+      }
+    });
+  </script>
+</body>
+</html>
