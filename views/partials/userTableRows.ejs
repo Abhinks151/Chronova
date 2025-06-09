@@ -1,0 +1,22 @@
+<% users.forEach((user, index) => { %>
+  <tr data-id="<%= user._id %>">
+    <td><%= (currentPage - 1) * limit + index + 1 %></td>
+    <td><%= user.firstname + ' ' + user.lastname %></td>
+    <td><%= user.email %></td>
+    <td>
+      <span class="status-badge <%= user.isBlocked ? 'status-blocked' : 'status-active' %>">
+        <%= user.isBlocked ? 'Blocked' : 'Active' %>
+      </span>
+    </td>
+    <td class="actions">
+      <button class="action-btn status-btn">
+        <span class="<%= user.isBlocked ? 'btn-text success' : 'btn-text danger' %>">
+          <%= user.isBlocked ? 'Unblock' : 'Block' %>
+        </span>
+      </button>
+      <!-- <button class="action-btn delete-btn">
+        <span class="btn-text delete">Delete</span>
+      </button> -->
+    </td>
+  </tr>
+<% }) %>

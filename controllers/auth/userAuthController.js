@@ -367,7 +367,7 @@ export const postUserLogin = async (req, res) => {
       return res.status(200).json({
         success: true,
         message: 'Login successful',
-        redirect: '/user',
+        redirect: '/user/home',
         user: {
           id: user._id,
           firstName: user.firstName,

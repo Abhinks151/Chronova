@@ -1,0 +1,382 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title><%= title || 'Admin User Management' %></title>
+  <link rel="stylesheet" href="/styles/dashboard.css" />
+  <link rel="stylesheet" href="/styles/adminUserManagement.css" />
+  <style>
+    /* Pagination disabled button style */
+    .pagination-btn:disabled {
+      background-color: #ccc;
+      cursor: not-allowed;
+      opacity: 0.6;
+    }
+
+    /* Modal styles */
+    .modal.hidden {
+      display: none;
+    }
+
+    .modal {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background-color: rgba(0,0,0,0.6);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      z-index: 9999;
+    }
+
+    .modal-content {
+      background: white;
+      padding: 2rem;
+      border-radius: 8px;
+      text-align: center;
+      width: 300px;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+    }
+
+    .modal-actions {
+      margin-top: 1.5rem;
+      display: flex;
+      justify-content: space-around;
+    }
+
+    .btn.confirm {
+      background-color: #28a745;
+      color: white;
+      padding: 0.5rem 1rem;
+      border: none;
+      border-radius: 4px;
+      cursor: pointer;
+      font-weight: 600;
+    }
+
+    .btn.cancel {
+      background-color: #dc3545;
+      color: white;
+      padding: 0.5rem 1rem;
+      border: none;
+      border-radius: 4px;
+      cursor: pointer;
+      font-weight: 600;
+    }
+
+    /* Optional: hover effect for modal buttons */
+    .btn.confirm:hover {
+      background-color: #218838;
+    }
+
+    .btn.cancel:hover {
+      background-color: #c82333;
+    }
+
+    .search-btn,
+.clear-btn {
+  margin-left: 0.5rem;
+  padding: 0.4rem 0.8rem;
+  border: none;
+  border-radius: 4px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.search-btn {
+  background-color: #007bff;
+  color: white;
+}
+
+.clear-btn {
+  background-color: #6c757d;
+  color: white;
+}
+
+.search-btn:hover {
+  background-color: #0056b3;
+}
+
+.clear-btn:hover {
+  background-color: #5a6268;
+}
+
+  </style>
+</head>
+<body>
+  <div class="dashboard-container">
+    <%- include('../../partials/sidebar') %>
+
+    <main class="main-content">
+      <header class="header">
+        <h1>Users</h1>
+        <div class="search-container">
+  <input type="text" id="searchInput" placeholder="Search users..." class="search-input" />
+  <button id="searchBtn" class="search-btn">Search</button>
+  <button id="clearBtn" class="clear-btn">Clear</button>
+</div>
+
+      </header>
+
+      <!-- Filter Controls -->
+      <div class="filter-controls">
+        <div class="filter-section">
+          <div class="filter-icon">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3"></polygon>
+            </svg>
+          </div>
+          <span class="filter-label">Filter By</span>
+          <select id="statusFilter" class="filter-select">
+            <option value="all" <%= statusFilter === 'all' ? 'selected' : '' %>>All Users</option>
+            <option value="active" <%= statusFilter === 'active' ? 'selected' : '' %>>Active Only</option>
+            <option value="blocked" <%= statusFilter === 'blocked' ? 'selected' : '' %>>Blocked Only</option>
+          </select>
+        </div>
+
+        <div class="sort-section">
+          <button id="sortAZ" class="sort-btn">A-Z</button>
+          <button id="sortZA" class="sort-btn">Z-A</button>
+        </div>
+      </div>
+
+      <!-- Users Table -->
+      <div class="users-table-container">
+        <table class="users-table">
+          <thead>
+            <tr>
+              <th>S.No</th>
+              <th>Name</th>
+              <th>Email</th>
+              <th>Status</th>
+              <th>Actions</th>
+            </tr>
+          </thead>
+          <tbody id="usersTableBody">
+            <%- include('../../partials/userTableRows') %>
+          </tbody>
+        </table>
+      </div>
+
+      <!-- Pagination -->
+      <div class="pagination-container">
+        <div class="pagination-info">
+          <span>
+            Showing <%= (currentPage - 1) * limit + 1 %> - 
+            <%= Math.min(currentPage * limit, totalUsers) %> of 
+            <%= totalUsers %> users
+          </span>
+        </div>
+
+        <div class="pagination-controls">
+          <button class="pagination-btn" id="prevPageBtn" <%= currentPage === 1 ? 'disabled' : '' %>>Previous</button>
+          <button class="pagination-btn" id="nextPageBtn" <%= currentPage === totalPages ? 'disabled' : '' %>>Next</button>
+        </div>
+      </div>
+    </main>
+  </div>
+
+  <!-- Confirmation Modal -->
+  <div id="confirmationModal" class="modal hidden">
+    <div class="modal-content">
+      <p id="modalMessage">Are you sure?</p>
+      <div class="modal-actions">
+        <button id="cancelBtn" class="btn cancel">Cancel</button>
+        <button id="confirmBtn" class="btn confirm">Yes</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Client-side Script -->
+  <script>
+    document.addEventListener('DOMContentLoaded', () => {
+    const usersTableBody = document.getElementById('usersTableBody');
+    const prevBtn = document.getElementById('prevPageBtn');
+    const nextBtn = document.getElementById('nextPageBtn');
+    const statusFilter = document.getElementById('statusFilter');
+    const sortAZ = document.getElementById('sortAZ');
+    const sortZA = document.getElementById('sortZA');
+    const paginationInfo = document.querySelector('.pagination-info span');
+
+    const modal = document.getElementById('confirmationModal');
+    const modalMessage = document.getElementById('modalMessage');
+    const confirmBtn = document.getElementById('confirmBtn');
+    const cancelBtn = document.getElementById('cancelBtn');
+
+    const searchBtn = document.getElementById('searchBtn');
+    const clearBtn = document.getElementById('clearBtn');
+    const searchInput = document.getElementById('searchInput');
+
+    let page = parseInt('<%= currentPage %>');
+    const limit = parseInt('<%= limit %>');
+    let status = '<%= statusFilter %>';
+    let sort = '<%= sort %>';
+    let search = ''; 
+    let pendingAction = null;
+
+
+    function showModal(message, onConfirm) {
+      modalMessage.textContent = message;
+      modal.classList.remove('hidden');
+      pendingAction = onConfirm;
+    }
+
+    confirmBtn.addEventListener('click', () => {
+      if (typeof pendingAction === 'function') {
+        pendingAction();
+        pendingAction = null;
+      }
+      modal.classList.add('hidden');
+    });
+
+    cancelBtn.addEventListener('click', () => {
+      pendingAction = null;
+      modal.classList.add('hidden');
+    });
+
+    async function fetchUsers() {
+      try {
+        const query = new URLSearchParams({
+          page,
+          limit,
+          status,
+          sort,
+        });
+
+        if (search.trim()) query.append('search', search.trim());
+
+        const response = await fetch(`/admin/users/page?${query.toString()}`);
+        const data = await response.json();
+
+        renderUsers(data.users);
+        updatePagination(data.currentPage, data.totalPages, data.totalUsers);
+      } catch (error) {
+        console.error('Error fetching users:', error);
+      }
+    }
+
+    function renderUsers(users) {
+      usersTableBody.innerHTML = '';
+      users.forEach((user, index) => {
+        const row = document.createElement('tr');
+        row.dataset.id = user._id;
+
+        row.innerHTML = `
+          <td>${(page - 1) * limit + index + 1}</td>
+          <td>${user.firstname} ${user.lastname}</td>
+          <td>${user.email}</td>
+          <td>
+            <span class="status-badge ${user.isBlocked ? 'status-blocked' : 'status-active'}">
+              ${user.isBlocked ? 'Blocked' : 'Active'}
+            </span>
+          </td>
+          <td class="actions">
+            <button class="action-btn status-btn">
+              <span class="${user.isBlocked ? 'btn-text success' : 'btn-text danger'}">
+                ${user.isBlocked ? 'Unblock' : 'Block'}
+              </span>
+            </button>
+          </td>
+        `;
+        usersTableBody.appendChild(row);
+      });
+    }
+
+    function updatePagination(currentPage, totalPages, totalUsers) {
+      page = currentPage;
+      paginationInfo.textContent = `Showing ${(page - 1) * limit + 1} - ${Math.min(page * limit, totalUsers)} of ${totalUsers} users`;
+
+      prevBtn.disabled = page === 1;
+      nextBtn.disabled = page === totalPages;
+    }
+
+    // Pagination
+    prevBtn.addEventListener('click', () => {
+      if (page > 1) {
+        page--;
+        fetchUsers();
+      }
+    });
+
+    nextBtn.addEventListener('click', () => {
+      page++;
+      fetchUsers();
+    });
+
+    // Filter and Sort
+    statusFilter.addEventListener('change', () => {
+      status = statusFilter.value;
+      page = 1;
+      fetchUsers();
+    });
+
+    sortAZ.addEventListener('click', () => {
+      sort = 'az';
+      page = 1;
+      fetchUsers();
+    });
+
+    sortZA.addEventListener('click', () => {
+      sort = 'za';
+      page = 1;
+      fetchUsers();
+    });
+
+    // Search & Clear
+    searchBtn.addEventListener('click', () => {
+      search = searchInput.value.trim();
+      page = 1;
+      fetchUsers();
+    });
+
+    clearBtn.addEventListener('click', () => {
+      search = '';
+      searchInput.value = '';
+      page = 1;
+      fetchUsers();
+    });
+
+    searchInput.addEventListener('keydown', (e) => {
+      if (e.key === 'Enter') {
+        search = searchInput.value.trim();
+        page = 1;
+        fetchUsers();
+      }
+    });
+
+    // Block/Unblock
+    usersTableBody.addEventListener('click', async (e) => {
+      const statusBtn = e.target.closest('.status-btn');
+      if (statusBtn) {
+        const row = e.target.closest('tr');
+        const userId = row.dataset.id;
+        const userName = row.children[1]?.textContent || 'this user';
+        const isBlocked = row.querySelector('.status-badge')?.classList.contains('status-blocked');
+        const action = isBlocked ? 'unblock' : 'block';
+
+        showModal(`Are you sure you want to ${action} ${userName}?`, async () => {
+          try {
+            const res = await fetch(`/admin/users/toggle-block/${userId}`, {
+              method: 'PATCH'
+            });
+            const result = await res.json();
+            if (result.success) {
+              fetchUsers();
+            } else {
+              alert(result.message || 'Action failed.');
+            }
+          } catch (err) {
+            console.error(`${action} error:`, err);
+            alert('Server error. Try again.');
+          }
+        });
+      }
+    });
+  });
+</script>
+
+</body>
+</html>

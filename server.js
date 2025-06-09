@@ -41,7 +41,7 @@ app.use(errorMiddleware);
 
 
 //Actual routes
-app.use("/", indesRoutes);
+app.use("/", indexRoutes);
 
 
 

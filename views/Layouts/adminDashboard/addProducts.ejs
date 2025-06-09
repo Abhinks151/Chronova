@@ -1,0 +1,992 @@
+<!DOCTYPE html>
+<html lang="en">
+	<head>
+		<meta charset="UTF-8" />
+		<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+		<title>Add Product - Admin Panel</title>
+
+		<!-- External CDNs -->
+		<link
+			href="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.5.12/cropper.min.css"
+			rel="stylesheet"
+		/>
+		<script src="https://cdnjs.cloudflare.com/ajax/libs/axios/1.4.0/axios.min.js"></script>
+		<script src="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.5.12/cropper.min.js"></script>
+		<link rel="stylesheet" href="/styles/dashboard.css" />
+		<style>
+			* {
+			    margin: 0;
+			    padding: 0;
+			    box-sizing: border-box;
+			}
+
+			body {
+			    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+			    background-color: #f5f5f5;
+			    color: #333;
+			}
+
+			.main-content {
+			    margin-left: 250px;
+			    padding: 20px;
+			    min-height: 100vh;
+			}
+
+			.page-header {
+			    background: white;
+			    padding: 20px;
+			    border-radius: 8px;
+			    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+			    margin-bottom: 20px;
+			}
+
+			.page-header h1 {
+			    color: #2c3e50;
+			    font-size: 28px;
+			    margin-bottom: 8px;
+			}
+
+			.page-header p {
+			    color: #7f8c8d;
+			    font-size: 14px;
+			}
+
+			.form-container {
+			    background: white;
+			    border-radius: 12px;
+			    box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+			    overflow: hidden;
+			}
+
+			.form-section {
+			    padding: 25px;
+			    border-bottom: 1px solid #eee;
+			}
+
+			.form-section:last-child {
+			    border-bottom: none;
+			}
+
+			.section-title {
+			    font-size: 18px;
+			    font-weight: 600;
+			    color: #2c3e50;
+			    margin-bottom: 20px;
+			    padding-bottom: 10px;
+			    border-bottom: 2px solid #3498db;
+			    display: inline-block;
+			}
+
+			.form-grid {
+			    display: grid;
+			    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+			    gap: 20px;
+			}
+
+			.form-group {
+			    display: flex;
+			    flex-direction: column;
+			}
+
+			.form-group.full-width {
+			    grid-column: 1 / -1;
+			}
+
+			label {
+			    font-weight: 600;
+			    margin-bottom: 8px;
+			    color: #34495e;
+			    font-size: 14px;
+			}
+
+			input[type="text"],
+			input[type="number"],
+			select,
+			textarea {
+			    padding: 12px 16px;
+			    border: 2px solid #e1e8ed;
+			    border-radius: 8px;
+			    font-size: 14px;
+			    transition: all 0.3s ease;
+			    background-color: #fafbfc;
+			}
+
+			input[type="text"]:focus,
+			input[type="number"]:focus,
+			select:focus,
+			textarea:focus {
+			    outline: none;
+			    border-color: #3498db;
+			    background-color: white;
+			    box-shadow: 0 0 0 3px rgba(52, 152, 219, 0.1);
+			}
+
+			textarea {
+			    resize: vertical;
+			    min-height: 100px;
+			}
+
+			select {
+			    cursor: pointer;
+			}
+
+			.required {
+			    color: #e74c3c;
+			}
+
+			/* Image Upload Styles */
+			.image-upload-container {
+			    display: grid;
+			    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+			    gap: 20px;
+			}
+
+			.image-upload-box {
+			    border: 2px dashed #bdc3c7;
+			    border-radius: 8px;
+			    padding: 20px;
+			    text-align: center;
+			    cursor: pointer;
+			    transition: all 0.3s ease;
+			    background-color: #fafbfc;
+			    position: relative;
+			    min-height: 150px;
+			    display: flex;
+			    flex-direction: column;
+			    justify-content: center;
+			    align-items: center;
+			}
+
+			.image-upload-box:hover {
+			    border-color: #3498db;
+			    background-color: #f8f9fa;
+			}
+
+			.image-upload-box.has-image {
+			    border-color: #27ae60;
+			    border-style: solid;
+			}
+
+			.upload-icon {
+			    font-size: 24px;
+			    color: #7f8c8d;
+			    margin-bottom: 10px;
+			}
+
+			.upload-text {
+			    color: #7f8c8d;
+			    font-size: 14px;
+			}
+
+			.image-preview {
+			    max-width: 100%;
+			    max-height: 120px;
+			    border-radius: 4px;
+			    margin-bottom: 10px;
+			}
+
+			.remove-image {
+			    background: #e74c3c;
+			    color: white;
+			    border: none;
+			    padding: 4px 8px;
+			    border-radius: 4px;
+			    font-size: 12px;
+			    cursor: pointer;
+			    margin-top: 5px;
+			}
+
+			.remove-image:hover {
+			    background: #c0392b;
+			}
+
+			/* Modal Styles */
+			.modal {
+			    display: none;
+			    position: fixed;
+			    z-index: 1000;
+			    left: 0;
+			    top: 0;
+			    width: 100%;
+			    height: 100%;
+			    background-color: rgba(0,0,0,0.5);
+			}
+
+			.modal-content {
+			    background-color: white;
+			    margin: 5% auto;
+			    padding: 20px;
+			    border-radius: 8px;
+			    width: 80%;
+			    max-width: 600px;
+			    max-height: 80vh;
+			    overflow-y: auto;
+			}
+
+			.modal-header {
+			    display: flex;
+			    justify-content: space-between;
+			    align-items: center;
+			    margin-bottom: 20px;
+			    padding-bottom: 10px;
+			    border-bottom: 1px solid #eee;
+			}
+
+			.close {
+			    font-size: 24px;
+			    font-weight: bold;
+			    cursor: pointer;
+			    color: #aaa;
+			}
+
+			.close:hover {
+			    color: #000;
+			}
+
+			.crop-container {
+			    max-height: 400px;
+			    margin-bottom: 20px;
+			}
+
+			.crop-controls {
+			    display: flex;
+			    gap: 10px;
+			    justify-content: center;
+			}
+
+			/* Button Styles */
+			.btn {
+			    padding: 12px 24px;
+			    border: none;
+			    border-radius: 6px;
+			    font-size: 14px;
+			    font-weight: 600;
+			    cursor: pointer;
+			    transition: all 0.3s ease;
+			    text-transform: uppercase;
+			    letter-spacing: 0.5px;
+			}
+
+			.btn-primary {
+			    background: linear-gradient(135deg, #3498db, #2980b9);
+			    color: white;
+			}
+
+			.btn-primary:hover {
+			    background: linear-gradient(135deg, #2980b9, #3498db);
+			    transform: translateY(-2px);
+			    box-shadow: 0 4px 8px rgba(52, 152, 219, 0.3);
+			}
+
+			.btn-secondary {
+			    background: #95a5a6;
+			    color: white;
+			}
+
+			.btn-secondary:hover {
+			    background: #7f8c8d;
+			}
+
+			.btn-success {
+			    background: #27ae60;
+			    color: white;
+			}
+
+			.btn-success:hover {
+			    background: #229954;
+			}
+
+			.form-actions {
+			    padding: 25px;
+			    background-color: #f8f9fa;
+			    display: flex;
+			    gap: 15px;
+			    justify-content: flex-end;
+			}
+
+			.loading {
+			    opacity: 0.7;
+			    pointer-events: none;
+			}
+
+			.loading::after {
+			    content: "";
+			    position: absolute;
+			    width: 20px;
+			    height: 20px;
+			    margin: auto;
+			    border: 2px solid transparent;
+			    border-top-color: #fff;
+			    border-radius: 50%;
+			    animation: spin 1s linear infinite;
+			}
+
+			@keyframes spin {
+			    0% { transform: rotate(0deg); }
+			    100% { transform: rotate(360deg); }
+			}
+
+			.alert {
+			    padding: 12px 16px;
+			    border-radius: 6px;
+			    margin-bottom: 20px;
+			    font-weight: 500;
+			}
+
+			.alert-success {
+			    background-color: #d4edda;
+			    color: #155724;
+			    border: 1px solid #c3e6cb;
+			}
+
+			.alert-error {
+			    background-color: #f8d7da;
+			    color: #721c24;
+			    border: 1px solid #f5c6cb;
+			}
+
+			@media (max-width: 768px) {
+			    .main-content {
+			        margin-left: 0;
+			        padding: 10px;
+			    }
+
+			    .form-grid {
+			        grid-template-columns: 1fr;
+			    }
+
+			    .image-upload-container {
+			        grid-template-columns: 1fr;
+			    }
+			}
+		</style>
+	</head>
+	<body>
+		<%- include('../../partials/sidebar') %>
+		<div class="main-content">
+			<div class="page-header">
+				<h1>Add New Product</h1>
+				<p>Add a new watch product to your inventory</p>
+			</div>
+
+			<div id="alertContainer"></div>
+
+			<form id="productForm" class="form-container">
+				<!-- Basic Information -->
+				<div class="form-section">
+					<h2 class="section-title">Basic Information</h2>
+					<div class="form-grid">
+						<div class="form-group">
+							<label for="productName"
+								>Product Name
+								<span class="required">*</span></label
+							>
+							<input
+								type="text"
+								id="productName"
+								name="productName"
+								required
+							/>
+						</div>
+
+						<div class="form-group">
+							<label for="brand"
+								>Brand <span class="required">*</span></label
+							>
+							<select id="brand" name="brand" required>
+								<option value="">Select Brand</option>
+								<option value="Rolex">Rolex</option>
+								<option value="Omega">Omega</option>
+								<option value="Seiko">Seiko</option>
+								<option value="Casio">Casio</option>
+								<option value="Tissot">Tissot</option>
+								<option value="Citizen">Citizen</option>
+								<option value="TAG Heuer">TAG Heuer</option>
+								<option value="Fossil">Fossil</option>
+								<option value="Apple">Apple</option>
+								<option value="Samsung">Samsung</option>
+								<option value="Other">Other</option>
+							</select>
+						</div>
+
+						
+
+						<div class="form-group">
+							<label for="category"
+								>Category <span class="required">*</span></label
+							>
+							<select id="category" name="category" required>
+								<option value="">Select Category</option>
+								<option value="Analog">Analog Watch</option>
+								<option value="Digital">Digital Watch</option>
+								<option value="Smart">Smart Watch</option>
+								<option value="Chronograph">Chronograph</option>
+								<option value="Dress">Dress Watch</option>
+								<option value="Sports">Sports Watch</option>
+								<option value="Diving">Diving Watch</option>
+								<option value="Luxury">Luxury Watch</option>
+							</select>
+						</div>
+
+						<div class="form-group">
+							<label for="category"
+								>Sub category <span class="required">*</span></label
+							>
+							<select id="category" name="category" required>
+								<option value="">Select Category</option>
+								<option value="Analog">Analog Watch</option>
+								<option value="Digital">Digital Watch</option>
+								<option value="Smart">Smart Watch</option>
+								<option value="Chronograph">Chronograph</option>
+								<option value="Dress">Dress Watch</option>
+								<option value="Sports">Sports Watch</option>
+								<option value="Diving">Diving Watch</option>
+								<option value="Luxury">Luxury Watch</option>
+							</select>
+						</div>
+
+						<div class="form-group full-width">
+							<label for="description"
+								>Description
+								<span class="required">*</span></label
+							>
+							<textarea
+								id="description"
+								name="description"
+								placeholder="Enter detailed product description..."
+								required
+							></textarea>
+						</div>
+					</div>
+				</div>
+
+				<!-- Watch Specifications -->
+				<div class="form-section">
+					<h2 class="section-title">Watch Specifications</h2>
+					<div class="form-grid">
+						<div class="form-group">
+							<label for="strapType">Strap Type</label>
+							<select id="strapType" name="strapType">
+								<option value="">Select Strap Type</option>
+								<option value="Leather">Leather</option>
+								<option value="Metal">Metal</option>
+								<option value="Rubber">Rubber</option>
+								<option value="Fabric">Fabric</option>
+								<option value="Silicone">Silicone</option>
+								<option value="Ceramic">Ceramic</option>
+								<option value="NATO">NATO</option>
+							</select>
+						</div>
+
+						<div class="form-group">
+							<label for="color">Color</label>
+							<input
+								type="text"
+								id="color"
+								name="color"
+								placeholder="e.g., Black, Silver, Gold"
+							/>
+						</div>
+
+						<div class="form-group">
+							<label for="dialSize">Dial Size (mm)</label>
+							<input
+								type="number"
+								id="dialSize"
+								name="dialSize"
+								placeholder="e.g., 40"
+								min="20"
+								max="60"
+							/>
+						</div>
+
+						<div class="form-group">
+							<label for="dialShape">Dial Shape</label>
+							<select id="dialShape" name="dialShape">
+								<option value="">Select Dial Shape</option>
+								<option value="Round">Round</option>
+								<option value="Square">Square</option>
+								<option value="Rectangle">Rectangle</option>
+								<option value="Oval">Oval</option>
+								<option value="Tonneau">Tonneau</option>
+							</select>
+						</div>
+
+						<div class="form-group">
+							<label for="movement">Movement Type</label>
+							<select id="movement" name="movement">
+								<option value="">Select Movement</option>
+								<option value="Quartz">Quartz</option>
+								<option value="Automatic">Automatic</option>
+								<option value="Manual">Manual</option>
+								<option value="Digital">Digital</option>
+								<option value="Solar">Solar</option>
+							</select>
+						</div>
+
+						<div class="form-group">
+							<label for="waterResistance"
+								>Water Resistance</label
+							>
+							<select id="waterResistance" name="waterResistance">
+								<option value="">
+									Select Water Resistance
+								</option>
+								<option value="30M">30M (3 ATM)</option>
+								<option value="50M">50M (5 ATM)</option>
+								<option value="100M">100M (10 ATM)</option>
+								<option value="200M">200M (20 ATM)</option>
+								<option value="300M">300M (30 ATM)</option>
+								<option value="500M">500M (50 ATM)</option>
+							</select>
+						</div>
+
+						<div class="form-group">
+							<label for="warranty">Warranty Period</label>
+							<select id="warranty" name="warranty">
+								<option value="">Select Warranty</option>
+								<option value="6 months">6 Months</option>
+								<option value="1 year">1 Year</option>
+								<option value="2 years">2 Years</option>
+								<option value="3 years">3 Years</option>
+								<option value="5 years">5 Years</option>
+								<option value="Lifetime">Lifetime</option>
+							</select>
+						</div>
+
+						<div class="form-group">
+							<label for="weight">Weight (grams)</label>
+							<input
+								type="number"
+								id="weight"
+								name="weight"
+								placeholder="e.g., 150"
+								min="10"
+								max="1000"
+							/>
+						</div>
+						
+						
+						
+					</div>
+				</div>
+
+				<!-- Pricing & Inventory -->
+				<div class="form-section">
+					<h2 class="section-title">Pricing & Inventory</h2>
+					<div class="form-grid">
+						<div class="form-group">
+							<label for="price"
+								>Regular Price
+								<span class="required">*</span></label
+							>
+							<input
+								type="number"
+								id="price"
+								name="price"
+								step="0.01"
+								min="0"
+								required
+								placeholder="0.00"
+							/>
+						</div>
+
+						<div class="form-group">
+							<label for="salePrice">Sale Price</label>
+							<input
+								type="number"
+								id="salePrice"
+								name="salePrice"
+								step="0.01"
+								min="0"
+								placeholder="0.00"
+							/>
+						</div>
+
+						<div class="form-group">
+							<label for="stockQuantity"
+								>Stock Quantity
+								<span class="required">*</span></label
+							>
+							<input
+								type="number"
+								id="stockQuantity"
+								name="stockQuantity"
+								min="0"
+								required
+								placeholder="0"
+							/>
+						</div>
+
+						<div class="form-group">
+							<label for="sku">SKU Code</label>
+							<input
+								type="text"
+								id="sku"
+								name="sku"
+								placeholder="e.g., WTH-001"
+							/>
+						</div>
+					</div>
+				</div>
+
+				<!-- Product Images -->
+				<div class="form-section">
+					<h2 class="section-title">Product Images</h2>
+					<div class="image-upload-container">
+						<div class="image-upload-box" data-index="0">
+							<div class="upload-icon">📷</div>
+							<div class="upload-text">
+								<strong>Primary Image</strong><br />
+								Click to upload
+							</div>
+							<input
+								type="file"
+								accept="image/*"
+								style="display: none;"
+								data-index="0"
+							/>
+						</div>
+
+						<div class="image-upload-box" data-index="1">
+							<div class="upload-icon">📷</div>
+							<div class="upload-text">
+								<strong>Image 2</strong><br />
+								Click to upload
+							</div>
+							<input
+								type="file"
+								accept="image/*"
+								style="display: none;"
+								data-index="1"
+							/>
+						</div>
+
+						<div class="image-upload-box" data-index="2">
+							<div class="upload-icon">📷</div>
+							<div class="upload-text">
+								<strong>Image 3</strong><br />
+								Click to upload
+							</div>
+							<input
+								type="file"
+								accept="image/*"
+								style="display: none;"
+								data-index="2"
+							/>
+						</div>
+
+						<div class="image-upload-box" data-index="3">
+							<div class="upload-icon">📷</div>
+							<div class="upload-text">
+								<strong>Image 4</strong><br />
+								Click to upload
+							</div>
+							<input
+								type="file"
+								accept="image/*"
+								style="display: none;"
+								data-index="3"
+							/>
+						</div>
+					</div>
+				</div>
+
+				<div class="form-actions">
+					<button
+						type="button"
+						class="btn btn-secondary"
+						onclick="resetForm()"
+					>
+						Reset
+					</button>
+					<button type="submit" class="btn btn-primary">
+						Add Product
+					</button>
+				</div>
+			</form>
+		</div>
+
+		<!-- Image Cropper Modal -->
+		<div id="cropperModal" class="modal">
+			<div class="modal-content">
+				<div class="modal-header">
+					<h3>Crop Image</h3>
+					<span class="close">&times;</span>
+				</div>
+				<div class="crop-container">
+					<img id="cropperImage" style="max-width: 100%;" />
+				</div>
+				<div class="crop-controls">
+					<button
+						type="button"
+						class="btn btn-secondary"
+						id="cancelCrop"
+					>
+						Cancel
+					</button>
+					<button
+						type="button"
+						class="btn btn-success"
+						id="applyCrop"
+					>
+						Apply Crop
+					</button>
+				</div>
+			</div>
+		</div>
+
+		<script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
+		<script>
+			let cropper = null;
+			let currentImageIndex = null;
+			let croppedImages = {};
+
+			// Initialize event listeners
+			document.addEventListener('DOMContentLoaded', function() {
+			    initializeImageUpload();
+			    initializeFormSubmission();
+			    initializeCropperModal();
+			});
+
+			function initializeImageUpload() {
+			    const uploadBoxes = document.querySelectorAll('.image-upload-box');
+
+			    uploadBoxes.forEach(box => {
+			        const input = box.querySelector('input[type="file"]');
+			        const index = box.dataset.index;
+
+			        box.addEventListener('click', () => {
+			            if (!box.classList.contains('has-image')) {
+			                input.click();
+			            }
+			        });
+
+			        input.addEventListener('change', (e) => {
+			            if (e.target.files && e.target.files[0]) {
+			                currentImageIndex = index;
+			                openCropper(e.target.files[0]);
+			            }
+			        });
+			    });
+			}
+
+			function openCropper(file) {
+			    const reader = new FileReader();
+			    reader.onload = function(e) {
+			        const cropperImage = document.getElementById('cropperImage');
+			        cropperImage.src = e.target.result;
+
+			        document.getElementById('cropperModal').style.display = 'block';
+
+			        // Initialize cropper
+			        if (cropper) {
+			            cropper.destroy();
+			        }
+
+			        cropper = new Cropper(cropperImage, {
+			            aspectRatio: 1,
+			            viewMode: 1,
+			            dragMode: 'move',
+			            autoCropArea: 0.8,
+			            restore: false,
+			            guides: false,
+			            center: false,
+			            highlight: false,
+			            cropBoxMovable: true,
+			            cropBoxResizable: true,
+			            toggleDragModeOnDblclick: false,
+			        });
+			    };
+			    reader.readAsDataURL(file);
+			}
+
+			function initializeCropperModal() {
+			    const modal = document.getElementById('cropperModal');
+			    const closeBtn = modal.querySelector('.close');
+			    const cancelBtn = document.getElementById('cancelCrop');
+			    const applyBtn = document.getElementById('applyCrop');
+
+			    closeBtn.addEventListener('click', closeCropper);
+			    cancelBtn.addEventListener('click', closeCropper);
+			    applyBtn.addEventListener('click', applyCrop);
+
+			    window.addEventListener('click', function(e) {
+			        if (e.target === modal) {
+			            closeCropper();
+			        }
+			    });
+			}
+
+			function closeCropper() {
+			    document.getElementById('cropperModal').style.display = 'none';
+			    if (cropper) {
+			        cropper.destroy();
+			        cropper = null;
+			    }
+			    currentImageIndex = null;
+			}
+
+			function applyCrop() {
+			    if (cropper && currentImageIndex !== null) {
+			        const canvas = cropper.getCroppedCanvas({
+			            width: 400,
+			            height: 400,
+			            imageSmoothingEnabled: true,
+			            imageSmoothingQuality: 'high',
+			        });
+
+			        canvas.toBlob(function(blob) {
+			            croppedImages[currentImageIndex] = blob;
+			            updateImagePreview(currentImageIndex, canvas.toDataURL());
+			            closeCropper();
+			        }, 'image/jpeg', 0.9);
+			    }
+			}
+
+			function updateImagePreview(index, dataURL) {
+			    const uploadBox = document.querySelector(`[data-index="${index}"]`);
+			    uploadBox.classList.add('has-image');
+			    uploadBox.innerHTML = `
+			        <img src="${dataURL}" alt="Preview" class="image-preview">
+			        <button type="button" class="remove-image" onclick="removeImage(${index})">Remove</button>
+			    `;
+			}
+
+			function removeImage(index) {
+			    const uploadBox = document.querySelector(`[data-index="${index}"]`);
+			    uploadBox.classList.remove('has-image');
+			    uploadBox.innerHTML = `
+			        <div class="upload-icon">📷</div>
+			        <div class="upload-text">
+			            <strong>${index === 0 ? 'Primary Image' : `Image ${parseInt(index) + 1}`}</strong><br>
+			            Click to upload
+			        </div>
+			        <input type="file" accept="image/*" style="display: none;" data-index="${index}">
+			    `;
+
+			    delete croppedImages[index];
+
+			    // Re-initialize event listener for this box
+			    const input = uploadBox.querySelector('input[type="file"]');
+			    uploadBox.addEventListener('click', () => {
+			        if (!uploadBox.classList.contains('has-image')) {
+			            input.click();
+			        }
+			    });
+
+			    input.addEventListener('change', (e) => {
+			        if (e.target.files && e.target.files[0]) {
+			            currentImageIndex = index;
+			            openCropper(e.target.files[0]);
+			        }
+			    });
+			}
+
+			function initializeFormSubmission() {
+			    const form = document.getElementById('productForm');
+			    form.addEventListener('submit', handleFormSubmission);
+			}
+
+			async function handleFormSubmission(e) {
+			    e.preventDefault();
+
+			    const submitBtn = e.target.querySelector('button[type="submit"]');
+			    submitBtn.classList.add('loading');
+			    submitBtn.disabled = true;
+
+			    try {
+			        const formData = new FormData();
+
+			        // Add form fields
+			        const formElements = e.target.elements;
+			        for (let element of formElements) {
+			            if (element.type !== 'file' && element.type !== 'submit' && element.name) {
+			                formData.append(element.name, element.value);
+			            }
+			        }
+
+			        // Add cropped images
+			        Object.keys(croppedImages).forEach(index => {
+			            formData.append(`image_${index}`, croppedImages[index], `image_${index}.jpg`);
+			        });
+
+			        const response = await axios.post('/admin/products/add', formData, {
+			            headers: {
+			                'Content-Type': 'multipart/form-data'
+			            }
+			        });
+
+			        showAlert('Product added successfully!', 'success');
+			        resetForm();
+
+
+			        setTimeout(() => {
+			            window.location.href = response.data.redirect || '/admin/products';
+			        }, 1500)
+
+                    
+			    } catch (error) {
+			        console.error('Error adding product:', error);
+			        showAlert(error.response?.data?.message || 'Error adding product. Please try again.', 'error');
+			    } finally {
+			        submitBtn.classList.remove('loading');
+			        submitBtn.disabled = false;
+			    }
+			}
+
+			function showAlert(message, type) {
+			    const alertContainer = document.getElementById('alertContainer');
+			    const alert = document.createElement('div');
+			    alert.className = `alert alert-${type}`;
+			    alert.textContent = message;
+
+			    alertContainer.appendChild(alert);
+
+			    setTimeout(() => {
+			        alert.remove();
+			    }, 5000);
+			}
+
+			function resetForm() {
+			    document.getElementById('productForm').reset();
+
+			    // Reset image uploads
+			    for (let i = 0; i < 4; i++) {
+			        removeImage(i);
+			    }
+
+			    croppedImages = {};
+			}
+
+			// Auto-generate SKU based on brand and product name
+			document.getElementById('brand').addEventListener('change', generateSKU);
+			document.getElementById('productName').addEventListener('input', generateSKU);
+
+			function generateSKU() {
+			    const brand = document.getElementById('brand').value;
+			    const productName = document.getElementById('productName').value;
+
+			    if (brand && productName) {
+			        const brandCode = brand.substring(0, 3).toUpperCase();
+			        const productCode = productName.replace(/\s+/g, '').substring(0, 3).toUpperCase();
+			        const randomNum = Math.floor(Math.random() * 1000).toString().padStart(3, '0');
+
+			        document.getElementById('sku').value = `${brandCode}-${productCode}-${randomNum}`;
+			    }
+			}
+
+			// Price validation
+			document.getElementById('salePrice').addEventListener('input', function() {
+			    const regularPrice = parseFloat(document.getElementById('price').value) || 0;
+			    const salePrice = parseFloat(this.value) || 0;
+
+			    if (salePrice > regularPrice) {
+			        this.setCustomValidity('Sale price cannot be higher than regular price');
+			    } else {
+			        this.setCustomValidity('');
+			    }
+			});
+		</script>
+	</body>
+</html>

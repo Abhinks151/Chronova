@@ -1,0 +1,30 @@
+<div class="orders-table-container">
+    <table class="orders-table">
+        <thead>
+            <tr>
+                <th>ID</th>
+                <th>NAME</th>
+                <th>ADDRESS</th>
+                <th>DATE</th>
+                <th>TYPE</th>
+                <th>STATUS</th>
+            </tr>
+        </thead>
+        <tbody>
+            <% orders.forEach(function(order) { %>
+            <tr>
+                <td class="order-id"><%= order.id %></td>
+                <td class="order-name"><%= order.name %></td>
+                <td class="order-address"><%= order.address %></td>
+                <td class="order-date"><%= order.date %></td>
+                <td class="order-type"><%= order.type %></td>
+                <td class="order-status">
+                    <span class="status-badge status-<%= order.status.toLowerCase() %>">
+                        <%= order.status %>
+                    </span>
+                </td>
+            </tr>
+            <% }); %>
+        </tbody>
+    </table>
+</div>

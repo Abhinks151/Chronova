@@ -1,0 +1,129 @@
+<!DOCTYPE html>
+<html lang="en">
+	<head>
+		<meta charset="UTF-8" />
+		<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+		<title><%= title || 'Admin Login' %></title>
+
+		<link rel="stylesheet" href="/styles/adminLogin.css" />
+	</head>
+	<body>
+		<div class="container">
+			<div class="login-card">
+				<h1 class="title">Admin Panel Login</h1>
+
+				<form
+					action="/admin/login"
+					id="myForm"
+					method="POST"
+					class="login-form"
+				>
+					<!-- Email -->
+					<div class="form-group">
+						<label for="email" class="form-label"
+							>Email address</label
+						>
+						<input
+							type="email"
+							id="email"
+							name="email"
+							class="form-input"
+							placeholder="Enter your email"
+							required
+						/>
+					</div>
+
+					<!-- Password -->
+					<div class="form-group">
+						<label for="password" class="form-label"
+							>Password</label
+						>
+						<input
+							type="password"
+							id="password"
+							name="password"
+							class="form-input"
+							placeholder="Enter your password"
+							required
+						/>
+					</div>
+					<div id="error-message" class="error-message"></div>
+
+					<!-- Submit -->
+					<button type="submit" class="login-btn">Login</button>
+				</form>
+			</div>
+		</div>
+		<script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
+		<script>
+							const form = document.getElementById('myForm');
+							const errorBox = document.getElementById('error-message');
+
+
+							form.addEventListener('submit', (event) => {
+							  event.preventDefault();
+
+							  const formData = {
+							    email: form.email.value,
+							    password: form.password.value,
+							  };
+
+							  sendData(formData);
+							});
+
+
+
+							function sendData(data) {
+						  axios.post('/admin/login', data)
+						    .then(response => {
+						      if (response.data.redirect) {
+						        window.location.href = response.data.redirect;
+						      } else {
+						        console.log('Success:', response.data);
+										window.location.href = response.data.redirect	;
+						      }
+						    })
+						    .catch(error => {
+						      const errData = error.response?.data;
+
+
+						      if (errData?.errors) {
+						        errorBox.innerHTML = errData.errors.map(err => `<p>${err.msg}</p>`).join('');
+						      } else if (errData?.message) {
+						        errorBox.innerHTML = `<p>${errData.message}</p>`;
+						      } else {
+						        errorBox.innerHTML = `<p>Something went wrong. Please try again.</p>`;
+						      }
+						    });
+						}
+
+
+
+
+						// Display query param error (if redirected from auth middleware)
+			const params = new URLSearchParams(window.location.search);
+			const errorType = params.get('error');
+			if (errorType) {
+			  let message = '';
+			  switch (errorType) {
+			    case 'unauthorized':
+			      message = 'Please log in to access the admin panel.';
+			      break;
+			    case 'notAdmin':
+			      message = 'You do not have admin privileges.';
+			      break;
+			    // case 'forbidden':
+			    //   message = 'Access denied. Admin privileges required.';
+			    //   break;
+			    // case 'invalid':
+			    //   message = 'Invalid session. Please login again.';
+			    //   break;
+			    default:
+			      message = 'Authentication failed. Please try again.';
+			  }
+
+			  errorBox.innerHTML = `<p>${message}</p>`;
+			}
+		</script>
+	</body>
+</html>

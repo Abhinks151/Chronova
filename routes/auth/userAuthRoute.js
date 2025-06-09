@@ -15,6 +15,9 @@ import {
 } from "../../controllers/auth/userAuthController.js";
 
 import validate from '../../utils/validationRules.js';
+import { authenticateUser } from '../../middlewares/userAuthMiddleware.js'
+
+
 
 const userAuthRouter = express.Router();
 
@@ -53,13 +56,13 @@ userAuthRouter.get('/logout', userLogout)
 
 
 
-userAuthRouter.get('/home', (req, res) => res.status(200).render('Layouts/home'));
+userAuthRouter.get('/home', authenticateUser, (req, res) => res.status(200).render('Layouts/home'));
 
 
 
 
 
-userAuthRouter.get('/', (req, res) => res.status(200).render('Layouts/home'));
+// userAuthRouter.get('/', (req, res) => res.status(200).render('Layouts/home'));
 
 
 export default userAuthRouter;

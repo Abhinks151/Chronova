@@ -1,0 +1,119 @@
+<div class="sales-chart-container">
+    <div class="chart-header">
+        <h3>Sales Details</h3>
+        <div class="chart-controls">
+            <button class="chart-btn active">Today</button>
+            <button class="chart-btn">October</button>
+        </div>
+    </div>
+    
+    <div class="chart-wrapper">
+        <canvas id="salesChart" width="800" height="300"></canvas>
+    </div>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const ctx = document.getElementById('salesChart').getContext('2d');
+    
+    // Sample sales data - you can replace this with your dynamic data
+    const salesData = <%- JSON.stringify(salesData) %>;
+    
+    const chart = new Chart(ctx, {
+        type: 'line',
+        data: {
+            labels: salesData.labels,
+            datasets: [{
+                label: 'Sales',
+                data: salesData.values,
+                borderColor: '#4F80FF',
+                backgroundColor: 'rgba(79, 128, 255, 0.1)',
+                borderWidth: 2,
+                fill: true,
+                tension: 0.4,
+                pointBackgroundColor: '#4F80FF',
+                pointBorderColor: '#4F80FF',
+                pointBorderWidth: 2,
+                pointRadius: 4,
+                pointHoverRadius: 6
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+                legend: {
+                    display: false
+                },
+                tooltip: {
+                    backgroundColor: '#4F80FF',
+                    titleColor: '#fff',
+                    bodyColor: '#fff',
+                    borderColor: '#4F80FF',
+                    borderWidth: 1,
+                    callbacks: {
+                        label: function(context) {
+                            return '$' + context.parsed.y.toLocaleString();
+                        }
+                    }
+                }
+            },
+            scales: {
+                x: {
+                    grid: {
+                        display: false
+                    },
+                    ticks: {
+                        color: '#666'
+                    }
+                },
+                y: {
+                    grid: {
+                        color: '#f0f0f0'
+                    },
+                    ticks: {
+                        color: '#666',
+                        callback: function(value) {
+                            return value + '%';
+                        }
+                    },
+                    beginAtZero: true,
+                    max: 100
+                }
+            },
+            elements: {
+                point: {
+                    hoverRadius: 8
+                }
+            }
+        }
+    });
+    
+    // Add peak point annotation
+    const maxIndex = salesData.values.indexOf(Math.max(...salesData.values));
+    const maxValue = Math.max(...salesData.values);
+    
+    // Custom annotation for peak value
+    const annotation = document.createElement('div');
+    annotation.className = 'chart-annotation';
+    annotation.innerHTML = `$${maxValue.toLocaleString()}`;
+    annotation.style.position = 'absolute';
+    annotation.style.background = '#4F80FF';
+    annotation.style.color = 'white';
+    annotation.style.padding = '4px 8px';
+    annotation.style.borderRadius = '4px';
+    annotation.style.fontSize = '12px';
+    annotation.style.fontWeight = 'bold';
+    
+    // Position the annotation (this is approximate - you might need to adjust)
+    const chartArea = chart.chartArea;
+    const xPos = chart.scales.x.getPixelForValue(maxIndex);
+    const yPos = chart.scales.y.getPixelForValue(maxValue);
+    
+    annotation.style.left = (xPos - 25) + 'px';
+    annotation.style.top = (yPos - 30) + 'px';
+    
+    document.querySelector('.chart-wrapper').style.position = 'relative';
+    document.querySelector('.chart-wrapper').appendChild(annotation);
+});
+</script>

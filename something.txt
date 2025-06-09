@@ -1,0 +1,16 @@
+<% for (let i = 1; i <= totalPages; i++) { %>
+            <% if (i === currentPage) { %>
+              <span class="pagination-btn active"><%= i %></span>
+            <% } else { %>
+              <a 
+                href="?page=<%= i %>&limit=<%= limit %>&status=<%= statusFilter %>&sort=<%= sort %>" 
+                class="pagination-btn"
+              >
+                <%= i %>
+              </a>
+            <% } %>
+          <% } %>
+
+
+
+// created at field in DataBase
