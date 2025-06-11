@@ -16,8 +16,8 @@
     "axios": "^1.9.0",
     "bcrypt": "^6.0.0",
     "bcryptjs": "^3.0.2",
+    "cloudinary": "^2.6.1",
     "cookie-parser": "^1.4.7",
-    "cors": "^2.8.5",
     "crypto": "^1.0.1",
     "dotenv": "^16.5.0",
     "ejs": "^3.1.10",
@@ -27,8 +27,8 @@
     "jsonwebtoken": "^9.0.2",
     "mongoose": "^8.15.1",
     "multer": "^2.0.1",
+    "multer-storage-cloudinary": "^4.0.0",
     "npm": "^11.4.1",
-    "resend": "^4.5.2",
-    "twilio": "^5.7.0"
+    "resend": "^4.5.2"
   }
 }

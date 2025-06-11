@@ -22,7 +22,7 @@ const productSchema = new mongoose.Schema({
     required: true,
     trim: true
   },
-  isDeletred: {
+  isDeleted: {
     type: Boolean,
     default: false
   },
@@ -34,6 +34,10 @@ const productSchema = new mongoose.Schema({
     type: [String],
     required: true,
     validate: arr => arr.length > 0
+  },
+  productType: {
+    type: String,
+    required: true,
   },
   description: {
     type: String,
@@ -98,9 +102,31 @@ const productSchema = new mongoose.Schema({
       message: '4 images are required.'
     }
   },
-},
-  {
-    timestamps: true
-  });
+  averageRating: {
+    type: Number,
+    default: 0
+  },
+  reviewNote: {
+    type: String,
+    default: "No reviews yet"
+  },
+  hasActiveOffer: {
+    type: Boolean,
+    default: false
+  },
+  finalPrice: {
+    type: Number,
+    default: function () {
+      return this.salePrice || this.price;
+    }
+  },
+  appliedDiscountInfo: {
+    type: String,
+    default: "No discounts applied"
+  }
 
-export const Products = mongoose.model('Product', productSchema);
+}, {
+  timestamps: true
+});
+
+export const Products = mongoose.model('Products', productSchema);
