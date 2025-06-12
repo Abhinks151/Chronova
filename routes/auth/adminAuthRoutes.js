@@ -1,20 +1,20 @@
 import {Router} from 'express'
-import {getAdminLogin , postAdminLogin} from '../../controllers/auth/adminAuthController.js'
+import {adminLogout, getAdminLogin , postAdminLogin} from '../../controllers/auth/adminAuthController.js'
 import validate from '../../utils/validationRules.js';
 import { getDashboard } from '../../controllers/dashboardController.js';
 import { authenticateAdmin } from '../../middlewares/adminAuthMiddleware.js';
 
 
-const adminAuthRouter = Router()
+const adminAuthRouter = Router();
 
 adminAuthRouter.get('/login', getAdminLogin);
 adminAuthRouter.post('/login',validate(['email', 'password']), postAdminLogin);
+adminAuthRouter.get('/logout',authenticateAdmin,adminLogout);
+
+adminAuthRouter.get('/dashboard',authenticateAdmin,getDashboard);
 
 
-adminAuthRouter.get('/dashboard',authenticateAdmin,getDashboard)
 
-
-
-export default adminAuthRouter
+export default adminAuthRouter;
 
 

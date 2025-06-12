@@ -12,7 +12,7 @@ export const paginationService = async (queryParams) => {
     search,
     sort,
   } = queryParams;
-  console.log(sort)
+  // console.log(sort)
 
 
   const filter = { isDeleted: false };
@@ -37,7 +37,7 @@ export const paginationService = async (queryParams) => {
   else if (sort === 'name-desc') sortOption = { productName: 1 };
   else if (sort === 'price-asc') sortOption = { salePrice: 1 };
   else if (sort === 'price-desc') sortOption = { salePrice: -1 };
-  else sortOption = { createdAt: -1 };
+  else sortOption = { updatedAt: -1 };
 
 
   const skip = (parseInt(page) - 1) * parseInt(limit);

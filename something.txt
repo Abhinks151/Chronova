@@ -47,3 +47,12 @@ FOLDER STRUCTURE
 
 // check filteration is proper in product management;
 // filter and sortOption in paginationService
+
+
+// error handiling
+
+// editProduct page line :: 54 
+<option value="<%= brand._id %>" 
+                                    <%= product.brand && product.brand.toString() === brand._id.toString() ? 'selected' : '' %>>
+                                    <%= brand.name %>
+                                </option>

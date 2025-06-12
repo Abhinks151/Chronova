@@ -54,3 +54,7 @@ export const postAdminLogin = async (req, res) => {
   }
 };
 
+export const adminLogout = async (req, res) => {
+  res.clearCookie("adminToken");
+  res.status(httpStatusCode.OK.code).redirect('/admin/login');
+};

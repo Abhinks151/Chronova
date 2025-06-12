@@ -1,15 +1,15 @@
 import { User } from "../../models/userModels.js";
-import { sendVerificationOTP, verifyOTP } from '../../helpers/otpService.js';
 import { generateToken } from '../../utils/generateToken.js';
-import { Resend } from 'resend';
 import crypto from "crypto";
 import bcrypt from "bcrypt";
 import { validationResult } from 'express-validator';
 import dotenv from 'dotenv';
+import { sendResetPasswordToken, sendVerificationOTP } from "../../utils/sendVerificationOTP.js";
+import { hashOTP } from "../../utils/otp.js";
+
 
 dotenv.config();
 
-const resend = new Resend(process.env.RESEND_API_KEY);
 const SALT = 10;
 
 // Helper function to handle response format (JSON vs HTML)
@@ -50,10 +50,11 @@ export const getUserRegister = async (req, res) => {
   res.status(200).render('Layouts/userRegister', renderData);
 };
 
-// POST user register page
 export const postUserRegister = async (req, res) => {
   try {
-    // Validate input errors
+
+
+
     const errors = validationResult(req);
     if (!errors.isEmpty()) {
       return handleValidationErrors(req, res, errors, 'Layouts/userRegister', 'Register');
@@ -61,20 +62,17 @@ export const postUserRegister = async (req, res) => {
 
     const { firstname, lastname, email, password, confirmPassword } = req.body;
 
-    // Password match validation
     if (password !== confirmPassword) {
       const renderData = createRenderData('Register', { confirmPassword: 'Passwords do not match' }, req.body);
       return handleResponse(req, res, 400, 'Layouts/userRegister', renderData);
     }
 
-    // Check if user already exists
     const existingUser = await User.findOne({ email: email.toLowerCase() });
     if (existingUser) {
       const renderData = createRenderData('Register', { email: 'User already exists with this email' }, req.body);
       return handleResponse(req, res, 400, 'Layouts/userRegister', renderData);
     }
 
-    // Create new user
     const hashedPassword = await bcrypt.hash(password, SALT);
     const newUser = new User({
       firstname,
@@ -84,9 +82,10 @@ export const postUserRegister = async (req, res) => {
     });
 
     await newUser.save();
+
     await sendVerificationOTP(newUser);
 
-    const successMsg = 'Registration successful! Please check your email for verification OTP.';
+    const successMsg = 'Registration successful! Please check your email for the verification OTP.';
     const renderData = createRenderData('Register', {}, {}, successMsg);
     const jsonData = { success: true, message: successMsg, redirect: '/user/verify-otp' };
 
@@ -99,105 +98,100 @@ export const postUserRegister = async (req, res) => {
   }
 };
 
-// GET verify OTP page
 export const getVerifyUserOTP = async (req, res) => {
   const email = req.query.email || '';
   const renderData = createRenderData('Verify Account', {}, { email, otp: '' }, '');
   res.status(200).render('Layouts/userVerify', renderData);
 };
 
-// POST verify OTP
-export const postVerifyUserOTP = async (req, res) => {
-  const { email, otp } = req.body;
-  const renderData = createRenderData('Verify Account', {}, { email: email || '', otp: otp || '' }, '');
 
+
+export const postVerifyUserOTP = async (req, res) => {
   try {
-    const user = await User.findOne({ email: email?.trim().toLowerCase() });
+    const { email, otp } = req.body;
+
+    if (!email || !otp) {
+      return res.status(400).json({ message: 'Email and OTP are required.' });
+    }
+
+    const user = await User.findOne({ email: email.trim().toLowerCase() });
 
     if (!user) {
-      renderData.errors.email = 'No account found with this email address';
-      return res.status(404).render('Layouts/userVerify', renderData);
+      return res.status(404).json({ message: 'No account found with this email address.' });
     }
 
     if (user.isVerified) {
-      return res.redirect('/user/login');
+      return res.status(200).json({ message: 'Account already verified. Please log in.', redirect: '/user/login' });
     }
 
     if (!user.verificationToken || !user.verificationTokenExpireAt) {
-      renderData.errors.otp = 'No verification code found. Please request a new one.';
-      return res.status(400).render('Layouts/userVerify', renderData);
+      return res.status(400).json({ message: 'No verification code found. Please request a new one.' });
     }
 
     if (new Date() > user.verificationTokenExpireAt) {
-      renderData.errors.otp = 'Verification code has expired. Please request a new one.';
-      return res.status(400).render('Layouts/userVerify', renderData);
+      return res.status(400).json({ message: 'Verification code has expired. Please request a new one.' });
     }
 
-    // Verify OTP
     const hashedOTP = crypto.createHash('sha256').update(otp.trim()).digest('hex');
     if (user.verificationToken !== hashedOTP) {
-      renderData.errors.otp = 'Invalid verification code. Please check and try again.';
-      return res.status(400).render('Layouts/userVerify', renderData);
+      return res.status(400).json({ message: 'Invalid verification code. Please try again.' });
     }
 
-    // Mark user as verified
     user.isVerified = true;
     user.verificationToken = undefined;
     user.verificationTokenExpireAt = undefined;
     await user.save();
 
-    return res.redirect('/user/login');
+    return res.status(200).json({ message: 'Account verified successfully.', redirect: '/user/login' });
 
   } catch (error) {
     console.error('Verify OTP Error:', error);
-    renderData.errors.general = 'Unable to verify account. Please try again later.';
-    return res.status(500).render('Layouts/userVerify', renderData);
+    return res.status(500).json({ message: 'Unable to verify account. Please try again later.' });
   }
 };
 
+
 // Resend verification code
+
 export const resendVerificationCode = async (req, res) => {
-  const { email } = req.body;
-  const renderData = createRenderData('Verify Account', {}, { email: email || '' }, '');
-
-  // Email validation
-  if (!email?.trim()) {
-    renderData.errors.email = 'Email is required';
-    return res.status(400).render('Layouts/userVerify', renderData);
-  }
-
-  const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-  if (!emailRegex.test(email.trim())) {
-    renderData.errors.email = 'Please enter a valid email address';
-    return res.status(400).render('Layouts/userVerify', renderData);
-  }
-
   try {
+    const errors = validationResult(req);
+    if (!errors.isEmpty()) {
+      // Return first error in JSON format
+      const errorMsg = errors.array()[0].msg || 'Validation error';
+      return res.status(400).json({ message: errorMsg });
+    }
+
+    const { email } = req.body;
+
+    if (!email) {
+      return res.status(400).json({ message: 'Email is required.' });
+    }
+
     const user = await User.findOne({ email: email.trim().toLowerCase() });
 
     if (!user) {
-      renderData.errors.email = 'No account found with this email address';
-      return res.status(404).render('Layouts/userVerify', renderData);
+      return res.status(404).json({ message: 'No user found with this email address.' });
     }
 
     if (user.isVerified) {
-      renderData.errors.general = 'Account is already verified. You can sign in now.';
-      return res.status(400).render('Layouts/userVerify', renderData);
+      return res.status(400).json({ message: 'Account is already verified. Please log in.' });
     }
 
     await sendVerificationOTP(user);
 
-    renderData.successMessage = 'Verification code sent successfully! Please check your email and enter the 6-digit code below.';
-    renderData.errors = {};
-
-    return res.status(200).render('Layouts/userVerify', renderData);
+    return res.status(200).json({
+      message: 'Verification code sent successfully. Please check your inbox.'
+    });
 
   } catch (error) {
     console.error('Resend Verification Error:', error);
-    renderData.errors.general = 'Unable to send verification code. Please try again later.';
-    return res.status(500).render('Layouts/userVerify', renderData);
+    return res.status(500).json({
+      message: 'Unable to send verification code. Please try again later.'
+    });
   }
 };
+
 
 // GET forgot password page
 export const getForgotPassord = async (req, res) => {
@@ -205,46 +199,26 @@ export const getForgotPassord = async (req, res) => {
   res.status(200).render('Layouts/userForgotPassword', renderData);
 };
 
-// POST forgot password
 export const postForgotPassword = async (req, res) => {
   try {
     const { email } = req.body;
 
-    if (!email) {
-      return res.status(400).json({ message: "Email is required" });
+    if (!email || !email.trim()) {
+      return res.status(400).json({ message: 'Email is required' });
     }
 
-    const user = await User.findOne({ email });
+    const user = await User.findOne({ email: email.trim().toLowerCase() });
     if (!user) {
-      return res.status(404).json({ message: "User not found" });
+      return res.status(404).json({ message: 'User not found' });
     }
 
-    // Generate and set reset token
-    const resetToken = crypto.randomBytes(32).toString("hex");
-    const hashedToken = crypto.createHash("sha256").update(resetToken).digest("hex");
+    await sendResetPasswordToken(user);
 
-    user.resetPasswordToken = hashedToken;
-    user.resetPasswordExpire = Date.now() + 24 * 60 * 60 * 1000; // 24 hours
-    await user.save();
-
-    // Send reset email
-    const resetUrl = `http://localhost:3000/user/reset-password/${resetToken}`;
-    await resend.emails.send({
-      from: "onboarding@resend.dev",
-      to: user.email,
-      subject: "Password Reset Request",
-      html: `
-        <p>You requested a password reset. Click this link to reset your password:</p>
-        <a href="${resetUrl}" style="padding: 10px 20px; background-color: #007BFF; color: #fff; text-decoration: none;">Reset Password</a>
-        <p>This link expires in 24 hours.</p>
-      `
-    });
-
-    res.status(200).json({ message: "Password reset email sent" });
+    res.status(200).json({ message: 'Password reset email sent successfully' });
 
   } catch (error) {
-    console.error('Forgot password error:', error);
-    res.status(500).json({ message: "Something went wrong. Please try again." });
+    console.error('Forgot Password Error:', error);
+    res.status(500).json({ message: 'Something went wrong. Please try again.' });
   }
 };
 
@@ -253,61 +227,78 @@ export const getResetPassword = async (req, res) => {
   const { token } = req.params;
 
   try {
-    const hashedToken = crypto.createHash('sha256').update(token).digest('hex');
+    // const hashedToken = hashOTP(token);
+
     const user = await User.findOne({
-      resetPasswordToken: hashedToken,
+      resetPasswordToken: token,
       resetPasswordExpire: { $gt: Date.now() }
     });
 
     if (!user) {
-      return res.status(400).send('Invalid or expired password reset token');
+      return res.status(400).render('Layouts/invalidResetToken', {
+        error: 'Reset link is invalid or has expired.'
+      });
     }
 
     res.render('Layouts/userResetPassword', { token });
 
   } catch (error) {
     console.error('Error in getResetPassword:', error);
-    res.status(500).send('Server error');
+    res.status(500).render('Layouts/error', {
+      error: 'Something went wrong. Please try again later.'
+    });
   }
 };
 
-// POST reset password
 export const postResetPassword = async (req, res) => {
   try {
     const { token, password, confirmPassword } = req.body;
-
+    console.log(token, password, confirmPassword);
     if (!token || !password || !confirmPassword) {
-      return res.status(400).json({ message: "All fields are required" });
+      return res.status(400).render('Layouts/userResetPassword', {
+        token,
+        error: 'All fields are required.'
+      });
     }
 
     if (password !== confirmPassword) {
-      return res.status(400).json({ message: "Passwords do not match" });
+      return res.status(400).render('Layouts/userResetPassword', {
+        token,
+        error: 'Passwords do not match.'
+      });
     }
 
-    // Find user with valid token
-    const hashedToken = crypto.createHash("sha256").update(token).digest("hex");
+    // const hashedToken = hashOTP(token);
+
     const user = await User.findOne({
-      resetPasswordToken: hashedToken,
+      resetPasswordToken: token,
       resetPasswordExpire: { $gt: Date.now() }
     });
 
     if (!user) {
-      return res.status(400).json({ message: "Invalid or expired token" });
+      return res.status(400).render('Layouts/userResetPassword', {
+        token,
+        error: 'Reset link is invalid or has expired.'
+      });
     }
 
-    // Update password and clear reset token
     user.password = await bcrypt.hash(password, SALT);
     user.resetPasswordToken = undefined;
     user.resetPasswordExpire = undefined;
     await user.save();
 
-    res.status(200).json({ message: "Password reset successful. Please login." });
+    const renderData = createRenderData('Login');
+    res.render('Layouts/userLogin', renderData);
 
   } catch (error) {
-    console.error('Reset password error:', error);
-    res.status(500).json({ message: "Something went wrong. Please try again." });
+    console.error('Reset Password Error:', error);
+    res.status(500).render('Layouts/userResetPassword', {
+      token: req.body.token,
+      error: 'Something went wrong. Please try again.'
+    });
   }
 };
+
 
 // GET login page
 export const getUserLogin = async (req, res) => {

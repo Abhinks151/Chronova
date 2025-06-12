@@ -174,16 +174,13 @@
 
   <!-- Success/Error Toast Notification -->
   <div id="toast" class="toast"></div>
-
   <script>
-    // ==================== GLOBAL VARIABLES ====================
-    // Product data management variables
-    let stringProduct = '<%- JSON.stringify(products) %>';
-    let allProducts = JSON.parse(stringProduct);
+    let allProducts = <%- JSON.stringify(products) %>
+    // let allProducts = JSON.parse(stringProduct);
+    console.log(allProducts)
     let currentProducts = [...allProducts];
-    let specifications =' <%- JSON.stringify(products.specifications) %>';
+    let specifications =' <%= JSON.stringify(products.specifications) %>';
     
-    // State management variables
     let isLoading = false;
     let currentSort = '';
     let pageSize = 5;
@@ -749,6 +746,7 @@ function viewProductDetails(productId) {
 
     // Confirm delete action with AJAX update
     async function confirmDeleteAction() {
+
       if (!pendingAction || pendingAction.type !== 'delete') return;
 
       const { productId } = pendingAction;
@@ -781,6 +779,9 @@ function viewProductDetails(productId) {
         showToast('Error deleting product. Please try again.', 'error');
       }
     }
+  
+
+
   </script>
 </body>
 </html>

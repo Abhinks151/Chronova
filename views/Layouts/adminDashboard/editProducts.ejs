@@ -1,0 +1,468 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Edit Product - Admin Panel</title>
+
+    <!-- External CDNs -->
+    <link
+        href="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.5.12/cropper.min.css"
+        rel="stylesheet"
+    />
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/axios/1.4.0/axios.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.5.12/cropper.min.js"></script>
+    <link rel="stylesheet" href="/styles/dashboard.css">
+    <link rel="stylesheet" href="/styles/admin-add-products.css">
+</head>
+<body>
+    <%- include('../../partials/sidebar') %>
+    <div class="main-content">
+        <div class="page-header">
+            <h1>Edit Product</h1>
+            <p>Update product information and specifications</p>
+        </div>
+
+        <div id="alertContainer"></div>
+
+        <form id="productForm" class="form-container">
+            <!-- Basic Information -->
+            <div class="form-section">
+                <h2 class="section-title">Basic Information</h2>
+                <div class="form-grid">
+                    <div class="form-group">
+                        <label for="productName">
+                            Product Name
+                            <span class="required">*</span>
+                        </label>
+                        <input
+                            type="text"
+                            id="productName"
+                            name="productName"
+                            value="<%= product.productName || '' %>"
+                            required
+                        />
+                    </div>
+
+                    <div class="form-group">
+                        <label for="brand">
+                            Brand <span class="required">*</span>
+                        </label>
+                        <select id="brand" name="brand" required>
+                            <option value="">Select Brand</option>
+                            <% brands.forEach(brand => { %>
+                                <option value="<%= brand._id %>" 
+                                    <%= product.brand && product.brand.toString() === brand._id.toString() ? 'selected' : '' %>>
+                                    <%= brand.name %>
+                                </option>
+                            <% }); %>
+                        </select>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="productType">
+                            Product Type
+                            <span class="required">*</span>
+                        </label>
+                        <select id="productType" name="productType" required>
+                            <option value="">Select Product Type</option>
+                            <% types.forEach(type => { %>
+                                <option value="<%= type._id %>" 
+                                    <%= product.productType && product.productType.toString() === type._id.toString() ? 'selected' : '' %>>
+                                    <%= type.name %>
+                                </option>
+                            <% }); %>
+                        </select>
+                    </div>
+
+                    <div class="form-group">
+                        <label>Categories <span class="required">*</span></label>
+                        <div class="checkbox-group" id="categoryCheckboxes">
+                            <% categories.forEach(category => { %>
+                                <div class="checkbox-item">
+                                    <input
+                                        type="checkbox"
+                                        id="cat-<%= category._id %>"
+                                        name="category"
+                                        value="<%= category._id %>"
+                                        <%= product.category && product.category.includes(category._id.toString()) ? 'checked' : '' %>
+                                    />
+                                    <label for="cat-<%= category._id %>"><%= category.name %></label>
+                                </div>
+                            <% }); %>
+                        </div>
+                    </div>
+
+                    <div class="form-group full-width">
+                        <label for="description">
+                            Description
+                            <span class="required">*</span>
+                        </label>
+                        <textarea
+                            id="description"
+                            name="description"
+                            placeholder="Enter detailed product description..."
+                            required
+                        ><%= product.description || '' %></textarea>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Watch Specifications -->
+            <div class="form-section">
+                <h2 class="section-title">Watch Specifications</h2>
+                <div class="form-grid">
+                    <div class="form-group">
+                        <label for="strapType">
+                            Strap Type
+                            <span class="required">*</span>
+                        </label>
+                        <select id="strapType" name="strapType" required>
+                            <option value="">Select Strap Type</option>
+                            <option value="Leather" <%= product.strapType === 'Leather' ? 'selected' : '' %>>Leather</option>
+                            <option value="Metal" <%= product.strapType === 'Metal' ? 'selected' : '' %>>Metal</option>
+                            <option value="Rubber" <%= product.strapType === 'Rubber' ? 'selected' : '' %>>Rubber</option>
+                            <option value="Fabric" <%= product.strapType === 'Fabric' ? 'selected' : '' %>>Fabric</option>
+                            <option value="Silicone" <%= product.strapType === 'Silicone' ? 'selected' : '' %>>Silicone</option>
+                            <option value="Ceramic" <%= product.strapType === 'Ceramic' ? 'selected' : '' %>>Ceramic</option>
+                            <option value="NATO" <%= product.strapType === 'NATO' ? 'selected' : '' %>>NATO</option>
+                        </select>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="slypeType">
+                            Style Type
+                            <span class="required">*</span>
+                        </label>
+                        <select id="slypeType" name="slypeType" required>
+                            <option value="">Select Style Type</option>
+                            <option value="Classic" <%= product.slypeType === 'Classic' ? 'selected' : '' %>>Classic</option>
+                            <option value="Modern" <%= product.slypeType === 'Modern' ? 'selected' : '' %>>Modern</option>
+                            <option value="Vintage" <%= product.slypeType === 'Vintage' ? 'selected' : '' %>>Vintage</option>
+                            <option value="Contemporary" <%= product.slypeType === 'Contemporary' ? 'selected' : '' %>>Contemporary</option>
+                            <option value="Traditional" <%= product.slypeType === 'Traditional' ? 'selected' : '' %>>Traditional</option>
+                        </select>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="color">
+                            Color <span class="required">*</span>
+                        </label>
+                        <input
+                            type="text"
+                            id="color"
+                            name="color"
+                            placeholder="e.g., Black, Silver, Gold"
+                            value="<%= product.color || '' %>"
+                            required
+                        />
+                    </div>
+
+                    <div class="form-group">
+                        <label for="dialSize">
+                            Dial Size (mm)
+                            <span class="required">*</span>
+                        </label>
+                        <input
+                            type="number"
+                            id="dialSize"
+                            name="dialSize"
+                            placeholder="e.g., 40"
+                            min="20"
+                            max="60"
+                            value="<%= product.dialSize || '' %>"
+                            required
+                        />
+                    </div>
+
+                    <div class="form-group">
+                        <label for="dialShape">
+                            Dial Shape
+                            <span class="required">*</span>
+                        </label>
+                        <select id="dialShape" name="dialShape" required>
+                            <option value="">Select Dial Shape</option>
+                            <option value="Round" <%= product.dialShape === 'Round' ? 'selected' : '' %>>Round</option>
+                            <option value="Square" <%= product.dialShape === 'Square' ? 'selected' : '' %>>Square</option>
+                            <option value="Rectangle" <%= product.dialShape === 'Rectangle' ? 'selected' : '' %>>Rectangle</option>
+                            <option value="Oval" <%= product.dialShape === 'Oval' ? 'selected' : '' %>>Oval</option>
+                            <option value="Tonneau" <%= product.dialShape === 'Tonneau' ? 'selected' : '' %>>Tonneau</option>
+                        </select>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="movement">
+                            Movement Type
+                            <span class="required">*</span>
+                        </label>
+                        <select id="movement" name="movement" required>
+                            <option value="">Select Movement</option>
+                            <option value="Quartz" <%= product.movement === 'Quartz' ? 'selected' : '' %>>Quartz</option>
+                            <option value="Automatic" <%= product.movement === 'Automatic' ? 'selected' : '' %>>Automatic</option>
+                            <option value="Manual" <%= product.movement === 'Manual' ? 'selected' : '' %>>Manual</option>
+                            <option value="Digital" <%= product.movement === 'Digital' ? 'selected' : '' %>>Digital</option>
+                            <option value="Solar" <%= product.movement === 'Solar' ? 'selected' : '' %>>Solar</option>
+                        </select>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="waterResistance">
+                            Water Resistance
+                            <span class="required">*</span>
+                        </label>
+                        <select id="waterResistance" name="waterResistance" required>
+                            <option value="">Select Water Resistance</option>
+                            <option value="30M" <%= product.waterResistance === '30M' ? 'selected' : '' %>>30M (3 ATM)</option>
+                            <option value="50M" <%= product.waterResistance === '50M' ? 'selected' : '' %>>50M (5 ATM)</option>
+                            <option value="100M" <%= product.waterResistance === '100M' ? 'selected' : '' %>>100M (10 ATM)</option>
+                            <option value="200M" <%= product.waterResistance === '200M' ? 'selected' : '' %>>200M (20 ATM)</option>
+                            <option value="300M" <%= product.waterResistance === '300M' ? 'selected' : '' %>>300M (30 ATM)</option>
+                            <option value="500M" <%= product.waterResistance === '500M' ? 'selected' : '' %>>500M (50 ATM)</option>
+                        </select>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="warranty">
+                            Warranty Period
+                            <span class="required">*</span>
+                        </label>
+                        <select id="warranty" name="warranty" required>
+                            <option value="">Select Warranty</option>
+                            <option value="6 months" <%= product.warranty === '6 months' ? 'selected' : '' %>>6 Months</option>
+                            <option value="1 year" <%= product.warranty === '1 year' ? 'selected' : '' %>>1 Year</option>
+                            <option value="2 years" <%= product.warranty === '2 years' ? 'selected' : '' %>>2 Years</option>
+                            <option value="3 years" <%= product.warranty === '3 years' ? 'selected' : '' %>>3 Years</option>
+                            <option value="5 years" <%= product.warranty === '5 years' ? 'selected' : '' %>>5 Years</option>
+                            <option value="Lifetime" <%= product.warranty === 'Lifetime' ? 'selected' : '' %>>Lifetime</option>
+                        </select>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="weight">
+                            Weight (grams)
+                            <span class="required">*</span>
+                        </label>
+                        <input
+                            type="number"
+                            id="weight"
+                            name="weight"
+                            placeholder="e.g., 150"
+                            min="10"
+                            max="1000"
+                            value="<%= product.weight || '' %>"
+                            required
+                        />
+                    </div>
+                </div>
+            </div>
+
+            <!-- Pricing & Inventory -->
+            <div class="form-section">
+                <h2 class="section-title">Pricing & Inventory</h2>
+                <div class="form-grid">
+                    <div class="form-group">
+                        <label for="price">
+                            Regular Price
+                            <span class="required">*</span>
+                        </label>
+                        <input
+                            type="number"
+                            id="price"
+                            name="price"
+                            step="0.01"
+                            min="0"
+                            value="<%= product.price || '' %>"
+                            required
+                            placeholder="0.00"
+                        />
+                    </div>
+
+                    <div class="form-group">
+                        <label for="salePrice">
+                            Sale Price
+                            <span class="required">*</span>
+                        </label>
+                        <input
+                            type="number"
+                            id="salePrice"
+                            name="salePrice"
+                            step="0.01"
+                            min="0"
+                            value="<%= product.salePrice || '' %>"
+                            required
+                            placeholder="0.00"
+                        />
+                    </div>
+
+                    <div class="form-group">
+                        <label for="stockQuantity">
+                            Stock Quantity
+                            <span class="required">*</span>
+                        </label>
+                        <input
+                            type="number"
+                            id="stockQuantity"
+                            name="stockQuantity"
+                            min="0"
+                            value="<%= product.stockQuantity || '' %>"
+                            required
+                            placeholder="0"
+                        />
+                    </div>
+
+                    <div class="form-group">
+                        <label for="sku">
+                            SKU Code <span class="required">*</span>
+                        </label>
+                        <input
+                            type="text"
+                            id="sku"
+                            name="sku"
+                            placeholder="e.g., WTH-001"
+                            value="<%= product.sku || '' %>"
+                            required
+                        />
+                    </div>
+                </div>
+                <div id="priceInfo" class="price-info" style="display: none;"></div>
+            </div>
+
+            <!-- Product Images -->
+            <div class="form-section">
+                <h2 class="section-title">
+                    Product Images
+                    <span style="color: #666; font-size: 14px;">
+                        (Leave empty to keep existing images, upload new ones to replace all)
+                    </span>
+                </h2>
+                
+                <!-- Current Images Display -->
+                <div class="current-images" id="currentImages">
+                    <h4>Current Images:</h4>
+                    <div class="current-images-grid">
+                        <% if (product.images && product.images.length > 0) { %>
+                            <% product.images.forEach((image, index) => { %>
+                                <div class="current-image-item">
+                                    <img src="<%= image.url %>" alt="Product Image <%= index + 1 %>" />
+                                    <span>Image <%= index + 1 %></span>
+                                </div>
+                            <% }); %>
+                        <% } else { %>
+                            <p>No current images</p>
+                        <% } %>
+                    </div>
+                </div>
+
+                <!-- New Images Upload -->
+                <div class="image-upload-container">
+                    <div class="image-upload-box" data-index="0">
+                        <div class="upload-icon">📷</div>
+                        <div class="upload-text">
+                            <strong>New Image 1</strong><br />
+                            Click to upload
+                        </div>
+                        <input
+                            type="file"
+                            accept="image/*"
+                            style="display: none;"
+                            data-index="0"
+                        />
+                    </div>
+
+                    <div class="image-upload-box" data-index="1">
+                        <div class="upload-icon">📷</div>
+                        <div class="upload-text">
+                            <strong>New Image 2</strong><br />
+                            Click to upload
+                        </div>
+                        <input
+                            type="file"
+                            accept="image/*"
+                            style="display: none;"
+                            data-index="1"
+                        />
+                    </div>
+
+                    <div class="image-upload-box" data-index="2">
+                        <div class="upload-icon">📷</div>
+                        <div class="upload-text">
+                            <strong>New Image 3</strong><br />
+                            Click to upload
+                        </div>
+                        <input
+                            type="file"
+                            accept="image/*"
+                            style="display: none;"
+                            data-index="2"
+                        />
+                    </div>
+
+                    <div class="image-upload-box" data-index="3">
+                        <div class="upload-icon">📷</div>
+                        <div class="upload-text">
+                            <strong>New Image 4</strong><br />
+                            Click to upload
+                        </div>
+                        <input
+                            type="file"
+                            accept="image/*"
+                            style="display: none;"
+                            data-index="3"
+                        />
+                    </div>
+                </div>
+            </div>
+
+            <div class="form-actions">
+                <button
+                    type="button"
+                    class="btn btn-secondary"
+                    onclick="window.history.back()"
+                >
+                    Cancel
+                </button>
+                <button type="submit" class="btn btn-primary">
+                    Update Product
+                </button>
+            </div>
+        </form>
+    </div>
+
+    <!-- Image Cropper Modal -->
+    <div id="cropperModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>Crop Image</h3>
+                <span class="close">&times;</span>
+            </div>
+            <div class="crop-container">
+                <img id="cropperImage" style="max-width: 100%;" />
+            </div>
+            <div class="crop-controls">
+                <button
+                    type="button"
+                    class="btn btn-secondary"
+                    id="cancelCrop"
+                >
+                    Cancel
+                </button>
+                <button
+                    type="button"
+                    class="btn btn-success"
+                    id="applyCrop"
+                >
+                    Apply Crop
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Pass product ID to JavaScript -->
+    <script>
+        window.PRODUCT_ID = '<%= product._id %>';
+    </script>
+    
+    <!-- External JavaScript -->
+    <script src="/scripts/edit-products.js"></script>
+</body>
+</html>

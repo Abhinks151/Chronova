@@ -1,0 +1,26 @@
+User:
+  ✔ resend verification code bug fixes @done (6/12/2025, 12:39:02 PM)
+  ✔ forget passowrd fixes @done (6/12/2025, 12:38:59 PM)
+  ✔ reset password fix @done (6/12/2025, 12:39:18 PM)
+  ☐ reset password route and flow complete fix
+  ☐ structure and conpactablity
+  ☐ better messages for emails
+  ☐ welcome message for verified users
+
+
+
+Admin:
+  user management:
+  
+  Product management:
+    ☐ cloudinary image delete
+    ☐ testing
+    ☐ edit page population with old data bug fixxes
+  
+  Category management:
+  
+
+GLOBAL:
+  ☐ ckeck status code
+  ☐ check folder structure
+  ☐ Error management

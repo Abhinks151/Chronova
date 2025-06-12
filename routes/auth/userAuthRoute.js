@@ -28,7 +28,7 @@ userAuthRouter.get('/verify-otp', getVerifyUserOTP);
 userAuthRouter.post('/verify-otp', postVerifyUserOTP);
 
 userAuthRouter.get('/resend-otp', getVerifyUserOTP);
-userAuthRouter.post('/resend-otp', resendVerificationCode);
+userAuthRouter.post('/resend-otp', validate(['email']), resendVerificationCode);
 
 
 
