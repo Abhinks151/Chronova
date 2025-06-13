@@ -10,6 +10,7 @@ import adminUserManagementRouter from "./adminDashboardRoutes/adminUserManagemen
 
 
 import adminProductManagement from "./adminDashboardRoutes/adminProductManagement.js"
+import googleAuthRouter from "./auth/googleRouter.js";
 
 
 const indexRoutes = express.Router();
@@ -18,6 +19,7 @@ const indexRoutes = express.Router();
 indexRoutes.use("/user", userAuthRoutes);
 indexRoutes.use('/admin', adminAuthRoutes)
 
+indexRoutes.use('/',googleAuthRouter)
 
 indexRoutes.use('/admin', adminUserManagementRouter)
 indexRoutes.use('/admin', adminProductManagement);

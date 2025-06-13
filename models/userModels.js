@@ -9,14 +9,30 @@ const userSchema = new mongoose.Schema({
   },
   password: {
     type: String,
-    required: true
+    required: function () {
+      return !this.isGoogleUser;
+    }
   },
   firstname: {
-    type: String,
-    required: true
+    type: String
   },
   lastname: {
     type: String
+  },
+  name: {
+    type: String
+  },
+  avatar: {
+    type: String
+  },
+  googleId: {
+    type: String,
+    unique: true,
+    sparse: true
+  },
+  isGoogleUser: {
+    type: Boolean,
+    default: false
   },
   lastLogin: {
     type: Date,
@@ -37,6 +53,7 @@ const userSchema = new mongoose.Schema({
 }, {
   timestamps: true,
 });
+
 
 
 

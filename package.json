@@ -29,6 +29,8 @@
     "multer": "^2.0.1",
     "multer-storage-cloudinary": "^4.0.0",
     "nodemailer": "^7.0.3",
-    "npm": "^11.4.1"
+    "npm": "^11.4.1",
+    "passport": "^0.7.0",
+    "passport-google-oauth20": "^2.0.0"
   }
 }

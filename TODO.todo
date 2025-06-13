@@ -7,6 +7,11 @@ User:
   ☐ better messages for emails
   ☐ welcome message for verified users
 
+  0auth:
+    ✔ set up passport js google auth strategy @done (6/13/2025, 9:37:49 AM)
+    ✔ add google auth in login page @done (6/13/2025, 9:37:29 AM)
+    ☐ check accesstoken and refresh toekn inside passport.js
+    ☐ add 0auth to user register page
 
 
 Admin:
@@ -24,3 +29,11 @@ GLOBAL:
   ☐ ckeck status code
   ☐ check folder structure
   ☐ Error management
+  ☐ maintain consistency for category brand and type in all places
+  ☐ check jwt expriry times
+  ☐ check otp and other verification times
+  ☐ clear unnesseasry clg
+
+  Extra:
+    ☐ add readme file
+    
