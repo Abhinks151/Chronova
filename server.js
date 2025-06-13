@@ -5,6 +5,7 @@ import path from "path";
 import { fileURLToPath } from "url";
 import './config/passport.js';
 import passport from "passport";
+import nochace from "nocache";
 // import csurf from "csurf";
 
 import connection from "./config/dbConnection.js";
@@ -26,6 +27,7 @@ app.set("view engine", "ejs");
 app.set("views", path.join(__dirname, "views"));
 
 app.use(passport.initialize());
+app.use(nochace());
 app.use(cookieParser());
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));

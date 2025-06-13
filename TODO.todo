@@ -23,6 +23,13 @@ Admin:
     ☐ edit page population with old data bug fixxes
   
   Category management:
+  ☐ create the schema for category
+  ☐ delete all existing product
+  ☐ category managemnet page with block add delete edit button
+  ☐ pagination from backend for category management
+  ☐ search input box with search and clear button
+  ☐ add category page
+  ☐ add the changes to product add and edit
   
 
 GLOBAL:
@@ -33,6 +40,7 @@ GLOBAL:
   ☐ check jwt expriry times
   ☐ check otp and other verification times
   ☐ clear unnesseasry clg
+  ☐ convert type and brand into utility constants
 
   Extra:
     ☐ add readme file

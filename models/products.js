@@ -30,11 +30,12 @@ const productSchema = new mongoose.Schema({
     type: Boolean,
     default: false
   },
-  category: {
-    type: [String],
-    required: true,
-    validate: arr => arr.length > 0
-  },
+  category: [
+    {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: 'Category'
+    }
+  ],
   productType: {
     type: String,
     required: true,

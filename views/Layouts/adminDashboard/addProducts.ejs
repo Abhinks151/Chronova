@@ -12,8 +12,8 @@
 		/>
 		<script src="https://cdnjs.cloudflare.com/ajax/libs/axios/1.4.0/axios.min.js"></script>
 		<script src="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.5.12/cropper.min.js"></script>
-		<link rel="stylesheet" href="/styles/dashboard.css">
-		<link rel="stylesheet" href="/styles/admin-add-products.css">
+		<link rel="stylesheet" href="/styles/dashboard.css" />
+		<link rel="stylesheet" href="/styles/admin-add-products.css" />
 	</head>
 	<body>
 		<%- include('../../partials/sidebar') %>
@@ -87,121 +87,23 @@
 						</div>
 
 						<div class="form-group">
-							<label
-								>Categories
-								<span class="required">*</span></label
-							>
+							<label>
+								Categories <span class="required">*</span>
+							</label>
 							<div class="checkbox-group" id="categoryCheckboxes">
+								<% categories.forEach(category => { %>
 								<div class="checkbox-item">
 									<input
 										type="checkbox"
-										id="cat-men"
+										id="cat-<%= category._id %>"
 										name="category"
-										value="Men"
+										value="<%= category._id %>"
 									/>
-									<label for="cat-men">Men</label>
-								</div>
-								<div class="checkbox-item">
-									<input
-										type="checkbox"
-										id="cat-women"
-										name="category"
-										value="Women"
-									/>
-									<label for="cat-women">Women</label>
-								</div>
-								<div class="checkbox-item">
-									<input
-										type="checkbox"
-										id="cat-kids"
-										name="category"
-										value="Kids"
-									/>
-									<label for="cat-kids">Kids</label>
-								</div>
-								<div class="checkbox-item">
-									<input
-										type="checkbox"
-										id="cat-unisex"
-										name="category"
-										value="Unisex"
-									/>
-									<label for="cat-unisex">Unisex</label>
-								</div>
-								<div class="checkbox-item">
-									<input
-										type="checkbox"
-										id="cat-luxury"
-										name="category"
-										value="Luxury"
-									/>
-									<label for="cat-luxury">Luxury</label>
-								</div>
-								<div class="checkbox-item">
-									<input
-										type="checkbox"
-										id="cat-formal"
-										name="category"
-										value="Formal"
-									/>
-									<label for="cat-formal">Formal</label>
-								</div>
-								<div class="checkbox-item">
-									<input
-										type="checkbox"
-										id="cat-casual"
-										name="category"
-										value="Casual"
-									/>
-									<label for="cat-casual">Casual</label>
-								</div>
-								<div class="checkbox-item">
-									<input
-										type="checkbox"
-										id="cat-sports"
-										name="category"
-										value="Sports"
-									/>
-									<label for="cat-sports">Sports</label>
-								</div>
-								<div class="checkbox-item">
-									<input
-										type="checkbox"
-										id="cat-minimalist"
-										name="category"
-										value="Minimalist"
-									/>
-									<label for="cat-minimalist"
-										>Minimalist</label
+									<label for="cat-<%= category._id %>"
+										><%= category.categoryName %></label
 									>
 								</div>
-								<div class="checkbox-item">
-									<input
-										type="checkbox"
-										id="cat-fashion"
-										name="category"
-										value="Fashion"
-									/>
-									<label for="cat-fashion">Fashion</label>
-								</div>
-								<div class="checkbox-item">
-									<input
-										type="checkbox"
-										id="cat-retro"
-										name="category"
-										value="Retro"
-									/>
-									<label for="cat-retro">Retro</label>
-								</div>
-								<div class="checkbox-item">
-									<input
-										type="checkbox"
-										id="cat-outdoor"
-										name="category"
-										value="Outdoor"
-									/>
-									<label for="cat-outdoor">Outdoor</label>
-								</div>
+								<% }); %>
 							</div>
 						</div>
 

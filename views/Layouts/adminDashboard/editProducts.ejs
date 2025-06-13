@@ -87,7 +87,7 @@
                                         value="<%= category._id %>"
                                         <%= product.category && product.category.includes(category._id.toString()) ? 'checked' : '' %>
                                     />
-                                    <label for="cat-<%= category._id %>"><%= category.name %></label>
+                                    <label for="cat-<%= category._id %>"><%= category.categoryName %></label>
                                 </div>
                             <% }); %>
                         </div>

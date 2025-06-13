@@ -5,8 +5,41 @@ import { blockProductService } from '../../servises/productManagement/blockProdu
 import { deleteProductService } from '../../servises/productManagement/daleteProductServise.js';
 import { paginationService } from '../../servises/productManagement/paginationService.js';
 import { Products } from '../../models/products.js';
+import { Category } from '../../models/category.js';
 
+const categories = [
+  { _id: 'men', name: 'Men' },
+  { _id: 'women', name: 'Women' },
+  { _id: 'kids', name: 'Kids' },
+  { _id: 'unisex', name: 'Unisex' },
+  { _id: 'luxury', name: 'Luxury' },
+  { _id: 'formal', name: 'Formal' },
+  { _id: 'casual', name: 'Casual' },
+  { _id: 'sports', name: 'Sports' },
+  { _id: 'minimalist', name: 'Minimalist' },
+  { _id: 'fashion', name: 'Fashion' },
+  { _id: 'retro', name: 'Retro' },
+  { _id: 'outdoor', name: 'Outdoor' },
+  { _id: 'chronograph', name: 'Chronograph' }
+];
 
+const types = [
+  { _id: 'mechanical', name: 'Mechanical' },
+  { _id: 'automatic', name: 'Automatic' },
+  { _id: 'quartz', name: 'Quartz' },
+  { _id: 'smartwatch', name: 'Smartwatch' }
+];
+
+const brands = [
+  { _id: 'fossil', name: 'Fossil' },
+  { _id: 'casio', name: 'Casio' },
+  { _id: 'titan', name: 'Titan' },
+  { _id: 'timex', name: 'Timex' },
+  { _id: 'rolex', name: 'Rolex' },
+  { _id: 'seiko', name: 'Seiko' },
+  { _id: 'tissot', name: 'Tissot' },
+  { _id: 'mk', name: 'Michael Kors' }
+];
 
 
 
@@ -55,7 +88,11 @@ export const getFilteredProducts = async (req, res) => {
 };
 
 export const getAddProducts = async (req, res) => {
-  res.status(httpStatusCode.OK.code).render('Layouts/adminDashboard/addProducts');
+  const categories = await Category.find({ isDeleted: false, isBlocked: false }).sort({ createdAt: -1 }).lean();
+  // console.log(categories)
+  res.status(httpStatusCode.OK.code).render('Layouts/adminDashboard/addProducts', {
+    categories
+  });
 }
 
 export const postAddProducts = async (req, res) => {
@@ -104,7 +141,7 @@ export const postAddProducts = async (req, res) => {
 // export const getEditProducts = async (req, res) => {
 //     try {
 //         const { id } = req.params;
-        
+
 //         const product = await Products.findById(id);
 //         if (!product) {
 //             return res.status(404).json({ 
@@ -206,143 +243,111 @@ export const postAddProducts = async (req, res) => {
 
 
 
-const types = [
-  { _id: 'mechanical', name: 'Mechanical' },
-  { _id: 'automatic', name: 'Automatic' },
-  { _id: 'quartz', name: 'Quartz' },
-  { _id: 'smartwatch', name: 'Smartwatch' }
-];
 
-const brands = [
-  { _id: 'fossil', name: 'Fossil' },
-  { _id: 'casio', name: 'Casio' },
-  { _id: 'titan', name: 'Titan' },
-  { _id: 'timex', name: 'Timex' },
-  { _id: 'rolex', name: 'Rolex' },
-  { _id: 'seiko', name: 'Seiko' },
-  { _id: 'tissot', name: 'Tissot' },
-  { _id: 'mk', name: 'Michael Kors' }
-];
-
-const categories = [
-  { _id: 'men', name: 'Men' },
-  { _id: 'women', name: 'Women' },
-  { _id: 'kids', name: 'Kids' },
-  { _id: 'unisex', name: 'Unisex' },
-  { _id: 'luxury', name: 'Luxury' },
-  { _id: 'formal', name: 'Formal' },
-  { _id: 'casual', name: 'Casual' },
-  { _id: 'sports', name: 'Sports' },
-  { _id: 'minimalist', name: 'Minimalist' },
-  { _id: 'fashion', name: 'Fashion' },
-  { _id: 'retro', name: 'Retro' },
-  { _id: 'outdoor', name: 'Outdoor' },
-  { _id: 'chronograph', name: 'Chronograph' }
-];
 
 
 // @desc Render edit product page
 export const getEditProducts = async (req, res) => {
-    try {
-        const { id } = req.params;
-
-        const product = await Products.findById(id);
-        if (!product) {
-            return res.status(404).render('error', { message: 'Product not found' });
-        }
-
-        res.render('Layouts/adminDashboard/editProducts', {
-            title: 'Edit Product',
-            product,
-            categories,
-            brands,
-            types
-        });
-
-    } catch (error) {
-        console.error('Error fetching product for edit:', error);
-        res.status(500).render('error', { message: 'Server error' });
+  try {
+    const { id } = req.params;
+    const categories = await Category.find({ isDeleted: false, isBlocked: false }).sort({ createdAt: -1 }).lean();
+    const product = await Products.findById(id);
+    if (!product) {
+      return res.status(404).render('error', { message: 'Product not found' });
     }
+
+    res.render('Layouts/adminDashboard/editProducts', {
+      title: 'Edit Product',
+      product,
+      categories,
+      brands,
+      types
+    });
+
+  } catch (error) {
+    console.error('Error fetching product for edit:', error);
+    res.status(500).render('error', { message: 'Server error' });
+  }
 };
 
 // @desc Handle product update
 export const patchEditProducts = async (req, res) => {
-    try {
-        const { id } = req.params;
-        const { body, files } = req;
+  try {
+    const { id } = req.params;
+    const { body, files } = req;
 
-        const existingProduct = await Products.findById(id);
-        if (!existingProduct) {
-            return res.status(404).json({
-                success: false,
-                message: 'Product not found'
-            });
-        }
-
-        if (body.sku && body.sku !== existingProduct.sku) {
-            const existingSKU = await Products.findOne({
-                sku: body.sku,
-                _id: { $ne: id }
-            });
-
-            if (existingSKU) {
-                return res.status(400).json({
-                    success: false,
-                    message: 'SKU already exists. Please use a different SKU.'
-                });
-            }
-        }
-
-        let images = existingProduct.images;
-        if (files && files.length > 0) {
-            images = files.map(file => ({
-                url: file.path,
-                public_id: file.filename
-            }));
-        }
-
-        const productData = {
-            ...body,
-            images,
-            updatedAt: new Date()
-        };
-
-        const updatedProduct = await Products.findByIdAndUpdate(
-            id,
-            productData,
-            { new: true, runValidators: true }
-        );
-
-        res.json({
-            success: true,
-            message: 'Product updated successfully!',
-            product: updatedProduct,
-            redirect: '/admin/products'
-        });
-
-    } catch (error) {
-        console.error('Error updating product:', error);
-
-        if (error.name === 'ValidationError') {
-            const errors = Object.values(error.errors).map(err => err.message);
-            return res.status(400).json({
-                success: false,
-                message: errors.join(', ')
-            });
-        }
-
-        if (error.code === 11000) {
-            return res.status(400).json({
-                success: false,
-                message: 'SKU already exists. Please use a different SKU.'
-            });
-        }
-
-        res.status(500).json({
-            success: false,
-            message: 'Error updating product. Please try again.'
-        });
+    const existingProduct = await Products.findById(id);
+    if (!existingProduct) {
+      return res.status(404).json({
+        success: false,
+        message: 'Product not found'
+      });
     }
+
+    if (body.sku && body.sku !== existingProduct.sku) {
+      const existingSKU = await Products.findOne({
+        sku: body.sku,
+        _id: { $ne: id }
+      });
+
+      if (existingSKU) {
+        return res.status(400).json({
+          success: false,
+          message: 'SKU already exists. Please use a different SKU.'
+        });
+      }
+    }
+
+    let images = existingProduct.images;
+    if (files && files.length > 0) {
+      images = files.map(file => ({
+        url: file.path,
+        public_id: file.filename
+      }));
+    }
+
+    const productData = {
+      ...body,
+      images,
+      updatedAt: new Date()
+    };
+
+    const updatedProduct = await Products.findByIdAndUpdate(
+      id,
+      productData,
+      { new: true, runValidators: true }
+    );
+
+    res.json({
+      success: true,
+      message: 'Product updated successfully!',
+      product: updatedProduct,
+      redirect: '/admin/products'
+    });
+
+  } catch (error) {
+    console.error('Error updating product:', error);
+
+    if (error.name === 'ValidationError') {
+      const errors = Object.values(error.errors).map(err => err.message);
+      return res.status(400).json({
+        success: false,
+        message: errors.join(', ')
+      });
+    }
+
+    if (error.code === 11000) {
+      return res.status(400).json({
+        success: false,
+        message: 'SKU already exists. Please use a different SKU.'
+      });
+    }
+
+    res.status(500).json({
+      success: false,
+      message: 'Error updating product. Please try again.'
+    });
+  }
 };
 
 
@@ -382,14 +387,14 @@ export const blockProduct = async (req, res) => {
 
 export const deleteProduct = async (req, res) => {
   try {
-    const {productId} = req.params;
+    const { productId } = req.params;
 
     await deleteProductService(productId);
 
     res.status(httpStatusCode.OK.code).json({
       success: true,
       message: 'Product deleted successfully',
-      
+
     })
 
   } catch (error) {
