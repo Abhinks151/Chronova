@@ -27,12 +27,12 @@ function initializeData() {
     currentCategories = [...allCategories];
     totalCategories = allCategories.length;
   }
-  
+
   if (typeof products !== 'undefined') {
     allProducts = products || [];
     filteredProducts = [...allProducts];
   }
-  
+
   renderCategories();
   updatePagination();
   populateProductsList();
@@ -44,7 +44,7 @@ function setupEventListeners() {
   document.getElementById('searchInput').addEventListener('keyup', (e) => {
     if (e.key === 'Enter') handleSearch();
   });
-  
+
   // Filter change listeners
   document.getElementById('typeFilter').addEventListener('change', handleFilters);
   document.getElementById('statusFilter').addEventListener('change', handleFilters);
@@ -97,7 +97,7 @@ function showToast(message, type = 'success') {
   const toast = document.getElementById('toast');
   toast.textContent = message;
   toast.className = `toast toast-${type} show`;
-  
+
   setTimeout(() => {
     toast.classList.remove('show');
   }, 3000);
@@ -108,7 +108,7 @@ function validateCategoryName() {
   const nameInput = document.getElementById('categoryName');
   const errorDiv = document.getElementById('categoryNameError');
   const name = nameInput.value.trim();
-  
+
   if (!name) {
     showFieldError(errorDiv, 'Category name is required');
     return false;
@@ -127,7 +127,7 @@ function validateCategoryName() {
 function validateCategoryType() {
   const typeSelect = document.getElementById('categoryType');
   const errorDiv = document.getElementById('categoryTypeError');
-  
+
   if (!typeSelect.value) {
     showFieldError(errorDiv, 'Please select a category type');
     return false;
@@ -150,7 +150,7 @@ function hideFieldError(errorDiv) {
 function validateForm() {
   const isNameValid = validateCategoryName();
   const isTypeValid = validateCategoryType();
-  
+
   return isNameValid && isTypeValid;
 }
 
@@ -202,7 +202,7 @@ async function fetchFilteredCategories(filters) {
     params.append('page', currentPage);
     params.append('limit', pageSize);
 
-    const response = await axios.get(`/admin/categories/filter?${params}`);
+    const response = await axios.get(`/admin/category/filter?${params}`);
     const data = response.data;
 
     if (data.success) {
@@ -240,9 +240,9 @@ function showError(message) {
 //   const tableEl = document.getElementById('categoriesTable');
 //   const noCategoriesEl = document.getElementById('noCategoriesMessage');
 //   const tbody = document.getElementById('categoriesTableBody');
-  
+
 //   loadingEl.style.display = 'none';
-  
+
 //   if (!currentCategories.length) {
 //     tableEl.style.display = 'none';
 //     noCategoriesEl.style.display = 'block';
@@ -299,6 +299,7 @@ function renderCategories() {
   const tbody = document.getElementById('categoriesTableBody');
 
   loadingEl.style.display = 'none';
+  tbody.innerHTML = '';
 
   if (!currentCategories.length) {
     tableEl.style.display = 'none';
@@ -314,39 +315,41 @@ function renderCategories() {
     const type = category.type || 'N/A';
     const productCount = category.productCount || 0;
     const status = category.isBlocked ? 'Blocked' : 'Active';
+    // console.log(category.isBlocked)
     const createdAt = category.createdAt ? formatDate(category.createdAt) : 'N/A';
+    // console.log('Received categories:', currentCategories);
 
     return `
-      <tr data-id="${category._id}">
-        <td class="category-cell">
-          <div class="category-info">
-            <div class="category-name">${name}</div>
-            <div class="category-desc">No description</div>
-          </div>
-        </td> 
-        <td>
-          <span class="type-badge type-${type.toLowerCase()}">${type}</span>
-        </td>
-        <td>
-          <span class="product-count">${productCount}</span>
-        </td>
-        <td>
-          <span class="status-badge ${category.isBlocked ? 'status-blocked' : 'status-active'}">
-            ${status}
-          </span>
-        </td>
-        <td>${createdAt}</td>
-        <td class="actions-cell">
-          <button class="action-btn btn-info" onclick="viewCategoryDetails('${category._id}')">View</button>
-          <button class="action-btn btn-warning" onclick="editCategory('${category._id}')">Edit</button>
-          <button class="action-btn ${category.isBlocked ? 'btn-success' : 'btn-danger'}" 
-                  onclick="showBlockModal('${category._id}', ${category.isBlocked})">
-            ${category.isBlocked ? 'Unblock' : 'Block'}
-          </button>
-          <button class="action-btn btn-danger" onclick="showDeleteModal('${category._id}')">Delete</button>
-        </td>
-      </tr>
-    `;
+        <tr data-id="${category._id}">
+          <td class="category-cell">
+            <div class="category-info">
+              <div class="category-name">${name}</div>
+              <div class="category-desc">No description</div>
+            </div>
+          </td> 
+          <td>
+            <span class="type-badge type-${type.toLowerCase()}">${type}</span>
+          </td>
+          <td>
+            <span class="product-count">${productCount}</span>
+          </td>
+          <td>
+            <span class="status-badge ${category.isBlocked ? 'status-blocked' : 'status-active'}">
+              ${status}
+            </span>
+          </td>
+          <td>${createdAt}</td>
+          <td class="actions-cell">
+            <button class="action-btn btn-info" onclick="viewCategoryDetails('${category._id}')">View</button>
+            <button class="action-btn btn-warning" onclick="editCategory('${category._id}')">Edit</button>
+            <button class="action-btn ${category.isBlocked ? 'btn-success' : 'btn-danger'}" 
+                    onclick="showBlockModal('${category._id}', ${category.isBlocked})">
+              ${category.isBlocked ? 'Unblock' : 'Block'}
+            </button>
+            <button class="action-btn btn-danger" onclick="showDeleteModal('${category._id}')">Delete</button>
+          </td>
+        </tr>
+      `;
   }).join('');
 }
 
@@ -358,7 +361,7 @@ function updatePagination() {
   const startItem = ((currentPage - 1) * pageSize) + 1;
   const endItem = Math.min(currentPage * pageSize, totalCategories);
 
-  document.getElementById('paginationInfo').textContent = 
+  document.getElementById('paginationInfo').textContent =
     `Showing ${startItem} - ${endItem} of ${totalCategories} categories`;
 
   document.getElementById('prevPageBtn').disabled = currentPage <= 1;
@@ -396,7 +399,7 @@ function resetCategoryForm() {
   document.getElementById('categoryModalTitle').textContent = 'Add New Category';
   document.getElementById('submitCategoryBtn').textContent = 'Add Category';
   updateSelectedProducts();
-  
+
   // Clear all error messages
   document.querySelectorAll('.error-message').forEach(error => {
     error.style.display = 'none';
@@ -417,27 +420,27 @@ function editCategory(categoryId) {
 
   isEditMode = true;
   currentCategoryId = categoryId;
-  
+
   document.getElementById('categoryModalTitle').textContent = 'Edit Category';
   document.getElementById('submitCategoryBtn').textContent = 'Update Category';
-  
+
   // Populate form fields
   document.getElementById('categoryName').value = category.name;
   document.getElementById('categoryType').value = category.type;
   document.getElementById('categoryDescription').value = category.description || '';
-  
+
   // Set selected products
   selectedProductIds = category.products ? category.products.map(p => p._id || p) : [];
-  
+
   populateProductsList();
   updateSelectedProducts();
-  
+
   document.getElementById('categoryModal').style.display = 'block';
 }
 
 function populateProductsList() {
   const productsList = document.getElementById('productsList');
-  
+
   productsList.innerHTML = filteredProducts.map(product => `
     <div class="product-item ${selectedProductIds.includes(product._id) ? 'selected' : ''}" 
          data-id="${product._id}" 
@@ -460,29 +463,29 @@ function populateProductsList() {
 
 function filterProducts() {
   const query = document.getElementById('productSearch').value.toLowerCase();
-  
+
   if (!query) {
     filteredProducts = [...allProducts];
   } else {
-    filteredProducts = allProducts.filter(product => 
+    filteredProducts = allProducts.filter(product =>
       product.productName.toLowerCase().includes(query) ||
       product.brand.toLowerCase().includes(query) ||
       product.sku.toLowerCase().includes(query)
     );
   }
-  
+
   populateProductsList();
 }
 
 function toggleProductSelection(productId) {
   const index = selectedProductIds.indexOf(productId);
-  
+
   if (index === -1) {
     selectedProductIds.push(productId);
   } else {
     selectedProductIds.splice(index, 1);
   }
-  
+
   populateProductsList();
   updateSelectedProducts();
 }
@@ -490,16 +493,16 @@ function toggleProductSelection(productId) {
 function updateSelectedProducts() {
   const selectedItems = document.getElementById('selectedItems');
   const selectedCount = document.getElementById('selectedCount');
-  
+
   selectedCount.textContent = selectedProductIds.length;
-  
+
   if (selectedProductIds.length === 0) {
     selectedItems.innerHTML = '<p class="no-selection">No products selected</p>';
     return;
   }
-  
+
   const selectedProducts = allProducts.filter(p => selectedProductIds.includes(p._id));
-  
+
   selectedItems.innerHTML = selectedProducts.map(product => `
     <div class="selected-item">
       <img src="${product.images && product.images[0] ? product.images[0].url : '/images/placeholder-watch.jpg'}" 
@@ -519,7 +522,7 @@ async function submitCategory() {
   }
 
   const formData = {
-    name: document.getElementById('categoryName').value.trim(),
+    categoryName: document.getElementById('categoryName').value.trim(),
     type: document.getElementById('categoryType').value,
     description: document.getElementById('categoryDescription').value.trim(),
     products: selectedProductIds
@@ -527,17 +530,17 @@ async function submitCategory() {
 
   try {
     let response;
-    
+
     if (isEditMode) {
-      response = await axios.put(`/admin/categories/edit/${currentCategoryId}`, formData);
+      response = await axios.put(`/admin/category/edit/${currentCategoryId}`, formData);
     } else {
-      response = await axios.post('/admin/categories/add', formData);
+      response = await axios.post('/admin/category/add', formData);
     }
 
     if (response.data.success) {
       closeModal('categoryModal');
       showToast(response.data.message || `Category ${isEditMode ? 'updated' : 'added'} successfully!`);
-      
+
       // Redirect to backend specified route
       if (response.data.redirect) {
         window.location.href = response.data.redirect;
@@ -696,18 +699,22 @@ async function confirmBlockAction() {
   if (!currentCategoryId || !pendingAction) return;
 
   try {
-    const response = await axios.put(`/admin/categories/${pendingAction}/${currentCategoryId}`);
+    const response = await axios.put(`/admin/category/${pendingAction}/${currentCategoryId}`);
 
     if (response.data.success) {
+      const updatedCategory = response.data.updatedCategory;
+
       closeModal('blockModal');
       showToast(response.data.message || `Category ${pendingAction}ed successfully!`);
-      
-      // Update local data
-      const categoryIndex = currentCategories.findIndex(c => c._id === currentCategoryId);
-      if (categoryIndex !== -1) {
-        currentCategories[categoryIndex].isBlocked = pendingAction === 'block';
-      }
-      
+
+      // Safely update category status with server-validated value
+      currentCategories = currentCategories.map(cat =>
+        cat._id === updatedCategory._id
+          ? { ...cat, isBlocked: updatedCategory.isBlocked }
+          : cat
+      );
+
+      // console.log(currentCategories);
       renderCategories();
     } else {
       showToast(response.data.message || `Failed to ${pendingAction} category`, 'error');
@@ -738,12 +745,12 @@ async function confirmDeleteAction() {
     if (response.data.success) {
       closeModal('deleteModal');
       showToast(response.data.message || 'Category deleted successfully!');
-      
+
       // Remove from local data
       currentCategories = currentCategories.filter(c => c._id !== currentCategoryId);
       allCategories = allCategories.filter(c => c._id !== currentCategoryId);
       totalCategories--;
-      
+
       renderCategories();
       updatePagination();
     } else {
