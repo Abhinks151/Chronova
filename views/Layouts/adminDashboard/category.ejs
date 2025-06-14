@@ -1,0 +1,223 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Category Management</title>
+  <link rel="stylesheet" href="/styles/dashboard.css">
+  <link rel="stylesheet" href="/styles/admin-categories.css">
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/axios/1.6.0/axios.min.js"></script>
+</head>
+<body>
+  <%- include('../../partials/sidebar') %>
+
+  <div class="container">
+    <!-- Page Header Section -->
+    <div class="page-header">
+      <h1 class="page-title">Category Management</h1>
+      <div class="header-actions">
+        <div class="search-container">
+          <input type="text" id="searchInput" class="search-input" placeholder="Search categories..." />
+        </div>
+        <button class="btn btn-primary" onclick="handleSearch()">Search</button>
+        <button class="btn btn-secondary" onclick="clearFilters()">Clear</button>
+        <button class="btn btn-success" onclick="openAddCategoryModal()">+ Add Category</button>
+      </div>
+    </div>
+
+    <!-- Filters Section -->
+    <div class="filters-section">
+      <span class="filter-label">Filter By:</span>
+      
+      <!-- Type Filter Dropdown -->
+      <div class="filter-group">
+        <label class="filter-label">Type:</label>
+        <select id="typeFilter" class="filter-select">
+          <option value="All">All Types</option>
+          <% types.forEach(type => { %>
+            <option value="<%= type %>"><%= type %></option>
+          <% }) %>
+        </select>
+      </div>
+
+      <!-- Status Filter Dropdown -->
+      <div class="filter-group">
+        <label class="filter-label">Status:</label>
+        <select id="statusFilter" class="filter-select">
+          <option value="All">All Status</option>
+          <option value="Active">Active</option>
+          <option value="Blocked">Blocked</option>
+        </select>
+      </div>
+
+      <!-- Sort Buttons -->
+      <div class="sort-group">
+        <button class="sort-btn" data-sort="name-asc">A-Z</button>
+        <button class="sort-btn" data-sort="name-desc">Z-A</button>
+        <button class="sort-btn" data-sort="products-desc">Most Products</button>
+        <button class="sort-btn" data-sort="date-desc">Newest</button>
+      </div>
+    </div>
+
+    <!-- Categories Table Container -->
+    <div class="table-container">
+      <!-- Loading Indicator -->
+      <div class="loading" id="loadingIndicator">
+        <div class="spinner"></div>
+        <div>Loading categories...</div>
+      </div>
+      
+      <!-- Categories Table -->
+      <table class="categories-table" id="categoriesTable" style="display:none;">
+        <thead>
+          <tr>
+            <th>Category Name</th>
+            <th>Type</th>
+            <th>Product Count</th>
+            <th>Status</th>
+            <th>Created Date</th>
+            <th>Actions</th>
+          </tr>
+        </thead>
+        <tbody id="categoriesTableBody">
+          <!-- Categories will be populated here dynamically -->
+        </tbody>
+      </table>
+
+      <!-- No Categories Message -->
+      <div class="no-categories" id="noCategoriesMessage" style="display:none;">
+        No categories found matching your criteria.
+      </div>
+    </div>
+
+    <!-- Pagination Container -->
+    <div class="pagination-container">
+      <div class="pagination-info" id="paginationInfo">
+        Showing 0 - 0 of 0 categories
+      </div>
+      
+      <div class="pagination-right">
+        <!-- Page Navigation Buttons -->
+        <div class="pagination-controls">
+          <button class="pagination-btn" id="prevPageBtn" onclick="goToPrevPage()">← Previous</button>
+          <button class="pagination-btn" id="nextPageBtn" onclick="goToNextPage()">Next →</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Add/Edit Category Modal -->
+  <div id="categoryModal" class="modal">
+    <div class="modal-content modal-medium">
+      <div class="modal-header">
+        <h2 id="categoryModalTitle">Add New Category</h2>
+        <span class="close" onclick="closeModal('categoryModal')">&times;</span>
+      </div>
+      <div class="modal-body">
+        <form id="categoryForm" novalidate>
+          <div class="form-group">
+            <label for="categoryName" class="form-label">Category Name *</label>
+            <input type="text" id="categoryName" name="categoryName" class="form-input" required>
+            <div class="error-message" id="categoryNameError"></div>
+          </div>
+
+          <div class="form-group">
+            <label for="categoryType" class="form-label">Category Type *</label>
+            <select id="categoryType" name="categoryType" class="form-select" required>
+              <option value="">Select Type</option>
+              <option value="Main">Main Category</option>
+              <option value="Sub">Sub Category</option>
+              <option value="Brand">Brand</option>
+            </select>
+            <div class="error-message" id="categoryTypeError"></div>
+          </div>
+
+          <div class="form-group">
+            <label for="categoryDescription" class="form-label">Description</label>
+            <textarea id="categoryDescription" name="categoryDescription" class="form-textarea" rows="3" placeholder="Optional description"></textarea>
+          </div>
+
+          <div class="form-group">
+            <label class="form-label">Select Products (Optional)</label>
+            <div class="products-selector">
+              <div class="search-products">
+                <input type="text" id="productSearch" class="form-input" placeholder="Search products to add...">
+              </div>
+              <div class="products-list" id="productsList">
+                <!-- Products will be populated here -->
+              </div>
+              <div class="selected-products" id="selectedProducts">
+                <h4>Selected Products (<span id="selectedCount">0</span>)</h4>
+                <div class="selected-items" id="selectedItems"></div>
+              </div>
+            </div>
+          </div>
+        </form>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" onclick="closeModal('categoryModal')">Cancel</button>
+        <button type="button" class="btn btn-success" onclick="submitCategory()" id="submitCategoryBtn">Add Category</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Category Details Modal -->
+  <div id="categoryDetailsModal" class="modal">
+    <div class="modal-content modal-large">
+      <div class="modal-header">
+        <h2>Category Details</h2>
+        <span class="close" onclick="closeModal('categoryDetailsModal')">&times;</span>
+      </div>
+      <div class="modal-body" id="categoryDetailsBody">
+        <!-- Dynamic content will be loaded here -->
+      </div>
+      <div class="modal-footer" id="categoryDetailsFooter">
+        <!-- Action buttons will be populated here -->
+      </div>
+    </div>
+  </div>
+
+  <!-- Block/Unblock Confirmation Modal -->
+  <div id="blockModal" class="modal">
+    <div class="modal-content modal-small">
+      <div class="modal-header">
+        <h2 id="blockModalTitle">Confirm Action</h2>
+        <span class="close" onclick="closeModal('blockModal')">&times;</span>
+      </div>
+      <div class="modal-body">
+        <p id="blockModalMessage"></p>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-secondary" onclick="closeModal('blockModal')">Cancel</button>
+        <button class="btn" id="blockConfirmBtn" onclick="confirmBlockAction()">Confirm</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Delete Confirmation Modal -->
+  <div id="deleteModal" class="modal">
+    <div class="modal-content modal-small">
+      <div class="modal-header">
+        <h2>Confirm Delete</h2>
+        <span class="close" onclick="closeModal('deleteModal')">&times;</span>
+      </div>
+      <div class="modal-body">
+        <p>Are you sure you want to delete this category?</p>
+        <p class="warning-text">This action cannot be undone and may affect associated products.</p>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-secondary" onclick="closeModal('deleteModal')">Cancel</button>
+        <button class="btn btn-danger" onclick="confirmDeleteAction()">Delete</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Success/Error Toast Notification -->
+  <div id="toast" class="toast"></div>
+<script>
+  const categories = <%- JSON.stringify(categories) %>;
+  const products = <%- JSON.stringify(products) %>;
+</script>
+  <script src="/scripts/admin-categories.js"></script>
+</body>
+</html>

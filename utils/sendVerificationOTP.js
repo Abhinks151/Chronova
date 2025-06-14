@@ -1,6 +1,6 @@
 // utils/sendVerificationOTP.js
 import { generateNumericOTP, hashOTP } from './otp.js';
-import { sendOTPEmail, sendResetPasswordEmail } from '../servises/emailService.js';
+import { sendOTPEmail, sendResetPasswordEmail, sendWelcomeEmail } from '../servises/emailService.js';
 import { User } from '../models/userModels.js';
 
 export const sendVerificationOTP = async (user) => {
@@ -42,4 +42,9 @@ export const verifyOTP = async (email, otp) => {
   await user.save();
 
   return user;
+};
+
+
+export const sendWelcome = async (user) => {
+  await sendWelcomeEmail(user.email, user.firstname);
 };

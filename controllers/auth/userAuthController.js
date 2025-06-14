@@ -4,9 +4,8 @@ import crypto from "crypto";
 import bcrypt from "bcrypt";
 import { validationResult } from 'express-validator';
 import dotenv from 'dotenv';
-import { sendResetPasswordToken, sendVerificationOTP } from "../../utils/sendVerificationOTP.js";
-import { hashOTP } from "../../utils/otp.js";
-
+import { sendResetPasswordToken, sendVerificationOTP, sendWelcome } from "../../utils/sendVerificationOTP.js";
+import { sendWelcomeEmail } from "../../servises/emailService.js";
 
 dotenv.config();
 
@@ -141,7 +140,7 @@ export const postVerifyUserOTP = async (req, res) => {
     user.verificationToken = undefined;
     user.verificationTokenExpireAt = undefined;
     await user.save();
-
+    sendWelcome(user);
     return res.status(200).json({ message: 'Account verified successfully.', redirect: '/user/login' });
 
   } catch (error) {
@@ -178,8 +177,7 @@ export const resendVerificationCode = async (req, res) => {
       return res.status(400).json({ message: 'Account is already verified. Please log in.' });
     }
 
-    await sendVerificationOTP(user);
-
+    await sendWelcome(user);
     return res.status(200).json({
       message: 'Verification code sent successfully. Please check your inbox.'
     });

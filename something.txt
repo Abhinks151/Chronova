@@ -56,3 +56,26 @@ FOLDER STRUCTURE
                                     <%= product.brand && product.brand.toString() === brand._id.toString() ? 'selected' : '' %>>
                                     <%= brand.name %>
                                 </option>
+
+
+
+Name	Type
+Men	Audience
+Women	Audience
+Kids	Audience
+Unisex	Audience
+Casual	Style
+Formal	Style
+Luxury	Style
+Fashion	Style
+Retro	Style
+Minimalist	Style
+Sports	Function
+Outdoor	Function
+Chronograph	Function
+New Arrival	Seasonal
+Trending	Seasonal
+Summer Sale	Seasonal
+Clearance	Seasonal
+Limited Edition	Seasonal
+

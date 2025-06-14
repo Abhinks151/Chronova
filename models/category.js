@@ -7,15 +7,25 @@ const categorySchema = new mongoose.Schema({
     trim: true,
     unique: true
   },
-  isBlocked:{
-    type:Boolean,
-    default:false
+  dicription: {
+    type: String,
+    required: true,
+    trim: true
   },
-  isDeleted:{
-    type:Boolean,
-    default:false
+  type: {
+    type: String,
+    required: [true, 'Category type is required'],
+    enum: ['audience', 'style', 'function', 'seasonal'],
+  },
+  isBlocked: {
+    type: Boolean,
+    default: false
+  },
+  isDeleted: {
+    type: Boolean,
+    default: false
   }
-},{
+}, {
   timestamps: true
 });
 

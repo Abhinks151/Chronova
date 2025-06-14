@@ -2,10 +2,11 @@ User:
   ✔ resend verification code bug fixes @done (6/12/2025, 12:39:02 PM)
   ✔ forget passowrd fixes @done (6/12/2025, 12:38:59 PM)
   ✔ reset password fix @done (6/12/2025, 12:39:18 PM)
-  ☐ reset password route and flow complete fix
-  ☐ structure and conpactablity
-  ☐ better messages for emails
-  ☐ welcome message for verified users
+  ✔ reset password route and flow complete fix @done (6/13/2025, 12:11:54 PM)
+  ☐ structure and compactablity
+  ✔ better messages for emails @done (6/13/2025, 1:01:24 PM)
+  ✔ welcome message for verified users @done (6/13/2025, 1:01:26 PM)
+  ☐ reset password button
 
   0auth:
     ✔ set up passport js google auth strategy @done (6/13/2025, 9:37:49 AM)
@@ -20,11 +21,12 @@ Admin:
   Product management:
     ☐ cloudinary image delete
     ☐ testing
-    ☐ edit page population with old data bug fixxes
+    ☐ edit page population with old data bug fixes
   
   Category management:
-  ☐ create the schema for category
-  ☐ delete all existing product
+  ✔ create the schema for category @done (6/13/2025, 12:10:30 PM)
+  ✔ delete all existing product @done (6/13/2025, 12:10:32 PM)
+  ✔ convert constants to category collection @done (6/13/2025, 12:11:16 PM)
   ☐ category managemnet page with block add delete edit button
   ☐ pagination from backend for category management
   ☐ search input box with search and clear button
@@ -33,7 +35,7 @@ Admin:
   
 
 GLOBAL:
-  ☐ ckeck status code
+  ☐ check status code
   ☐ check folder structure
   ☐ Error management
   ☐ maintain consistency for category brand and type in all places
@@ -41,6 +43,7 @@ GLOBAL:
   ☐ check otp and other verification times
   ☐ clear unnesseasry clg
   ☐ convert type and brand into utility constants
+  ☐ validation all kind and type
 
   Extra:
     ☐ add readme file
