@@ -1,4 +1,4 @@
-Chronova — E-commerce Platform for Watch Enthusiasts
+⌚ Chronova — E-commerce Platform for Watch Enthusiasts
 
 Chronova is a full-featured e-commerce platform dedicated to premium and high-quality watches. Designed with a focus on performance, security, and user experience, it serves both customers and admins through dynamic, responsive views and powerful backend capabilities.
 
@@ -30,21 +30,7 @@ Cloudinary — Image storage
 
 📁 Folder Structure
 
-Chronova/
-├── controllers/            # All route logic (user/admin)
-├── models/                 # Mongoose models
-├── routes/                 # Route declarations
-├── views/                 # EJS templates
-│   └── partials/           # Common reusable components
-├── public/
-│   ├── scripts/            # Frontend JavaScript
-│   └── styles/             # Custom CSS
-├── config/                 # DB config & other setup files
-├── services/               # External integrations like email or cloudinary
-├── middleware/             # Custom middlewares
-├── utils/                  # Utility functions (e.g., email sending)
-├── server.js               # Main app entry
-└── .env                    # Environment variables
+<pre> ## 📁 Folder Structure ```bash Chronova/ ├── controllers/ # All route logic (user/admin) ├── models/ # Mongoose models ├── routes/ # Route declarations ├── views/ │ └── partials/ # Common reusable components ├── public/ │ ├── scripts/ # Frontend JavaScript │ └── styles/ # Custom CSS ├── config/ # DB config & other setup files ├── services/ # External integrations like email or cloudinary ├── middleware/ # Custom middlewares ├── utils/ # Utility functions (e.g., email sending) ├── server.js # Main app entry └── .env # Environment variables ``` </pre>
 
 ✅ Features (Currently Implemented)
 
@@ -98,6 +84,7 @@ These are currently under development and will be rolled out incrementally.
 
 📦 Dependencies
 
+<pre>
 {
   "express": "^5.1.0",
   "ejs": "^3.1.10",
@@ -108,9 +95,9 @@ These are currently under development and will be rolled out incrementally.
   "bcrypt": "^6.0.0",
   "multer": "^2.0.1",
   "cloudinary": "^2.6.1",
-  "nodemailer": "^7.0.3",
-  ...
+  "nodemailer": "^7.0.3"
 }
+</pre>
 
 🚀 Getting Started
 
@@ -122,7 +109,7 @@ Coming soon — installation and setup instructions will be added once project r
 
 📄 License
 
-MIT (to be confirmed)
+MIT
 
 ✍️ Author
 
