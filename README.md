@@ -29,8 +29,23 @@ Nodemailer — OTP & Welcome email service using custom templates
 Cloudinary — Image storage
 
 📁 Folder Structure
-
-<pre> ## 📁 Folder Structure ```bash Chronova/ ├── controllers/ # All route logic (user/admin) ├── models/ # Mongoose models ├── routes/ # Route declarations ├── views/ │ └── partials/ # Common reusable components ├── public/ │ ├── scripts/ # Frontend JavaScript │ └── styles/ # Custom CSS ├── config/ # DB config & other setup files ├── services/ # External integrations like email or cloudinary ├── middleware/ # Custom middlewares ├── utils/ # Utility functions (e.g., email sending) ├── server.js # Main app entry └── .env # Environment variables ``` </pre>
+<pre>
+Chronova/
+├── controllers/            # All route logic (user/admin)
+├── models/                 # Mongoose models
+├── routes/                 # Route declarations
+├── views/                 
+│   └── partials/           # Common reusable components
+├── public/
+│   ├── scripts/            # Frontend JavaScript
+│   └── styles/             # Custom CSS
+├── config/                 # DB config & other setup files
+├── services/               # External integrations like email or cloudinary
+├── middleware/             # Custom middlewares
+├── utils/                  # Utility functions (e.g., email sending)
+├── server.js               # Main app entry
+└── .env                    # Environment variables
+</pre>
 
 ✅ Features (Currently Implemented)
 
