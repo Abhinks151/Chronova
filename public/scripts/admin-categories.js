@@ -6,7 +6,7 @@ let selectedProductIds = [];
 let filteredProducts = [];
 let isLoading = false;
 let currentSort = '';
-let pageSize = 10;
+let pageSize = 5;
 let totalCategories = 0;
 let currentPage = 1;
 let pendingAction = null;
@@ -740,7 +740,7 @@ async function confirmDeleteAction() {
   if (!currentCategoryId) return;
 
   try {
-    const response = await axios.delete(`/admin/categories/delete/${currentCategoryId}`);
+    const response = await axios.delete(`/admin/category/delete/${currentCategoryId}`);
 
     if (response.data.success) {
       closeModal('deleteModal');

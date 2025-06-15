@@ -93,7 +93,7 @@ export const filterCategories = async (req, res) => {
 
     // console.log(result)
 
-    res.status(HttpStatusCode.OK.code).json(result);
+    res.status(200).json(result);
   } catch (error) {
     console.error('Error filtering categories:', error);
     res.status(httpStatusCode.BAD_REQUEST.code).json({
@@ -240,7 +240,7 @@ export const deleteCategory = async (req, res) => {
 
     const category = await Category.findById(id);
     category.isDeleted = true;
-
+    await category.save();
 
     if (!category) {
       return res.status(404).json({

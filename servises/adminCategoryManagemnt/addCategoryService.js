@@ -15,22 +15,19 @@ export const addCategoryService = async ({ categoryName, type, description, prod
     throw new Error("Category description is required");
   }
 
-  const existing = await Category.findOne({ categoryName: categoryName.trim() });
+  const existing = await Category.findOne({ categoryName: categoryName });
   if (existing) {
     throw new Error("A category with this name already exists");
   }
 
   const newCategory = new Category({
-    categoryName: categoryName.trim(),
+    categoryName: categoryName,
     type,
-    description: description.trim(),
-    products: [], 
-    isBlocked: false
+    description: description,
   });
 
   const savedCategory = await newCategory.save();
   console.log('savedCategory', savedCategory);
-  console.log('products', products);
   if (products.length > 0) {
     const validProductIds = products.filter(id => mongoose.Types.ObjectId.isValid(id));
     await Products.updateMany(
@@ -38,6 +35,7 @@ export const addCategoryService = async ({ categoryName, type, description, prod
       { $addToSet: { category: savedCategory._id } } //array
     );
   }
+  console.log('products', products);
 
   return savedCategory;
 };

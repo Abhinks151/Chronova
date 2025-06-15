@@ -27,11 +27,14 @@ Admin:
   ✔ create the schema for category @done (6/13/2025, 12:10:30 PM)
   ✔ delete all existing product @done (6/13/2025, 12:10:32 PM)
   ✔ convert constants to category collection @done (6/13/2025, 12:11:16 PM)
-  ☐ category managemnet page with block add delete edit button
-  ☐ pagination from backend for category management
-  ☐ search input box with search and clear button
-  ☐ add category page
-  ☐ add the changes to product add and edit
+  ✔ category managemnet page with block add delete edit button @done (6/15/2025, 11:58:34 AM)
+  ✔ pagination from backend for category management @done (6/15/2025, 11:58:32 AM)
+  ✔ search input box with search and clear button @done (6/15/2025, 11:58:37 AM)
+  ✔ add category page @done (6/15/2025, 11:58:38 AM)
+  ✔ delete button @done (6/15/2025, 12:05:58 PM)
+  ✔ add the changes to product add and edit @done (6/15/2025, 12:06:00 PM)
+  ☐ update product listing in product management to show on delted category and categoryName
+
   
 
 GLOBAL:

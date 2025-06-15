@@ -5,10 +5,26 @@ import { Products } from "../../models/products.js";
 export const getCategoryService = async () => {
   const categoriesWithCount = await Category.aggregate([
     {
+      $match: {
+        isDeleted: false
+      }
+    },
+    {
       $lookup: {
         from: 'products',
-        localField: '_id',
-        foreignField: 'category',
+        let: { categoryId: '$_id' },
+        pipeline: [
+          {
+            $match: {
+              $expr: {
+                $and: [
+                  { $eq: ['$category', '$$categoryId'] },
+                  { $eq: ['$isDeleted', false] }
+                ]
+              }
+            }
+          }
+        ],
         as: 'products'
       }
     },
@@ -21,11 +37,15 @@ export const getCategoryService = async () => {
       $project: {
         products: 0
       }
+    },
+    {
+      $sort: {
+        createdAt: -1
+      }
     }
-  ]);
+  ])
 
-  // Get all products
-  const products = await Products.find().lean();
+  const products = await Products.find({ isDeleted: false }).lean();
 
   return { categoriesWithCount, products };
 };

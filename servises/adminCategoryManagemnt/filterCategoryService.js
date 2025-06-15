@@ -43,7 +43,7 @@ export const filterCategoriesService = async (queryParams) => {
   }
 
   const totalCount = await Category.countDocuments(filter);
-
+  filter.isDeleted = false;
   let categories = await Category.find(filter)
     .sort(sortQuery)
     .skip((page - 1) * limit)
@@ -55,6 +55,7 @@ export const filterCategoriesService = async (queryParams) => {
   const productCounts = await Products.aggregate([
     {
       $match: {
+        isDeleted: false,
         category: { $elemMatch: { $in: categoryIds } }
       }
     },
