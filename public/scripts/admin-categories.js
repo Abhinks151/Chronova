@@ -340,19 +340,19 @@ function renderCategories() {
           </td>
           <td>${createdAt}</td>
           <td class="actions-cell">
-            <button class="action-btn btn-info" onclick="viewCategoryDetails('${category._id}')">View</button>
-            <button class="action-btn btn-warning" onclick="editCategory('${category._id}')">Edit</button>
-            <button class="action-btn ${category.isBlocked ? 'btn-success' : 'btn-danger'}" 
-                    onclick="showBlockModal('${category._id}', ${category.isBlocked})">
-              ${category.isBlocked ? 'Unblock' : 'Block'}
-            </button>
-            <button class="action-btn btn-danger" onclick="showDeleteModal('${category._id}')">Delete</button>
+          <button class="action-btn btn-warning" onclick="editCategory('${category._id}')">Edit</button>
+          <button class="action-btn ${category.isBlocked ? 'btn-success' : 'btn-danger'}" 
+          onclick="showBlockModal('${category._id}', ${category.isBlocked})">
+          ${category.isBlocked ? 'Unblock' : 'Block'}
+          </button>
+          <button class="action-btn btn-danger" onclick="showDeleteModal('${category._id}')">Delete</button>
           </td>
-        </tr>
-      `;
-  }).join('');
-}
-
+          </tr>
+          `;
+        }).join('');
+      }
+      
+      // <button class="action-btn btn-info" onclick="viewCategoryDetails('${category._id}')">View</button>
 
 
 // ==================== PAGINATION FUNCTIONS ====================
@@ -425,7 +425,7 @@ function editCategory(categoryId) {
   document.getElementById('submitCategoryBtn').textContent = 'Update Category';
 
   // Populate form fields
-  document.getElementById('categoryName').value = category.name;
+  document.getElementById('categoryName').value = category.categoryName;
   document.getElementById('categoryType').value = category.type;
   document.getElementById('categoryDescription').value = category.description || '';
 
@@ -522,9 +522,9 @@ async function submitCategory() {
   }
 
   const formData = {
-    categoryName: document.getElementById('categoryName').value.trim(),
+    categoryName: document.getElementById('categoryName').value,
     type: document.getElementById('categoryType').value,
-    description: document.getElementById('categoryDescription').value.trim(),
+    description: document.getElementById('categoryDescription').value,
     products: selectedProductIds
   };
 
@@ -532,7 +532,7 @@ async function submitCategory() {
     let response;
 
     if (isEditMode) {
-      response = await axios.put(`/admin/category/edit/${currentCategoryId}`, formData);
+      response = await axios.patch(`/admin/category/edit/${currentCategoryId}`, formData);
     } else {
       response = await axios.post('/admin/category/add', formData);
     }
@@ -682,12 +682,12 @@ function showBlockModal(categoryId, isBlocked) {
 
   if (isBlocked) {
     modalTitle.textContent = 'Unblock Category';
-    modalMessage.textContent = `Are you sure you want to unblock "${category.name}"? This will make it available again.`;
+    modalMessage.textContent = `Are you sure you want to unblock "${category.categoryName}"? This will make it available again.`;
     confirmBtn.textContent = 'Unblock';
     confirmBtn.className = 'btn btn-success';
   } else {
-    modalTitle.textContent = 'Block Category';
-    modalMessage.textContent = `Are you sure you want to block "${category.name}"? This will make it unavailable.`;
+    modalTitle.textContent = 'Block Category';  
+    modalMessage.textContent = `Are you sure you want to block "${category.categoryName}"? This will make it unavailable.`;
     confirmBtn.textContent = 'Block';
     confirmBtn.className = 'btn btn-danger';
   }
@@ -699,7 +699,7 @@ async function confirmBlockAction() {
   if (!currentCategoryId || !pendingAction) return;
 
   try {
-    const response = await axios.put(`/admin/category/${pendingAction}/${currentCategoryId}`);
+    const response = await axios.patch(`/admin/category/block/${currentCategoryId}`);
 
     if (response.data.success) {
       const updatedCategory = response.data.updatedCategory;

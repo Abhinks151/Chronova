@@ -45,6 +45,7 @@ export const paginationService = async (queryParams) => {
   // console.log(sortOption)  
   const [products, totalCount] = await Promise.all([
     Products.find(filter)
+    .populate('category', 'categoryName')
       .sort(sortOption)
       .skip(skip)
       .limit(parseInt(limit))

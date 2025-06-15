@@ -7,7 +7,7 @@ export const filterCategoriesService = async (queryParams) => {
     search = '',
     type,
     status,
-    sort = 'date-desc',
+    sort,
     page = 1,
     limit = 5
   } = queryParams;
@@ -33,17 +33,20 @@ export const filterCategoriesService = async (queryParams) => {
 
   const sortQuery = {};
   if (sort === 'name-asc') {
-    sortQuery.name = 1;
+    sortQuery.categoryName = 1;
   } else if (sort === 'name-desc') {
-    sortQuery.name = -1;
+    sortQuery.categoryName = -1;
   } else if (sort === 'date-desc') {
     sortQuery.createdAt = -1;
   } else {
     sortQuery.createdAt = -1;
   }
 
-  const totalCount = await Category.countDocuments(filter);
+  // console.log(filter);
+  // console.log(sortQuery);
+
   filter.isDeleted = false;
+  const totalCount = await Category.countDocuments(filter);
   let categories = await Category.find(filter)
     .sort(sortQuery)
     .skip((page - 1) * limit)

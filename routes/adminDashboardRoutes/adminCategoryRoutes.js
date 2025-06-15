@@ -1,5 +1,5 @@
 import express from "express";
-import { addCategory, blockCategory, deleteCategory, editCategory, filterCategories, getCategory, unblockCategory } from "../../controllers/adminDashboard/adminCategoryManagement.js";
+import { addCategory, deleteCategory, editCategory, filterCategories, getCategory, toggleBlockCategory } from "../../controllers/adminDashboard/adminCategoryManagement.js";
 import { authenticateAdmin } from "../../middlewares/adminAuthMiddleware.js";
 
 const categoryRouter = express.Router()
@@ -14,9 +14,8 @@ const categoryRouter = express.Router()
 categoryRouter.get('/category', authenticateAdmin, getCategory);
 categoryRouter.get('/category/filter', authenticateAdmin, filterCategories);
 categoryRouter.post('/category/add', authenticateAdmin, addCategory);
-categoryRouter.put('/category/edit/:id', authenticateAdmin, editCategory);
-categoryRouter.put('/category/block/:id', authenticateAdmin, blockCategory);
-categoryRouter.put('/category/unblock/:id', authenticateAdmin, unblockCategory);
+categoryRouter.patch('/category/edit/:id', authenticateAdmin, editCategory);
+categoryRouter.patch('/category/block/:id', authenticateAdmin, toggleBlockCategory);
 categoryRouter.delete('/category/delete/:id', authenticateAdmin, deleteCategory);
 
 

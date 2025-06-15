@@ -18,7 +18,7 @@ export const getCategoryService = async () => {
             $match: {
               $expr: {
                 $and: [
-                  { $eq: ['$category', '$$categoryId'] },
+                  { $in: ['$$categoryId', '$category'] },  // ✅ fix for array
                   { $eq: ['$isDeleted', false] }
                 ]
               }
@@ -43,9 +43,10 @@ export const getCategoryService = async () => {
         createdAt: -1
       }
     }
-  ])
+  ]);
 
   const products = await Products.find({ isDeleted: false }).lean();
 
   return { categoriesWithCount, products };
 };
+

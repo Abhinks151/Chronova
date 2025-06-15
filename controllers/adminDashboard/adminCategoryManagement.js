@@ -1,11 +1,13 @@
-import { HttpStatusCode } from "axios";
-import { Category } from "../../models/category.js";
+
 import { addCategoryService } from "../../servises/adminCategoryManagemnt/addCategoryService.js";
 import { filterCategoriesService } from "../../servises/adminCategoryManagemnt/filterCategoryService.js";
 import { getCategoryService } from "../../servises/adminCategoryManagemnt/getCategoryService.js";
 import httpStatusCode from "../../utils/httpStatusCode.js";
+import { editCategoryService } from "../../servises/adminCategoryManagemnt/editCategoryService.js";
+import { toggleBlockCategoryService } from "../../servises/adminCategoryManagemnt/blockCategory.js";
+import { deleteCategoryService } from "../../servises/adminCategoryManagemnt/deleteCategory.js";
+import { types } from "../../utils/categoryTypes.js";
 
-const types = ['audience', 'style', 'function', 'seasonal'];
 
 export const getCategory = async (req, res) => {
   try {
@@ -93,7 +95,7 @@ export const filterCategories = async (req, res) => {
 
     // console.log(result)
 
-    res.status(200).json(result);
+    res.status(httpStatusCode.OK.code).json(result);
   } catch (error) {
     console.error('Error filtering categories:', error);
     res.status(httpStatusCode.BAD_REQUEST.code).json({
@@ -130,56 +132,62 @@ export const addCategory = async (req, res) => {
 };
 
 
-// Edit category
+
 export const editCategory = async (req, res) => {
   try {
+    
+
     const { id } = req.params;
-    const { name, type, description, products } = req.body;
+    const { categoryName, type, description, products } = req.body;
 
-    const updateData = {
-      name,
-      type,
-      description,
-      products: products || []
-    };
+    if (!categoryName || !type || !description || !products) {
+      return res.status(httpStatusCode.BAD_REQUEST.code).json({
+        success: false,
+        message: 'All fields are required'
+      }); 
+    }
 
-    const category = await Category.findByIdAndUpdate(id, updateData, { new: true });
-
-    if (!category) {
-      return res.status(404).json({
+    const result = await editCategoryService(id, { categoryName, type, description, products });
+    // console.log(result)
+    if (!result) {
+      return res.status(httpStatusCode.NOT_FOUND.code).json({
         success: false,
         message: 'Category not found'
       });
     }
 
-    res.json({
+    res.status(httpStatusCode.OK.code).json({
       success: true,
       message: 'Category updated successfully!',
-      category
+      category: result
     });
 
   } catch (error) {
-    console.error('Error updating category:', error);
-    res.status(500).json({
+    console.error('Error:', error);
+    res.status(httpStatusCode.INTERNAL_SERVER_ERROR.code).json({
       success: false,
-      message: 'Error updating category'
+      message: 'Internal server error'
     });
   }
 };
 
-// Block category
-export const blockCategory = async (req, res) => {
+// Block 
+export const toggleBlockCategory = async (req, res) => {
   try {
     const { id } = req.params;
 
-    const category = await Category.findByIdAndUpdate(
-      id,
-      { isBlocked: true },
-      { new: true }
-    );
+    // Basic validation
+    if (!id || typeof id !== 'string') {
+      return res.status(httpStatusCode.BAD_REQUEST.code).json({
+        success: false,
+        message: 'Invalid category ID'
+      });
+    }
 
-    if (!category) {
-      return res.status(404).json({
+    const result = await toggleBlockCategoryService(id);
+
+    if (!result) {
+      return res.status(httpStatusCode.NOT_FOUND.code).json({
         success: false,
         message: 'Category not found'
       });
@@ -187,63 +195,35 @@ export const blockCategory = async (req, res) => {
 
     res.json({
       success: true,
-      message: 'Category blocked successfully!',
-      updatedCategory: category
+      message: `Category ${result.isBlocked ? 'blocked' : 'unblocked'} successfully!`,
+      updatedCategory: result
     });
 
   } catch (error) {
-    console.error('Error blocking category:', error);
-    res.status(500).json({
+    console.error('Error toggling category block state:', error);
+    res.status(httpStatusCode.INTERNAL_SERVER_ERROR.code).json({
       success: false,
-      message: 'Error blocking category'
+      message: 'Internal server error'
     });
   }
 };
 
-// Unblock category
-export const unblockCategory = async (req, res) => {
-  try {
-    const { id } = req.params;
 
-    const category = await Category.findByIdAndUpdate(
-      id,
-      { isBlocked: false },
-      { new: true }
-    );
-
-    if (!category) {
-      return res.status(404).json({
-        success: false,
-        message: 'Category not found'
-      });
-    }
-
-    res.json({
-      success: true,
-      message: 'Category unblocked successfully!',
-      updatedCategory: category
-    });
-
-  } catch (error) {
-    console.error('Error unblocking category:', error);
-    res.status(500).json({
-      success: false,
-      message: 'Error unblocking category'
-    });
-  }
-};
-
-// Delete category
 export const deleteCategory = async (req, res) => {
   try {
     const { id } = req.params;
 
-    const category = await Category.findById(id);
-    category.isDeleted = true;
-    await category.save();
+    if (!id || typeof id !== 'string') {
+      return res.status(httpStatusCode.BAD_REQUEST.code).json({
+        success: false,
+        message: 'Invalid category ID'
+      });
+    }
 
-    if (!category) {
-      return res.status(404).json({
+    const result = await deleteCategoryService(id);
+
+    if (!result) {
+      return res.status(httpStatusCode.NOT_FOUND.code).json({
         success: false,
         message: 'Category not found'
       });
@@ -256,9 +236,10 @@ export const deleteCategory = async (req, res) => {
 
   } catch (error) {
     console.error('Error deleting category:', error);
-    res.status(500).json({
+    res.status(httpStatusCode.INTERNAL_SERVER_ERROR.code).json({
       success: false,
-      message: 'Error deleting category'
+      message: 'Internal server error'
     });
   }
 };
+

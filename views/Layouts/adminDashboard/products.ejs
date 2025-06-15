@@ -404,7 +404,11 @@
             </div>
           </td>
           <td><code class="sku-code">${product.sku}</code></td>
-          <td>${Array.isArray(product.category) ? product.category.join(' > ') : product.category}</td>
+          <td>
+            ${Array.isArray(product.category)
+              ? product.category.map(cat => cat.categoryName).join(' > ')
+              : 'Uncategorized'}
+          </td>
           <td>${product.brand}</td>
           <td class="price-cell">
             <div class="sale-price">₹${formatPrice(product.salePrice)}</div>

@@ -46,7 +46,7 @@ const brands = [
 export const getProductsPage = async (req, res) => {
   try {
     const paginated = await paginationService(req.query);
-
+    // console.log(paginated.products);
     res.render('Layouts/adminDashboard/products', {
       title: 'Products',
       products: paginated.products,
