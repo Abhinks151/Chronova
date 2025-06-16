@@ -13,7 +13,6 @@ export const fetchFilteredProducts = async (filters) => {
     ];
   }
 
-  //mongoose
   if (filters.category && mongoose.Types.ObjectId.isValid(filters.category)) {
     query.category = { $in: [new mongoose.Types.ObjectId(filters.category)] };
   }
@@ -50,11 +49,81 @@ export const fetchFilteredProducts = async (filters) => {
   const limit = parseInt(filters.limit) || 9;
   const skip = (page - 1) * limit;
 
-  const [products, totalProducts] = await Promise.all([
-    Products.find(query).sort(sort).skip(skip).limit(limit).lean(),
-    Products.countDocuments(query)
+  const products = await Products.aggregate([
+    { $match: query },
+    {
+      $lookup: {
+        from: 'categories',
+        localField: 'category',
+        foreignField: '_id',
+        as: 'categoryDetails'
+      }
+    },
+    {
+      $addFields: {
+        validCategories: {
+          $filter: {
+            input: '$categoryDetails',
+            as: 'cat',
+            cond: {
+              $and: [
+                { $eq: ['$$cat.isBlocked', false] },
+                { $eq: ['$$cat.isDeleted', false] }
+              ]
+            }
+          }
+        }
+      }
+    },
+    {
+      $match: {
+        $expr: {
+          $eq: [{ $size: '$category' }, { $size: '$validCategories' }]
+        }
+      }
+    },
+    { $sort: sort },
+    { $skip: skip },
+    { $limit: limit }
   ]);
 
+  const totalCountResult = await Products.aggregate([
+    { $match: query },
+    {
+      $lookup: {
+        from: 'categories',
+        localField: 'category',
+        foreignField: '_id',
+        as: 'categoryDetails'
+      }
+    },
+    {
+      $addFields: {
+        validCategories: {
+          $filter: {
+            input: '$categoryDetails',
+            as: 'cat',
+            cond: {
+              $and: [
+                { $eq: ['$$cat.isBlocked', false] },
+                { $eq: ['$$cat.isDeleted', false] }
+              ]
+            }
+          }
+        }
+      }
+    },
+    {
+      $match: {
+        $expr: {
+          $eq: [{ $size: '$category' }, { $size: '$validCategories' }]
+        }
+      }
+    },
+    { $count: 'total' }
+  ]);
+
+  const totalProducts = totalCountResult[0]?.total || 0;
   const totalPages = Math.ceil(totalProducts / limit);
 
   return {

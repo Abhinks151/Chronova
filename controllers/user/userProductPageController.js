@@ -23,7 +23,7 @@ export const getProductListingPage = async (req, res) => {
 export const getFilteredProducts = async (req, res) => {
   try {
     const result = await fetchFilteredProducts(req.query);
-
+    // console.log(result)
     res.status(HttpStatusCode.OK.code).json({
       success: true,
       ...result

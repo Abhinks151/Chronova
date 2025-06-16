@@ -15,6 +15,7 @@ User:
     ☐ add 0auth to user register page
 
   Product details page:
+    ✔ almost complete with featured products @done (6/16/2025, 11:16:14 PM)
     
 
 Admin:
@@ -37,6 +38,8 @@ Admin:
   ✔ add the changes to product add and edit @done (6/15/2025, 12:06:00 PM)
   ✔ update product listing in product management to show on delted category and categoryName @done (6/16/2025, 1:19:11 PM)
 
+  Review management:
+    ☐ dynamically update inside the product schema
   
 
 GLOBAL:

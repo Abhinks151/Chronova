@@ -107,10 +107,14 @@ const productSchema = new mongoose.Schema({
     type: Number,
     default: 0
   },
-  reviewNote: {
-    type: String,
-    default: "No reviews yet"
+  reviewCount: {
+    type: Number,
+    default: 0
   },
+  review:[{
+    type : mongoose.Schema.Types.ObjectId,
+    ref : 'Review'
+  }],
   hasActiveOffer: {
     type: Boolean,
     default: false
