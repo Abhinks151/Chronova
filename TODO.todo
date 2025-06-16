@@ -14,6 +14,8 @@ User:
     ☐ check accesstoken and refresh toekn inside passport.js
     ☐ add 0auth to user register page
 
+  Product details page:
+    
 
 Admin:
   user management:
@@ -33,7 +35,7 @@ Admin:
   ✔ add category page @done (6/15/2025, 11:58:38 AM)
   ✔ delete button @done (6/15/2025, 12:05:58 PM)
   ✔ add the changes to product add and edit @done (6/15/2025, 12:06:00 PM)
-  ☐ update product listing in product management to show on delted category and categoryName
+  ✔ update product listing in product management to show on delted category and categoryName @done (6/16/2025, 1:19:11 PM)
 
   
 
@@ -49,5 +51,7 @@ GLOBAL:
   ☐ validation all kind and type
 
   Extra:
-    ☐ add readme file
+    ✔ add readme file @done (6/16/2025, 1:19:17 PM)
+
+  
     

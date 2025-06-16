@@ -1,4 +1,4 @@
-⌚ Chronova — E-commerce Platform for Watch Enthusiasts
+Chronova — E-commerce Platform for Watch Enthusiasts
 
 Chronova is a full-featured e-commerce platform dedicated to premium and high-quality watches. Designed with a focus on performance, security, and user experience, it serves both customers and admins through dynamic, responsive views and powerful backend capabilities.
 

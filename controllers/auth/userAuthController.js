@@ -11,7 +11,6 @@ dotenv.config();
 
 const SALT = 10;
 
-// Helper function to handle response format (JSON vs HTML)
 const handleResponse = (req, res, status, viewName, data, jsonData = null) => {
   if (req.xhr || req.get('Content-Type') === 'application/json') {
     return res.status(status).json(jsonData || {
@@ -24,7 +23,6 @@ const handleResponse = (req, res, status, viewName, data, jsonData = null) => {
   return res.status(status).render(viewName, data);
 };
 
-// Helper function to create render data structure
 const createRenderData = (title, errors = {}, formData = {}, successMessage = null) => ({
   title,
   errors,
@@ -32,7 +30,6 @@ const createRenderData = (title, errors = {}, formData = {}, successMessage = nu
   successMessage
 });
 
-// Helper function to handle validation errors
 const handleValidationErrors = (req, res, errors, viewName, title) => {
   const errorMap = {};
   errors.array().forEach(error => {
@@ -43,7 +40,6 @@ const handleValidationErrors = (req, res, errors, viewName, title) => {
   return handleResponse(req, res, 400, viewName, renderData);
 };
 
-// GET user register page
 export const getUserRegister = async (req, res) => {
   const renderData = createRenderData('Register');
   res.status(200).render('Layouts/userRegister', renderData);
@@ -356,7 +352,7 @@ export const postUserLogin = async (req, res) => {
       return res.status(200).json({
         success: true,
         message: 'Login successful',
-        redirect: '/user/home',
+        redirect: '/user/products',
         user: {
           id: user._id,
           firstName: user.firstName,
