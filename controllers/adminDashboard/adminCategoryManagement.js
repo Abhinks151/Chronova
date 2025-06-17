@@ -29,7 +29,7 @@ export const getCategory = async (req, res) => {
     });
   }
 };
-   
+
 // export const addCategory = async (req, res) => {
 //   try {
 //     const categoryData = req.body;
@@ -102,36 +102,33 @@ export const filterCategories = async (req, res) => {
 
 
 export const addCategory = async (req, res) => {
-  try {
-    const { categoryName, type, description, products } = req.body;
+  const { categoryName, type, description, products } = req.body;
 
-    const category = await addCategoryService({
-      categoryName,
-      type,
-      description,
-      products
-    });
+  const result = await addCategoryService({
+    categoryName,
+    type,
+    description,
+    products
+  });
 
-    res.status(httpStatusCode.CREATED.code).json({
-      success: true,
-      message: 'Category added successfully!',
-      category
-    });
-  } catch (error) {
-    console.error('Error adding category:', error.message);
-    res.status(httpStatusCode.BAD_REQUEST.code).json({
+  if (result.error) {
+    return res.status(httpStatusCode.BAD_REQUEST.code).json({
       success: false,
-      message: error.message || 'Something went wrong'
+      message: result.error
     });
   }
+
+  return res.status(httpStatusCode.CREATED.code).json({
+    success: true,
+    message: 'Category added successfully!',
+    category: result.data
+  });
 };
 
 
 
 export const editCategory = async (req, res) => {
   try {
-    
-
     const { id } = req.params;
     const { categoryName, type, description, products } = req.body;
 
@@ -139,32 +136,38 @@ export const editCategory = async (req, res) => {
       return res.status(httpStatusCode.BAD_REQUEST.code).json({
         success: false,
         message: 'All fields are required'
-      }); 
-    }
-
-    const result = await editCategoryService(id, { categoryName, type, description, products });
-    // console.log(result)
-    if (!result) {
-      return res.status(httpStatusCode.NOT_FOUND.code).json({
-        success: false,
-        message: 'Category not found'
       });
     }
 
-    res.status(httpStatusCode.OK.code).json({
+    const result = await editCategoryService(id, {
+      name: categoryName,
+      type,
+      description,
+      products
+    });
+
+    if (result.error) {
+      return res.status(httpStatusCode.BAD_REQUEST.code).json({
+        success: false,
+        message: result.error
+      });
+    }
+
+    return res.status(httpStatusCode.OK.code).json({
       success: true,
       message: 'Category updated successfully!',
-      category: result
+      category: result.data
     });
 
   } catch (error) {
-    console.error('Error:', error);
-    res.status(httpStatusCode.INTERNAL_SERVER_ERROR.code).json({
+    console.error('Error in editCategory controller:', error);
+    return res.status(httpStatusCode.INTERNAL_SERVER_ERROR.code).json({
       success: false,
       message: 'Internal server error'
     });
   }
 };
+
 
 // Block 
 export const toggleBlockCategory = async (req, res) => {

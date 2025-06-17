@@ -372,3 +372,37 @@
 			        grid-template-columns: 1fr;
 			    }
 			}
+
+.toast {
+  position: fixed;
+  top: 20px;
+  right: 20px;
+  padding: 15px 20px;
+  border-radius: 8px;
+  color: white;
+  font-weight: 500;
+  z-index: 1100;
+  transform: translateX(400px);
+  transition: transform 0.3s ease;
+  max-width: 350px;
+}
+
+.toast.show {
+  transform: translateX(0);
+}
+
+.toast-success {
+  background: linear-gradient(135deg, #27ae60, #229954);
+}
+
+.toast-error {
+  background: linear-gradient(135deg, #e74c3c, #c0392b);
+}
+
+.toast-warning {
+  background: linear-gradient(135deg, #f39c12, #e67e22);
+}
+
+.toast-info {
+  background: linear-gradient(135deg, #3498db, #2980b9);
+}

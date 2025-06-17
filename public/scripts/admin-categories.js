@@ -324,7 +324,7 @@ function renderCategories() {
           <td class="category-cell">
             <div class="category-info">
               <div class="category-name">${name}</div>
-              <div class="category-desc">No description</div>
+              <div class="category-desc">${category.description}</div>
             </div>
           </td> 
           <td>
@@ -541,21 +541,27 @@ async function submitCategory() {
       closeModal('categoryModal');
       showToast(response.data.message || `Category ${isEditMode ? 'updated' : 'added'} successfully!`);
 
-      // Redirect to backend specified route
       if (response.data.redirect) {
         window.location.href = response.data.redirect;
       } else {
-        // Refresh the page data
         handleFilters();
       }
     } else {
       showToast(response.data.message || `Failed to ${isEditMode ? 'update' : 'add'} category`, 'error');
     }
+
   } catch (error) {
     console.error('Error submitting category:', error);
-    showToast('Error submitting category. Please try again.', 'error');
+
+    const errorMessage =
+      error.response?.data?.message ||
+      error.message ||
+      `Failed to ${isEditMode ? 'update' : 'add'} category`;
+
+    showToast(errorMessage, 'error');
   }
 }
+
 
 // ==================== CATEGORY DETAILS MODAL ====================
 function viewCategoryDetails(categoryId) {

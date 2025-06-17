@@ -102,9 +102,6 @@ export const postAddProducts = async (req, res) => {
   try {
     const { body, files } = req;
 
-    // console.log(body);
-    // console.log(files);
-
     const images = files.map((file) => ({
       url: file.path,
       public_id: file.filename
@@ -115,22 +112,32 @@ export const postAddProducts = async (req, res) => {
       images
     };
 
-    const newProduct = await addProductService(productData);
+    // console.log(productData)
 
+    const result = await addProductService(productData);
 
+    if (result.error) {
+      return res.status(httpStatusCode.BAD_REQUEST.code).json({
+        success: false,
+        message: result.error
+      });
+    }
 
-
-    console.log(newProduct);
-    res.status(httpStatusCode.CREATED.code).json({
+    return res.status(httpStatusCode.CREATED.code).json({
+      success: true,
       message: "Product added successfully",
       redirect: '/admin/products'
     });
 
   } catch (err) {
-    console.error(err);
-    res.status(httpStatusCode.INTERNAL_SERVER_ERROR.code).json({ message: 'Something went wrong' });
+    console.error('Error in postAddProducts:', err);
+    return res.status(httpStatusCode.INTERNAL_SERVER_ERROR.code).json({
+      success: false,
+      message: 'Something went wrong. Please try again later.'
+    });
   }
-}
+};
+
 
 
 // export const getEditProducts = async (req, res) => {

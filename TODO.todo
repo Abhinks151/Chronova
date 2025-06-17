@@ -25,6 +25,8 @@ Admin:
     ☐ cloudinary image delete
     ☐ testing
     ☐ edit page population with old data bug fixes
+    ✔ validation for items in backend in cateogry add @done (6/17/2025, 7:31:23 PM)
+    ✔ check duplication @done (6/17/2025, 7:31:24 PM)
   
   Category management:
   ✔ create the schema for category @done (6/13/2025, 12:10:30 PM)
@@ -37,6 +39,8 @@ Admin:
   ✔ delete button @done (6/15/2025, 12:05:58 PM)
   ✔ add the changes to product add and edit @done (6/15/2025, 12:06:00 PM)
   ✔ update product listing in product management to show on delted category and categoryName @done (6/16/2025, 1:19:11 PM)
+    ✔ validation for items in backend in cateogry add @done (6/17/2025, 7:31:26 PM)
+    ✔ check duplication @done (6/17/2025, 7:31:27 PM)
 
   Review management:
     ☐ dynamically update inside the product schema

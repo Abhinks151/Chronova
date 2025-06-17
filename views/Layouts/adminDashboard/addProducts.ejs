@@ -95,11 +95,11 @@
 								<div class="checkbox-item">
 									<input
 										type="checkbox"
-										id="cat-<%= category._id %>"
+										id="<%= category._id %>"
 										name="category"
 										value="<%= category._id %>"
 									/>
-									<label for="cat-<%= category._id %>"
+									<label for="<%= category._id %>"
 										><%= category.categoryName %></label
 									>
 								</div>
@@ -423,7 +423,6 @@
 			</form>
 		</div>
 
-		<!-- Image Cropper Modal -->
 		<div id="cropperModal" class="modal">
 			<div class="modal-content">
 				<div class="modal-header">
@@ -451,13 +450,23 @@
 				</div>
 			</div>
 		</div>
+		<div id="toast" class="toast"></div>
+
 		<script>
-						// Product Form Handler JavaScript
 			let cropper = null;
 			let currentImageIndex = null;
 			let croppedImages = {};
 
-			// Initialize event listeners
+			function showToast(message, type = 'success') {
+  const toast = document.getElementById('toast');
+  toast.textContent = message;
+  toast.className = `toast toast-${type} show`;
+
+  setTimeout(() => {
+    toast.classList.remove('show');
+  }, 3000);
+}
+
 			document.addEventListener('DOMContentLoaded', function() {
 			    initializeImageUpload();
 			    initializeFormSubmission();
@@ -468,7 +477,6 @@
 			    initializeAutoSKU();
 			});
 
-			// Initialize image upload functionality
 			function initializeImageUpload() {
 			    const uploadBoxes = document.querySelectorAll('.image-upload-box');
 
@@ -491,7 +499,6 @@
 			    });
 			}
 
-			// Open image cropper modal
 			function openCropper(file) {
 			    const reader = new FileReader();
 			    reader.onload = function(e) {
@@ -522,7 +529,6 @@
 			    reader.readAsDataURL(file);
 			}
 
-			// Initialize cropper modal functionality
 			function initializeCropperModal() {
 			    const modal = document.getElementById('cropperModal');
 			    const closeBtn = modal.querySelector('.close');
@@ -540,7 +546,6 @@
 			    });
 			}
 
-			// Close cropper modal
 			function closeCropper() {
 			    document.getElementById('cropperModal').style.display = 'none';
 			    if (cropper) {
@@ -550,7 +555,6 @@
 			    currentImageIndex = null;
 			}
 
-			// Apply crop and save image
 			function applyCrop() {
 			    if (cropper && currentImageIndex !== null) {
 			        const canvas = cropper.getCroppedCanvas({
@@ -568,7 +572,6 @@
 			    }
 			}
 
-			// Update image preview after cropping
 			function updateImagePreview(index, dataURL) {
 			    const uploadBox = document.querySelector(`[data-index="${index}"]`);
 			    uploadBox.classList.add('has-image');
@@ -579,7 +582,6 @@
 			    `;
 			}
 
-			// Remove uploaded image
 			function removeImage(index) {
 			    const uploadBox = document.querySelector(`[data-index="${index}"]`);
 			    uploadBox.classList.remove('has-image');
@@ -613,13 +615,11 @@
 			    });
 			}
 
-			// Initialize form submission
 			function initializeFormSubmission() {
 			    const form = document.getElementById('productForm');
 			    form.addEventListener('submit', handleFormSubmission);
 			}
 
-			// Handle form submission
 			async function handleFormSubmission(e) {
 			    e.preventDefault();
 
@@ -660,7 +660,7 @@
 			        });
 
 			        showAlert(response.data.message || 'Product added successfully!', 'success');
-
+							showToast(response.data.message || 'Product added successfully!', 'success');
 			        // Reset form after successful submission
 			        setTimeout(() => {
 			            resetForm();
@@ -675,6 +675,7 @@
 			        console.error('Error adding product:', error);
 			        const errorMessage = error.response?.data?.message || 'Error adding product. Please try again.';
 			        showAlert(errorMessage, 'error');
+							showToast(errorMessage, 'error');
 			    } finally {
 			        submitBtn.classList.remove('loading');
 			        submitBtn.disabled = false;
@@ -682,7 +683,6 @@
 			    }
 			}
 
-			// Form validation
 			function validateForm() {
 			    let isValid = true;
 			    const errors = [];
@@ -747,6 +747,7 @@
 
 			    if (!isValid) {
 			        showAlert(errors.join('<br>'), 'error');
+							showToast(errors.join('<br>'), 'error');
 			    }
 
 			    return isValid;
@@ -766,7 +767,6 @@
 			    }, 5000);
 			}
 
-			// Reset form
 			function resetForm() {
 			    document.getElementById('productForm').reset();
 
@@ -799,7 +799,6 @@
 			    document.getElementById('alertContainer').innerHTML = '';
 			}
 
-			// Initialize toggle switches
 			function initializeToggleSwitches() {
 			    const toggles = document.querySelectorAll('.toggle-switch');
 
@@ -817,7 +816,6 @@
 			    });
 			}
 
-			// Initialize price validation
 			function initializePriceValidation() {
 			    const priceInput = document.getElementById('price');
 			    const salePriceInput = document.getElementById('salePrice');
@@ -852,7 +850,6 @@
 			    salePriceInput.addEventListener('input', validatePrices);
 			}
 
-			// Initialize category validation
 			function initializeCategoryValidation() {
 			    const categoryCheckboxes = document.querySelectorAll('input[name="category"]');
 
@@ -870,7 +867,6 @@
 			    });
 			}
 
-			// Initialize auto-generated SKU
 			function initializeAutoSKU() {
 			    const brandSelect = document.getElementById('brand');
 			    const productNameInput = document.getElementById('productName');
@@ -893,7 +889,6 @@
 			    productNameInput.addEventListener('input', generateSKU);
 			}
 
-			// Global functions for inline event handlers
 			window.removeImage = removeImage;
 			window.resetForm = resetForm;
 		</script>
