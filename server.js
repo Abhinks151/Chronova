@@ -35,7 +35,7 @@ app.use(express.urlencoded({ extended: true }));
 
 
 // Error handler
-app.use(errorMiddleware);
+// app.use(errorMiddleware);
 
 
 

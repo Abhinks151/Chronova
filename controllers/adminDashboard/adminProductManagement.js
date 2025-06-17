@@ -1,27 +1,26 @@
 import httpStatusCode from '../../utils/httpStatusCode.js';
-import { addProductService } from '../../servises/productManagement/addProductServise.js';
-import { getProductsServise } from '../../servises/productManagement/getProductsServise.js';
+import { addProductService, getCategories } from '../../servises/productManagement/addProductServise.js';
 import { blockProductService } from '../../servises/productManagement/blockProductServise.js';
 import { deleteProductService } from '../../servises/productManagement/daleteProductServise.js';
 import { paginationService } from '../../servises/productManagement/paginationService.js';
-import { Products } from '../../models/products.js';
-import { Category } from '../../models/category.js';
+import { getProduct, updateProductService } from '../../servises/productManagement/editProductService.js';
 
-const categories = [
-  { _id: 'men', name: 'Men' },
-  { _id: 'women', name: 'Women' },
-  { _id: 'kids', name: 'Kids' },
-  { _id: 'unisex', name: 'Unisex' },
-  { _id: 'luxury', name: 'Luxury' },
-  { _id: 'formal', name: 'Formal' },
-  { _id: 'casual', name: 'Casual' },
-  { _id: 'sports', name: 'Sports' },
-  { _id: 'minimalist', name: 'Minimalist' },
-  { _id: 'fashion', name: 'Fashion' },
-  { _id: 'retro', name: 'Retro' },
-  { _id: 'outdoor', name: 'Outdoor' },
-  { _id: 'chronograph', name: 'Chronograph' }
-];
+
+// const categories = [
+//   { _id: 'men', name: 'Men' },
+//   { _id: 'women', name: 'Women' },
+//   { _id: 'kids', name: 'Kids' },
+//   { _id: 'unisex', name: 'Unisex' },
+//   { _id: 'luxury', name: 'Luxury' },
+//   { _id: 'formal', name: 'Formal' },
+//   { _id: 'casual', name: 'Casual' },
+//   { _id: 'sports', name: 'Sports' },
+//   { _id: 'minimalist', name: 'Minimalist' },
+//   { _id: 'fashion', name: 'Fashion' },
+//   { _id: 'retro', name: 'Retro' },
+//   { _id: 'outdoor', name: 'Outdoor' },
+//   { _id: 'chronograph', name: 'Chronograph' }
+// ];
 
 const types = [
   { _id: 'mechanical', name: 'Mechanical' },
@@ -47,7 +46,7 @@ export const getProductsPage = async (req, res) => {
   try {
     const paginated = await paginationService(req.query);
     // console.log(paginated.products);
-    res.render('Layouts/adminDashboard/products', {
+    res.status(httpStatusCode.OK.code).render('Layouts/adminDashboard/products', {
       title: 'Products',
       products: paginated.products,
       categories: paginated.categories,
@@ -60,7 +59,7 @@ export const getProductsPage = async (req, res) => {
     });
   } catch (error) {
     console.error('Error loading products page:', error);
-    res.status(500).render('error', { error: 'Failed to load products' });
+    res.status(httpStatusCode.INTERNAL_SERVER_ERROR.code).render('error', { error: 'Failed to load products' });
   }
 };
 
@@ -68,7 +67,7 @@ export const getFilteredProducts = async (req, res) => {
   try {
     const paginated = await paginationService(req.query);
     // console.log(paginated);
-    res.status(200).json({
+    res.status(httpStatusCode.OK.code).json({
       success: true,
       products: paginated.products,
       categories: paginated.categories,
@@ -80,7 +79,7 @@ export const getFilteredProducts = async (req, res) => {
     });
   } catch (error) {
     console.error('Error filtering products:', error);
-    res.status(500).json({
+    res.status(httpStatusCode.INTERNAL_SERVER_ERROR.code).json({
       success: false,
       message: 'Failed to fetch products',
     });
@@ -88,11 +87,15 @@ export const getFilteredProducts = async (req, res) => {
 };
 
 export const getAddProducts = async (req, res) => {
-  const categories = await Category.find({ isDeleted: false, isBlocked: false }).sort({ createdAt: -1 }).lean();
-  // console.log(categories)
-  res.status(httpStatusCode.OK.code).render('Layouts/adminDashboard/addProducts', {
-    categories
-  });
+  try {
+    const categories = await getCategories();
+    res.status(httpStatusCode.OK.code).render('Layouts/adminDashboard/addProducts', {
+      categories
+    });
+  } catch (error) {
+    console.log(error);
+    res.status(httpStatusCode.INTERNAL_SERVER_ERROR.code).json({ message: 'Something went wrong' });
+  }
 }
 
 export const postAddProducts = async (req, res) => {
@@ -128,14 +131,6 @@ export const postAddProducts = async (req, res) => {
     res.status(httpStatusCode.INTERNAL_SERVER_ERROR.code).json({ message: 'Something went wrong' });
   }
 }
-
-
-
-
-
-
-
-
 
 
 // export const getEditProducts = async (req, res) => {
@@ -250,10 +245,10 @@ export const postAddProducts = async (req, res) => {
 export const getEditProducts = async (req, res) => {
   try {
     const { id } = req.params;
-    const categories = await Category.find({ isDeleted: false, isBlocked: false }).sort({ createdAt: -1 }).lean();
-    const product = await Products.findById(id);
+    const categories = await getCategories();
+    const product = await getProduct()
     if (!product) {
-      return res.status(404).render('error', { message: 'Product not found' });
+      return res.status(httpStatusCode.NOT_FOUND.code).render('error', { message: 'Product not found' });
     }
 
     res.render('Layouts/adminDashboard/editProducts', {
@@ -270,100 +265,35 @@ export const getEditProducts = async (req, res) => {
   }
 };
 
-// @desc Handle product update
 export const patchEditProducts = async (req, res) => {
   try {
     const { id } = req.params;
     const { body, files } = req;
 
-    const existingProduct = await Products.findById(id);
-    if (!existingProduct) {
-      return res.status(404).json({
+    const result = await updateProductService(id, body, files);
+
+    if (!result.success) {
+      return res.status(result.statusCode || 400).json({
         success: false,
-        message: 'Product not found'
+        message: result.message
       });
     }
 
-    if (body.sku && body.sku !== existingProduct.sku) {
-      const existingSKU = await Products.findOne({
-        sku: body.sku,
-        _id: { $ne: id }
-      });
-
-      if (existingSKU) {
-        return res.status(400).json({
-          success: false,
-          message: 'SKU already exists. Please use a different SKU.'
-        });
-      }
-    }
-
-    let images = existingProduct.images;
-    if (files && files.length > 0) {
-      images = files.map(file => ({
-        url: file.path,
-        public_id: file.filename
-      }));
-    }
-
-    const productData = {
-      ...body,
-      images,
-      updatedAt: new Date()
-    };
-
-    const updatedProduct = await Products.findByIdAndUpdate(
-      id,
-      productData,
-      { new: true, runValidators: true }
-    );
-
-    res.json({
+    return res.json({
       success: true,
-      message: 'Product updated successfully!',
-      product: updatedProduct,
+      message: result.message,
+      product: result.product,
       redirect: '/admin/products'
     });
 
   } catch (error) {
-    console.error('Error updating product:', error);
-
-    if (error.name === 'ValidationError') {
-      const errors = Object.values(error.errors).map(err => err.message);
-      return res.status(400).json({
-        success: false,
-        message: errors.join(', ')
-      });
-    }
-
-    if (error.code === 11000) {
-      return res.status(400).json({
-        success: false,
-        message: 'SKU already exists. Please use a different SKU.'
-      });
-    }
-
-    res.status(500).json({
+    console.error('Unexpected error in patchEditProducts:', error);
+    return res.status(httpStatusCode.INTERNAL_SERVER_ERROR.code).json({
       success: false,
       message: 'Error updating product. Please try again.'
     });
   }
 };
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 
 export const blockProduct = async (req, res) => {

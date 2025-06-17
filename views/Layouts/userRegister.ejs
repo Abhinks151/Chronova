@@ -1,347 +1,281 @@
 <!DOCTYPE html>
 <html lang="en">
-	<head>
-		<meta charset="UTF-8" />
-		<meta name="viewport" content="width=device-width, initial-scale=1" />
-		<title><%= title || 'Register' %></title>
-		<link rel="stylesheet" href="/styles/userRegister.css" />
-	</head>
-	<body>
-		<div class="container">
-			<div
-				class="register-card"
-				role="main"
-				aria-labelledby="registerTitle"
-			>
-				<h1 class="title" id="registerTitle">Register now</h1>
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title><%= title || 'Register' %></title>
+    <link rel="stylesheet" href="/styles/userRegister.css" />
+    <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
+    <style>
+      .error-message {
+        display: none;
+        color: red;
+        font-size: 0.85rem;
+      }
 
-				<% if (successMessage) { %>
-				<div class="success-message" role="alert" aria-live="assertive">
-					<%= successMessage %>
-				</div>
-				<% } %>
+      .error-message.visible {
+        display: block;
+      }
 
-				<form
-					class="register-form"
-					id="registerForm"
-					action="/user/register"
-					method="POST"
-					novalidate
-					aria-describedby="general-error"
-				>
-					<!-- First Name -->
-					<div class="form-group">
-						<label for="firstname" class="form-label"
-							>First name</label
-						>
-						<input
-							type="text"
-							id="firstname"
-							name="firstname"
-							class="form-input <%= errors?.firstname ? 'error' : '' %>"
-							placeholder="Enter your first name"
-							value="<%= formData?.firstname || '' %>"
-							aria-describedby="firstname-error"
-							required
-							autocomplete="given-name"
-						/>
-						<span
-							class="error-message"
-							id="firstname-error"
-							aria-live="polite"
-							><%= errors?.firstname || '' %></span
-						>
-					</div>
+      .form-input.error {
+        border-color: red;
+      }
 
-					<!-- Last Name -->
-					<div class="form-group">
-						<label for="lastname" class="form-label"
-							>Last name</label
-						>
-						<input
-							type="text"
-							id="lastname"
-							name="lastname"
-							class="form-input <%= errors?.lastname ? 'error' : '' %>"
-							placeholder="Enter your last name"
-							value="<%= formData?.lastname || '' %>"
-							aria-describedby="lastname-error"
-							autocomplete="family-name"
-						/>
-						<span
-							class="error-message"
-							id="lastname-error"
-							aria-live="polite"
-							><%= errors?.lastname || '' %></span
-						>
-					</div>
+      .success-message {
+        color: green;
+        font-weight: 600;
+        margin-bottom: 1rem;
+      }
+    </style>
+  </head>
 
-					<!-- Email -->
-					<div class="form-group">
-						<label for="email" class="form-label"
-							>Email address</label
-						>
-						<input
-							type="email"
-							id="email"
-							name="email"
-							class="form-input <%= errors?.email ? 'error' : '' %>"
-							placeholder="Enter your email"
-							value="<%= formData?.email || '' %>"
-							aria-describedby="email-error"
-							required
-							autocomplete="email"
-						/>
-						<span
-							class="error-message"
-							id="email-error"
-							aria-live="polite"
-							><%= errors?.email || '' %></span
-						>
-					</div>
+  <body>
+    <div class="container">
+      <div class="register-card" role="main" aria-labelledby="registerTitle">
+        <h1 class="title" id="registerTitle">Register now</h1>
 
-					<!-- Password -->
-					<div class="form-group">
-						<label for="password" class="form-label"
-							>Password</label
-						>
-						<input
-							type="password"
-							id="password"
-							name="password"
-							class="form-input <%= errors?.password ? 'error' : '' %>"
-							placeholder="Enter your password"
-							aria-describedby="password-error"
-							required
-							autocomplete="new-password"
-						/>
-						<span
-							class="error-message"
-							id="password-error"
-							aria-live="polite"
-							><%= errors?.password || '' %></span
-						>
-					</div>
+        <% if (successMessage) { %>
+        <div class="success-message" role="alert" aria-live="assertive">
+          <%= successMessage %>
+        </div>
+        <% } %>
 
-					<!-- Confirm Password -->
-					<div class="form-group">
-						<label for="confirmPassword" class="form-label"
-							>Confirm password</label
-						>
-						<input
-							type="password"
-							id="confirmPassword"
-							name="confirmPassword"
-							class="form-input <%= errors?.confirmPassword ? 'error' : '' %>"
-							placeholder="Confirm your password"
-							aria-describedby="confirmPassword-error"
-							required
-							autocomplete="new-password"
-						/>
-						<span
-							class="error-message"
-							id="confirmPassword-error"
-							aria-live="polite"
-							><%= errors?.confirmPassword || '' %></span
-						>
-					</div>
+        <form
+          class="register-form"
+          id="registerForm"
+          action="/user/register"
+          method="POST"
+          novalidate
+        >
+          <!-- First Name -->
+          <div class="form-group">
+            <label for="firstname">First name</label>
+            <input
+              type="text"
+              id="firstname"
+              name="firstname"
+              class="form-input"
+              placeholder="Enter your first name"
+              autocomplete="given-name"
+              required
+            />
+            <span class="error-message" id="firstname-error"></span>
+          </div>
 
-					<!-- General Error -->
-					<div
-						class="error-message"
-						id="general-error"
-						role="alert"
-						aria-live="assertive"
-						tabindex="-1"
-					>
-						<%= errors?.general || '' %>
-					</div>
+          <!-- Last Name -->
+          <div class="form-group">
+            <label for="lastname">Last name</label>
+            <input
+              type="text"
+              id="lastname"
+              name="lastname"
+              class="form-input"
+              placeholder="Enter your last name"
+              autocomplete="family-name"
+              required
+            />
+            <span class="error-message" id="lastname-error"></span>
+          </div>
 
-					<!-- Submit Button -->
-					<button
-						type="submit"
-						class="signup-btn"
-						id="signupBtn"
-						aria-live="polite"
-						aria-busy="false"
-					>
-						<span class="btn-text">Signup</span>
-						<div
-							class="loading-spinner"
-							id="loadingSpinner"
-							style="display: none;"
-							aria-hidden="true"
-						></div>
-					</button>
+          <!-- Email -->
+          <div class="form-group">
+            <label for="email">Email address</label>
+            <input
+              type="email"
+              id="email"
+              name="email"
+              class="form-input"
+              placeholder="Enter your email"
+              autocomplete="email"
+              required
+            />
+            <span class="error-message" id="email-error"></span>
+          </div>
 
-					<div class="divider"><span>or</span></div>
+          <!-- Password -->
+          <div class="form-group">
+            <label for="password">Password</label>
+            <input
+              type="password"
+              id="password"
+              name="password"
+              class="form-input"
+              placeholder="Enter your password"
+              autocomplete="new-password"
+              required
+            />
+            <span class="error-message" id="password-error"></span>
+          </div>
 
-					<!-- Google Button (disabled for now)
-        <button type="button" class="google-btn" disabled aria-disabled="true">Sign in with Google</button> -->
+          <!-- Confirm Password -->
+          <div class="form-group">
+            <label for="confirmPassword">Confirm password</label>
+            <input
+              type="password"
+              id="confirmPassword"
+              name="confirmPassword"
+              class="form-input"
+              placeholder="Confirm your password"
+              autocomplete="new-password"
+              required
+            />
+            <span class="error-message" id="confirmPassword-error"></span>
+          </div>
 
-					<button
-						type="button"
-						class="google-btn"
-						onclick="window.location.href='/auth/google'"
-					>
-						Sign in with Google
-					</button>
+          <!-- General Error -->
+          <div class="error-message" id="general-error" role="alert"></div>
 
-					<!-- Sign In Link -->
-					<div class="signin-link">
-						Have an account?
-						<a href="/user/login" class="link">Sign in</a>
-					</div>
-				</form>
+          <!-- Submit Button -->
+          <button type="submit" class="signup-btn" id="signupBtn">
+            <span class="btn-text">Signup</span>
+            <div
+              class="loading-spinner"
+              id="loadingSpinner"
+              style="display: none"
+            ></div>
+          </button>
 
-				<!-- Success Message Placeholder -->
-				<div
-					id="successMessage"
-					class="success-message"
-					role="alert"
-					aria-live="assertive"
-					style="display: none;"
-				></div>
-			</div>
-		</div>
+          <!-- Success Message -->
+          <div
+            id="successMessage"
+            class="success-message"
+            role="alert"
+            style="display: none"
+          ></div>
+        </form>
+      </div>
+    </div>
 
-		<script>
-			document.addEventListener('DOMContentLoaded', () => {
-			  const form = document.getElementById('registerForm');
-			  const signupBtn = document.getElementById('signupBtn');
-			  const btnText = signupBtn.querySelector('.btn-text');
-			  const spinner = document.getElementById('loadingSpinner');
-			  const successMessage = document.getElementById('successMessage');
+    <script>
+      document.addEventListener('DOMContentLoaded', () => {
+        const form = document.getElementById('registerForm');
+        const signupBtn = document.getElementById('signupBtn');
+        const btnText = signupBtn.querySelector('.btn-text');
+        const spinner = document.getElementById('loadingSpinner');
+        const successMessage = document.getElementById('successMessage');
 
-			  const inputs = {
-			    firstname: document.getElementById('firstname'),
-			    lastname: document.getElementById('lastname'),
-			    email: document.getElementById('email'),
-			    password: document.getElementById('password'),
-			    confirmPassword: document.getElementById('confirmPassword'),
-			  };
+        const inputs = {
+          firstname: document.getElementById('firstname'),
+          lastname: document.getElementById('lastname'),
+          email: document.getElementById('email'),
+          password: document.getElementById('password'),
+          confirmPassword: document.getElementById('confirmPassword')
+        };
 
-			  const errorElements = {
-			    firstname: document.getElementById('firstname-error'),
-			    lastname: document.getElementById('lastname-error'),
-			    email: document.getElementById('email-error'),
-			    password: document.getElementById('password-error'),
-			    confirmPassword: document.getElementById('confirmPassword-error'),
-			    general: document.getElementById('general-error'),
-			  };
+        const errorElements = {
+          firstname: document.getElementById('firstname-error'),
+          lastname: document.getElementById('lastname-error'),
+          email: document.getElementById('email-error'),
+          password: document.getElementById('password-error'),
+          confirmPassword: document.getElementById('confirmPassword-error'),
+          general: document.getElementById('general-error')
+        };
 
-			  // Clear error on input change
-			  Object.entries(inputs).forEach(([field, input]) => {
-			    input.addEventListener('input', () => {
-			      clearFieldError(field);
-			    });
-			  });
+        Object.entries(inputs).forEach(([field, input]) => {
+          input.addEventListener('input', () => {
+            clearFieldError(field);
+          });
+        });
 
-			  form.addEventListener('submit', async (e) => {
-			    e.preventDefault();
-			    clearAllErrors();
-			    hideSuccessMessage();
-			    setLoadingState(true);
+        form.addEventListener('submit', async (e) => {
+          e.preventDefault();
+          clearAllErrors();
+          hideSuccessMessage();
+          setLoadingState(true);
 
-			    try {
-			      const formData = new FormData(form);
-			      const data = {
-			        firstname: formData.get('firstname').trim(),
-			        lastname: formData.get('lastname').trim(),
-			        email: formData.get('email').trim(),
-			        password: formData.get('password'),
-			        confirmPassword: formData.get('confirmPassword'),
-			      };
+          try {
+            const data = {
+              firstname: inputs.firstname.value.trim(),
+              lastname: inputs.lastname.value.trim(),
+              email: inputs.email.value.trim(),
+              password: inputs.password.value,
+              confirmPassword: inputs.confirmPassword.value
+            };
 
-			      const response = await fetch('/user/register', {
-			        method: 'POST',
-			        headers: {
-			          'Content-Type': 'application/json',
-			          'X-Requested-With': 'XMLHttpRequest',
-			        },
-			        body: JSON.stringify(data),
-			        credentials: 'include',
-			      });
+            const response = await axios.post('/user/register', data, {
+              headers: {
+                'Content-Type': 'application/json',
+                'X-Requested-With': 'XMLHttpRequest'
+              },
+              withCredentials: true
+            });
 
-			      const result = await response.json();
+            const result = response.data;
 
-			      if (result.success) {
-			        showSuccessMessage(result.message || 'Registration successful!');
-			        form.reset();
-			        // Focus success message for accessibility
-			        successMessage.focus();
-			        setTimeout(() => {
-			          window.location.href = result.redirect || '/user/login';
-			        }, 2000);
-			      } else {
-			        if (result.errors && typeof result.errors === 'object') {
-			          displayErrors(result.errors);
-			          // Focus general error if present
-			          if (result.errors.general) {
-			            errorElements.general.focus();
-			          }
-			        } else {
-			          showGeneralError('Registration failed. Please try again.');
-			          errorElements.general.focus();
-			        }
-			      }
-			    } catch (error) {
-			      console.error('Registration error:', error);
-			      showGeneralError('Network error. Please try again.');
-			      errorElements.general.focus();
-			    } finally {
-			      setLoadingState(false);
-			    }
-			  });
+            if (result.success) {
+              showSuccessMessage(result.message);
+              form.reset();
+              successMessage.focus();
+              setTimeout(() => {
+                window.location.href = result.redirect || '/user/login';
+              }, 2000);
+            } else {
+              if (result.errors && typeof result.errors === 'object') {
+                displayErrors(result.errors);
+              } else {
+                showGeneralError('Registration failed. Try again.');
+              }
+            }
+          } catch (err) {
+            const errorData = err?.response?.data?.errors;
+            if (errorData) {
+              displayErrors(errorData);
+            } else {
+              showGeneralError('Network/server error. Please try again.');
+            }
+          } finally {
+            setLoadingState(false);
+          }
+        });
 
-			  function clearAllErrors() {
-			    Object.values(errorElements).forEach(el => {
-			      el.textContent = '';
-			      el.classList.remove('visible');
-			    });
-			    Object.values(inputs).forEach(input => input.classList.remove('error'));
-			  }
+        function clearAllErrors() {
+          Object.values(errorElements).forEach((el) => {
+            el.textContent = '';
+            el.classList.remove('visible');
+          });
+          Object.values(inputs).forEach((input) =>
+            input.classList.remove('error')
+          );
+        }
 
-			  function clearFieldError(field) {
-			    errorElements[field].textContent = '';
-			    inputs[field].classList.remove('error');
-			    errorElements.general.textContent = '';
-			    hideSuccessMessage();
-			  }
+        function clearFieldError(field) {
+          errorElements[field].textContent = '';
+          errorElements[field].classList.remove('visible');
+          inputs[field].classList.remove('error');
+        }
 
-			  function displayErrors(errors) {
-			    Object.entries(errors).forEach(([field, message]) => {
-			      if (errorElements[field]) {
-			        errorElements[field].textContent = message;
-			        errorElements[field].classList.add('visible');
-			      }
-			      if (field !== 'general' && inputs[field]) {
-			        inputs[field].classList.add('error');
-			      }
-			    });
-			  }
+        function displayErrors(errors) {
+          Object.entries(errors).forEach(([field, message]) => {
+            if (errorElements[field]) {
+              errorElements[field].textContent = message;
+              errorElements[field].classList.add('visible');
+              if (inputs[field]) {
+                inputs[field].classList.add('error');
+              }
+            }
+          });
+        }
 
-			  function showGeneralError(msg) {
-			    errorElements.general.textContent = msg;
-			    errorElements.general.classList.add('visible');
-			  }
+        function showGeneralError(msg) {
+          errorElements.general.textContent = msg;
+          errorElements.general.classList.add('visible');
+        }
 
-			  function showSuccessMessage(msg) {
-			    successMessage.textContent = msg;
-			    successMessage.style.display = 'block';
-			  }
+        function showSuccessMessage(msg) {
+          successMessage.textContent = msg;
+          successMessage.style.display = 'block';
+        }
 
-			  function hideSuccessMessage() {
-			    successMessage.style.display = 'none';
-			  }
+        function hideSuccessMessage() {
+          successMessage.style.display = 'none';
+        }
 
-			  function setLoadingState(isLoading) {
-			    signupBtn.disabled = isLoading;
-			    signupBtn.setAttribute('aria-busy', isLoading);
-			    btnText.style.opacity = isLoading ? '0' : '1';
-			    spinner.style.display = isLoading ? 'block' : 'none';
-			  }
-			});
-		</script>
-	</body>
+        function setLoadingState(isLoading) {
+          signupBtn.disabled = isLoading;
+          btnText.style.opacity = isLoading ? '0' : '1';
+          spinner.style.display = isLoading ? 'block' : 'none';
+        }
+      });
+    </script>
+  </body>
 </html>

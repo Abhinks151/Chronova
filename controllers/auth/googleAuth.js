@@ -24,7 +24,7 @@ export const googleCallback = [
         maxAge: 7 * 24 * 60 * 60 * 1000,
       });
 
-      res.redirect('/user/home');
+      res.redirect('/user/products');
     } catch (err) {
       console.error('OAuth error:', err);
       res.redirect('/user/login');

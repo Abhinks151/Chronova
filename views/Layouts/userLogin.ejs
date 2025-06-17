@@ -13,7 +13,6 @@
 			<div class="register-card">
 				<h1 class="title">Sign in to your account</h1>
 
-				<!-- Success Message -->
 				<% if (typeof successMessage !== 'undefined' && successMessage)
 				{ %>
 				<div class="success-message"><%= successMessage %></div>
@@ -41,7 +40,6 @@
 						</span>
 					</div>
 
-					<!-- Password -->
 					<div class="form-group">
 						<label for="password" class="form-label"
 							>Password</label
@@ -60,13 +58,11 @@
 						</span>
 					</div>
 
-					<!-- General Error -->
 					<div class="error-message" id="general-error">
 						<%= (typeof errors !== 'undefined' && errors.general) ?
 						errors.general : '' %>
 					</div>
 
-					<!-- Submit -->
 					<button type="submit" class="signup-btn" id="submitBtn">
 						<span class="btn-text">Login</span>
 						<div
@@ -78,7 +74,6 @@
 
 					<div class="divider"><span>or</span></div>
 
-					<!-- Google Login -->
 					<button
 						type="button"
 						class="google-btn"
@@ -87,7 +82,6 @@
 						Sign in with Google
 					</button>
 
-					<!-- Links -->
 					<div class="signin-link">
 						Don't have an account?
 						<a href="/user/register" class="link">Register</a>
@@ -103,7 +97,7 @@
 		</div>
 
 		<script>
-			document.addEventListener('DOMContentLoaded', function () {
+			  document.addEventListener('DOMContentLoaded', function () {
 			  const form = document.getElementById('loginForm');
 			  const submitBtn = document.getElementById('submitBtn');
 			  const btnText = document.querySelector('.btn-text');

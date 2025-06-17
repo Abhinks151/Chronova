@@ -30,8 +30,6 @@ export const getCategory = async (req, res) => {
   }
 };
    
-
-
 // export const addCategory = async (req, res) => {
 //   try {
 //     const categoryData = req.body;
@@ -71,9 +69,6 @@ export const getCategory = async (req, res) => {
 // };
 
 // Filter categories with search, type, status, sort, pagination
-
-
-
 
 
 export const filterCategories = async (req, res) => {

@@ -3,7 +3,7 @@ User:
   ✔ forget passowrd fixes @done (6/12/2025, 12:38:59 PM)
   ✔ reset password fix @done (6/12/2025, 12:39:18 PM)
   ✔ reset password route and flow complete fix @done (6/13/2025, 12:11:54 PM)
-  ☐ structure and compactablity
+  ✔ structure and compactablity @done (6/17/2025, 2:42:49 PM)
   ✔ better messages for emails @done (6/13/2025, 1:01:24 PM)
   ✔ welcome message for verified users @done (6/13/2025, 1:01:26 PM)
   ☐ reset password button
@@ -12,7 +12,7 @@ User:
     ✔ set up passport js google auth strategy @done (6/13/2025, 9:37:49 AM)
     ✔ add google auth in login page @done (6/13/2025, 9:37:29 AM)
     ☐ check accesstoken and refresh toekn inside passport.js
-    ☐ add 0auth to user register page
+    ✔ add 0auth to user register page @done (6/17/2025, 2:42:41 PM)
 
   Product details page:
     ✔ almost complete with featured products @done (6/16/2025, 11:16:14 PM)
@@ -43,13 +43,13 @@ Admin:
   
 
 GLOBAL:
-  ☐ check status code
-  ☐ check folder structure
+  ✔ check status code @done (6/17/2025, 2:43:09 PM)
+  ✔ check folder structure @done (6/17/2025, 2:43:09 PM)
   ☐ Error management
   ☐ maintain consistency for category brand and type in all places
-  ☐ check jwt expriry times
-  ☐ check otp and other verification times
-  ☐ clear unnesseasry clg
+  ✔ check jwt expriry times @done (6/17/2025, 2:44:03 PM)
+  ✔ check otp and other verification times @done (6/17/2025, 2:44:20 PM)
+  ✔ clear unnesseasry clg @done (6/17/2025, 2:44:22 PM)
   ☐ convert type and brand into utility constants
   ☐ validation all kind and type
 
