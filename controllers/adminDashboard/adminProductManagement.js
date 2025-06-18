@@ -5,23 +5,6 @@ import { deleteProductService } from '../../servises/productManagement/daletePro
 import { paginationService } from '../../servises/productManagement/paginationService.js';
 import { getProduct, updateProductService } from '../../servises/productManagement/editProductService.js';
 
-
-// const categories = [
-//   { _id: 'men', name: 'Men' },
-//   { _id: 'women', name: 'Women' },
-//   { _id: 'kids', name: 'Kids' },
-//   { _id: 'unisex', name: 'Unisex' },
-//   { _id: 'luxury', name: 'Luxury' },
-//   { _id: 'formal', name: 'Formal' },
-//   { _id: 'casual', name: 'Casual' },
-//   { _id: 'sports', name: 'Sports' },
-//   { _id: 'minimalist', name: 'Minimalist' },
-//   { _id: 'fashion', name: 'Fashion' },
-//   { _id: 'retro', name: 'Retro' },
-//   { _id: 'outdoor', name: 'Outdoor' },
-//   { _id: 'chronograph', name: 'Chronograph' }
-// ];
-
 const types = [
   { _id: 'mechanical', name: 'Mechanical' },
   { _id: 'automatic', name: 'Automatic' },
@@ -40,12 +23,9 @@ const brands = [
   { _id: 'mk', name: 'Michael Kors' }
 ];
 
-
-
 export const getProductsPage = async (req, res) => {
   try {
     const paginated = await paginationService(req.query);
-    // console.log(paginated.products);
     res.status(httpStatusCode.OK.code).render('Layouts/adminDashboard/products', {
       title: 'Products',
       products: paginated.products,
@@ -66,7 +46,6 @@ export const getProductsPage = async (req, res) => {
 export const getFilteredProducts = async (req, res) => {
   try {
     const paginated = await paginationService(req.query);
-    // console.log(paginated);
     res.status(httpStatusCode.OK.code).json({
       success: true,
       products: paginated.products,
@@ -96,24 +75,17 @@ export const getAddProducts = async (req, res) => {
     console.log(error);
     res.status(httpStatusCode.INTERNAL_SERVER_ERROR.code).json({ message: 'Something went wrong' });
   }
-}
+};
 
 export const postAddProducts = async (req, res) => {
   try {
     const { body, files } = req;
-
-    const images = files.map((file) => ({
+    const images = files.map(file => ({
       url: file.path,
       public_id: file.filename
     }));
 
-    const productData = {
-      ...body,
-      images
-    };
-
-    // console.log(productData)
-
+    const productData = { ...body, images };
     const result = await addProductService(productData);
 
     if (result.error) {
@@ -121,6 +93,34 @@ export const postAddProducts = async (req, res) => {
         success: false,
         message: result.error
       });
+    }
+
+    const { productName, description, price, stockQuantity, category, brand } = productData;
+    const parsedPrice = Number(price);
+    const parsedStock = Number(stockQuantity);
+
+    if (!productName || !productName.trim() || !/^[a-zA-Z\s]+$/.test(productName.trim())) {
+      return { error: "Product name is required and must contain only letters and spaces" };
+    }
+
+    if (!description || !description.trim() || !/^.{10,}$/.test(description.trim())) {
+      return { error: "Product description is required and must be at least 10 characters" };
+    }
+
+    if (isNaN(parsedPrice) || parsedPrice < 0) {
+      return { error: "Product price must be a valid non-negative number" };
+    }
+
+    if (isNaN(parsedStock) || parsedStock < 0) {
+      return { error: "Product stock must be a valid non-negative number" };
+    }
+
+    if (!Array.isArray(category) || !category.every(id => mongoose.Types.ObjectId.isValid(id))) {
+      return { error: "Invalid category id" };
+    }
+
+    if (brand && (!/^[a-zA-Z\s]+$/.test(brand) || typeof brand !== "string")) {
+      return { error: "Brand must be a string containing only letters and spaces" };
     }
 
     return res.status(httpStatusCode.CREATED.code).json({
@@ -138,122 +138,12 @@ export const postAddProducts = async (req, res) => {
   }
 };
 
-
-
-// export const getEditProducts = async (req, res) => {
-//     try {
-//         const { id } = req.params;
-
-//         const product = await Products.findById(id);
-//         if (!product) {
-//             return res.status(404).json({ 
-//                 success: false, 
-//                 message: 'Product not found' 
-//             });
-//         }
-
-//         if (product.isDeleted) {
-//             return res.status(404).json({ 
-//                 success: false, 
-//                 message: 'Product has been deleted' 
-//             });
-//         }
-
-//         res.render('Layouts/adminDashboard/editProducts', { 
-//             product,
-//             title: 'Edit Product',
-//             // currentPage: 'products'
-//         });
-//     } catch (error) {
-//         console.error('Error fetching product for edit:', error);
-//         res.status(500).json({ 
-//             success: false, 
-//             message: 'Server error while fetching product' 
-//         });
-//     }
-// };
-
-
-
-
-
-// export const patchEditProducts = async (req, res) => {
-//   try {
-//     const { id } = req.params;
-//     const { body, files } = req;
-
-//     const existingProduct = await Products.findById(id);
-//     if (!existingProduct) {
-//       return res.status(404).render('Layouts/adminDashboard/editProducts', {
-//         error: 'Product not found',
-//         product: null,
-//         title: 'Edit Product',
-//         currentPage: 'products'
-//       });
-//     }
-
-//     // Prepare new image array
-//     let images = [];
-
-//     if (files && files.length > 0) {
-//       images = files.map(file => ({
-//         url: file.path,
-//         public_id: file.filename
-//       }));
-//     } else {
-//       images = existingProduct.images;
-//     }
-
-//     // Optional manual validation
-//     if (!images || images.length !== 4) {
-//       return res.status(400).render('Layouts/adminDashboard/editProducts', {
-//         error: 'Exactly 4 images are required.',
-//         product: existingProduct,
-//         title: 'Edit Product',
-//         currentPage: 'products'
-//       });
-//     }
-
-//     const updatedProductData = {
-//       ...body,
-//       images
-//     };
-
-
-//     console.log(updatedProductData);
-
-//     await Products.findByIdAndUpdate(id, updatedProductData, {
-//       new: true,
-//       runValidators: true
-//     });
-
-//     res.status(httpStatusCode.OK.code).json({
-//       message: 'Product updated successfully',
-//       redirect: '/admin/products'
-//     });
-//   } catch (err) {
-//     console.error('Error in patchEditProducts:', err);
-//     res.status(httpStatusCode.INTERNAL_SERVER_ERROR.code).json({
-//       message: 'Something went wrong while updating product'
-//     });
-//   }
-// };
-
-
-
-// Temporary hardcoded values
-
-
-
-
-
-
-// @desc Render edit product page
 export const getEditProducts = async (req, res) => {
   try {
     const { id } = req.params;
     const categories = await getCategories();
-    const product = await getProduct()
+    const product = await getProduct(id);
+
     if (!product) {
       return res.status(httpStatusCode.NOT_FOUND.code).render('error', { message: 'Product not found' });
     }
@@ -268,7 +158,12 @@ export const getEditProducts = async (req, res) => {
 
   } catch (error) {
     console.error('Error fetching product for edit:', error);
-    res.status(500).render('error', { message: 'Server error' });
+    res.status(httpStatusCode.INTERNAL_SERVER_ERROR.code).render('Layouts/adminDashboard/editProducts', {
+      message: 'Server error while fetching product',
+      categories,
+      brands,
+      types
+    });
   }
 };
 
@@ -276,7 +171,6 @@ export const patchEditProducts = async (req, res) => {
   try {
     const { id } = req.params;
     const { body, files } = req;
-
     const result = await updateProductService(id, body, files);
 
     if (!result.success) {
@@ -302,11 +196,9 @@ export const patchEditProducts = async (req, res) => {
   }
 };
 
-
 export const blockProduct = async (req, res) => {
   try {
     const { productId } = req.params;
-
     await blockProductService(productId);
 
     res.status(httpStatusCode.OK.code).json({
@@ -316,26 +208,24 @@ export const blockProduct = async (req, res) => {
     });
 
   } catch (error) {
-    console.error(err);
+    console.error(error);
     res.status(httpStatusCode.INTERNAL_SERVER_ERROR.code).json({ message: 'Something went wrong' });
   }
-}
-
+};
 
 export const deleteProduct = async (req, res) => {
   try {
     const { productId } = req.params;
-
     await deleteProductService(productId);
 
     res.status(httpStatusCode.OK.code).json({
       success: true,
       message: 'Product deleted successfully',
-
-    })
+    });
 
   } catch (error) {
-    console.error(err);
+    console.error(error);
     res.status(httpStatusCode.INTERNAL_SERVER_ERROR.code).json({ message: 'Something went wrong' });
   }
-}
+};
+

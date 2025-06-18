@@ -3,11 +3,7 @@ import jwt from "jsonwebtoken";
 import { Admin } from "../models/adminModels.js";
 import httpStatusCode from "../utils/httpStatusCode.js";
 
-
-
 dotenv.config();
-
-
 
 export const authenticateAdmin = async (req, res, next) => {
   try {
@@ -16,15 +12,11 @@ export const authenticateAdmin = async (req, res, next) => {
       return res.redirect('/admin/login?error=unauthorized');
     }
 
-    
-
-
     const decoded = jwt.verify(adminToken, process.env.JWT_SECRET_KEY);
     const admin = await Admin.findById(decoded.id);
     if (!admin) {
       return res.redirect('/admin/login?error=unauthorized');
     }
-
 
     if (!admin.isAdmin) {
       return res.redirect('/admin/login?error=notAdmin');
@@ -38,3 +30,4 @@ export const authenticateAdmin = async (req, res, next) => {
     res.status(httpStatusCode.INTERNAL_SERVER_ERROR.code).json({ error: 'Internal Server Error' });
   }
 }
+

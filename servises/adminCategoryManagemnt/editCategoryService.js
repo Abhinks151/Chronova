@@ -2,7 +2,6 @@ import { Category } from '../../models/category.js';
 import mongoose from 'mongoose';
 import { Products } from '../../models/products.js';
 
-
 export const editCategoryService = async (id, updateData) => {
   if (!mongoose.Types.ObjectId.isValid(id)) {
     return { error: 'Invalid category ID' };
@@ -13,16 +12,16 @@ export const editCategoryService = async (id, updateData) => {
     return { error: 'Category not found' };
   }
 
-  if (!updateData.name || !updateData.name.trim()) {
-    return { error: 'Category name is required' };
+  if (!updateData.name || !updateData.name.trim() || !/^[a-zA-Z\s]+$/.test(updateData.name)) {
+    return { error: 'Category name is required and must contain only letters and spaces' };
   }
 
   if (!updateData.type || !['audience', 'style', 'function', 'seasonal'].includes(updateData.type)) {
     return { error: 'Invalid or missing category type' };
   }
 
-  if (!updateData.description || !updateData.description.trim()) {
-    return { error: 'Category description is required' };
+  if (!updateData.description || !updateData.description.trim() || !/^[a-zA-Z\s]+$/.test(updateData.description)) {
+    return { error: 'Category description is required and must contain only letters and spaces' };
   }
 
   const nameExists = await Category.findOne({

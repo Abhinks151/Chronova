@@ -3,96 +3,100 @@ import mongoose from "mongoose";
 const imageSchema = new mongoose.Schema({
   url: {
     type: String,
-    required: true
+    required: true,
   },
   public_id: {
     type: String,
-    required: true
-  }
+    required: true,
+  },
 }, { _id: false });
 
 const productSchema = new mongoose.Schema({
   productName: {
     type: String,
     required: true,
-    trim: true
+    trim: true,
   },
   brand: {
     type: String,
     required: true,
-    trim: true
+    trim: true,
   },
   isDeleted: {
     type: Boolean,
-    default: false
+    default: false,
   },
   isBlocked: {
     type: Boolean,
-    default: false
+    default: false,
   },
-  category: [
-    {
-      type: mongoose.Schema.Types.ObjectId,
-      ref: 'Category'
-    }
-  ],
+  category: [{
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'Category',
+  }],
   productType: {
     type: String,
     required: true,
   },
   description: {
     type: String,
-    required: true
+    required: true,
   },
   strapType: {
     type: String,
-    required: true
+    required: true,
   },
   color: {
     type: String,
-    required: true
+    required: true,
   },
   dialSize: {
     type: Number,
-    required: true
+    required: true,
   },
   dialShape: {
     type: String,
-    required: true
+    required: true,
   },
   movement: {
     type: String,
-    required: true
+    required: true,
   },
   waterResistance: {
     type: String,
-    required: true
+    required: true,
   },
   warranty: {
     type: String,
-    required: true
+    required: true,
   },
   weight: {
     type: Number,
-    required: true
+    required: true,
   },
   price: {
     type: Number,
-    required: true
+    required: true,
   },
   salePrice: {
     type: Number,
-    required: true
+    required: true,
+  },
+  finalPrice: {
+    type: Number,
+    default: function () {
+      return this.salePrice || this.price;
+    },
   },
   stockQuantity: {
     type: Number,
-    required: true
+    required: true,
   },
   sku: {
     type: String,
     required: true,
     unique: true,
-    trim: true
+    trim: true,
   },
   images: {
     type: [imageSchema],
@@ -100,38 +104,32 @@ const productSchema = new mongoose.Schema({
       validator: function (arr) {
         return arr.length === 4;
       },
-      message: '4 images are required.'
-    }
+      message: '4 images are required.',
+    },
   },
   averageRating: {
     type: Number,
-    default: 0
+    default: 0,
   },
   reviewCount: {
     type: Number,
-    default: 0
+    default: 0,
   },
-  review:[{
-    type : mongoose.Schema.Types.ObjectId,
-    ref : 'Review'
+  review: [{
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'Review',
   }],
   hasActiveOffer: {
     type: Boolean,
-    default: false
-  },
-  finalPrice: {
-    type: Number,
-    default: function () {
-      return this.salePrice || this.price;
-    }
+    default: false,
   },
   appliedDiscountInfo: {
     type: String,
-    default: "No discounts applied"
-  }
-
+    default: "No discounts applied",
+  },
 }, {
-  timestamps: true
+  timestamps: true,
 });
 
 export const Products = mongoose.model('Products', productSchema);
+

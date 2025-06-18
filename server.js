@@ -9,7 +9,7 @@ import nochace from "nocache";
 // import csurf from "csurf";
 
 import connection from "./config/dbConnection.js";
-import { errorMiddleware } from "./middlewares/errorMiddleware.js";
+// import { errorMiddleware } from "./middlewares/errorMiddleware.js";
 
 import indexRoutes from "./routes/index.js";
 
@@ -44,6 +44,7 @@ app.use("/", indexRoutes);
 
 
 app.listen(PORT, () => {
-  console.log(`Server running on port ${PORT}`);
+  console.log(`Server running on http://localhost:${PORT}/user/products`);
+  console.log(`Server running on http://localhost:${PORT}/admin/dashboard`);
 });
 

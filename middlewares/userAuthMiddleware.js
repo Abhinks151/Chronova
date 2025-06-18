@@ -36,7 +36,7 @@ export const authenticateUser = async (req, res, next) => {
       const renderData = createRenderData(
         'Login',
         { email: 'Login to your account to continue' },
-        {}, // formData
+        {},
         null
       );
       return handleResponse(req, res, httpStatusCode.UNAUTHORIZED.code, 'Layouts/userLogin', renderData);
@@ -48,7 +48,7 @@ export const authenticateUser = async (req, res, next) => {
       const renderData = createRenderData(
         'Login',
         { email: 'Login to your account to continue' },
-        {}, // formData
+        {},
         null
       );
       return handleResponse(req, res, httpStatusCode.UNAUTHORIZED.code, 'Layouts/userLogin', renderData);
@@ -79,4 +79,5 @@ export const authenticateUser = async (req, res, next) => {
     return handleResponse(req, res, httpStatusCode.UNAUTHORIZED.code, 'Layouts/userLogin', renderData);
   }
 }
+
 

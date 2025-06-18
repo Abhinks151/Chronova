@@ -7,6 +7,7 @@ import adminProductManagement from "./adminDashboardRoutes/adminProductManagemen
 import googleAuthRouter from "./auth/googleRouter.js";
 import categoryRouter from "./adminDashboardRoutes/adminCategoryRoutes.js";
 import userProductPageRoutes from "./user/userProductPageRoutes.js";
+import userAccountRoutes from "./user/userAccountRoutes.js";
 
 const indexRoutes = express.Router();
 
@@ -22,7 +23,7 @@ indexRoutes.use('/admin', categoryRouter)
 
 indexRoutes.use('/user', userProductPageRoutes);
 
-
+indexRoutes.use('/',userAccountRoutes)
 
 
 export default indexRoutes;

@@ -5,6 +5,8 @@ const SALT = 10;
 
 
 export const resetPassword = async ({ body }) => {
+  // console.log(body)
+  const { token } = body;
   const user = await User.findOne({
     resetPasswordToken: token,
     resetPasswordExpire: { $gt: Date.now() }

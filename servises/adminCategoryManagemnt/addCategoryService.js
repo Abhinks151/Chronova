@@ -4,16 +4,16 @@ import mongoose from "mongoose";
 
 
 export const addCategoryService = async ({ categoryName, type, description, products = [] }) => {
-  if (!categoryName || !categoryName.trim()) {
-    return { error: "Category name is required" };
+  if (!categoryName || !categoryName.trim() || !/^[a-zA-Z0-9\s]+$/i.test(categoryName)) {
+    return { error: "Category name must contain only letters, numbers and spaces" };
   }
 
   if (!type || !['audience', 'style', 'function', 'seasonal'].includes(type)) {
     return { error: "Invalid or missing category type" };
   }
 
-  if (!description || !description.trim()) {
-    return { error: "Category description is required" };
+  if (!description || !description.trim() || !/^[a-zA-Z0-9\s.,]+$/i.test(description)) {
+    return { error: "Category description must contain only letters, numbers, spaces, commas and periods" };
   }
 
   const existing = await Category.findOne({ categoryName: categoryName });
@@ -39,3 +39,4 @@ export const addCategoryService = async ({ categoryName, type, description, prod
 
   return { data: savedCategory };
 };
+

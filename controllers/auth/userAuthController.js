@@ -169,11 +169,14 @@ export const getForgotPassord = async (req, res) => {
 export const postForgotPassword = async (req, res) => {
   try {
 
+    const email = req.body.email;
+    console.log(email)
+    const result = await forgotPassword(email);
 
-    const result = await forgotPassword(req.body);
-
-    res.status(result.status).json({
-      message: result.message,
+    return res.status(500).render('Layouts/userLogin', {
+      title: 'Login',
+      formData: req.body || {},
+      errors: { general: "check your email" }
     });
 
   } catch (error) {
@@ -185,11 +188,14 @@ export const postForgotPassword = async (req, res) => {
 };
 
 
+
 export const getResetPassword = async (req, res) => {
   try {
-    const { token } = req.params;
+    const token = req.params.token;
+    // console.log(token)
+    // const token = req.query.id || req.query._id;
 
-    const result = await resetPassword(token);
+    const result = await resetPassword({ body: { token } });
     return res.status(result.status).render('Layouts/userResetPassword', {
       token,
       error: result.error
@@ -206,7 +212,11 @@ export const postResetPassword = async (req, res) => {
   try {
     const result = await handlePasswordReset(req.body);
 
-    return res.status(result.status).render(result.view, result.data);
+    return res.status(result.status).render(result.view, {
+      message: result.data,
+      title: "Login",
+
+    });
 
   } catch (error) {
     console.error('Reset Password Error:', error);

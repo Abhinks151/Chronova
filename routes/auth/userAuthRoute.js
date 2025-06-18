@@ -49,8 +49,8 @@ userAuthRouter.post('/forgot-password', postForgotPassword);
 
 
 
-userAuthRouter.get('/reset-password/:token', getResetPassword);
-userAuthRouter.post('/reset-password', postResetPassword);
+userAuthRouter.get('/reset-password/:token',authenticateUser, getResetPassword);
+userAuthRouter.post('/reset-password', authenticateUser,postResetPassword);
 
 
 

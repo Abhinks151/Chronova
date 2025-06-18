@@ -19,9 +19,15 @@ const userSchema = new mongoose.Schema({
   lastname: {
     type: String
   },
-  name: {
+  phone: {
     type: String
   },
+  address: [
+    {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "Address"
+    }
+  ],
   avatar: {
     type: String
   },

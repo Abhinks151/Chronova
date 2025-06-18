@@ -25,6 +25,13 @@ export const loginUserService = async (email, password) => {
         errors: { email: 'Please verify your email before logging in' }
       };
     }
+    if (user.isBlocked) {
+      return {
+        success: false,
+        errors: { email: 'Your account has been blocked' }
+      };
+    }
+
 
     const isPasswordValid = await bcrypt.compare(password, user.password);
     if (!isPasswordValid) {
@@ -43,8 +50,6 @@ export const loginUserService = async (email, password) => {
       token,
       user: {
         id: user._id,
-        firstName: user.firstName,
-        lastName: user.lastName,
         email: user.email
       },
       errors: {}

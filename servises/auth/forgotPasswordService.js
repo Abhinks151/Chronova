@@ -1,10 +1,11 @@
 import { User } from "../../models/userModels.js";
 import httpStatusCode from '../../utils/httpStatusCode.js';
+import { sendResetPasswordToken } from "../../utils/sendVerificationOTP.js";
 
 
 
-export const forgotPassword = async ({ body }) => {
-  const { email } = body;
+export const forgotPassword = async (email) => {
+
 
   if (!email || !email.trim()) {
     return {

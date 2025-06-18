@@ -1,0 +1,390 @@
+<!DOCTYPE html>
+<html lang="en">
+	<head>
+		<meta charset="UTF-8" />
+		<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+		<title>Profile - Chronova</title>
+		<link
+			rel="stylesheet"
+			href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css"
+		/>
+		<script src="https://cdnjs.cloudflare.com/ajax/libs/axios/1.6.0/axios.min.js"></script>
+		<link rel="stylesheet" href="/styles/user/user-profile.css" />
+	</head>
+	<body>
+		<!-- Toast Notification -->
+		<div id="toast" class="toast">
+			<i class="fas fa-check-circle" id="toast-icon"></i>
+			<span id="toast-message"></span>
+			<button class="toast-close" onclick="hideToast()">
+				<i class="fas fa-times"></i>
+			</button>
+		</div>
+
+		<!-- Navbar -->
+		<nav class="navbar">
+			<div class="nav-container">
+				<div class="nav-logo">
+					<a href="/">
+						<span>Chronova</span>
+					</a>
+				</div>
+
+				<div class="nav-search">
+					<div class="search-container">
+						<input
+							type="text"
+							id="searchInput"
+							placeholder="Search premium watches..."
+							class="search-input"
+						/>
+						<button class="search-btn" onclick="performSearch()">
+							<i class="fas fa-search"></i>
+							Search
+						</button>
+					</div>
+				</div>
+
+				<div class="nav-actions">
+					<a href="/user/wishlist" class="nav-btn">
+						<i class="far fa-heart"></i>
+						<span class="nav-text">Wishlist</span>
+						<span class="badge" id="wishlist-count">0</span>
+					</a>
+					<a href="/user/cart" class="nav-btn">
+						<i class="fas fa-shopping-cart"></i>
+						<span class="nav-text">Cart</span>
+						<span class="badge" id="cart-count">0</span>
+					</a>
+					<a href="/user/profile" class="nav-btn">
+						<i class="fas fa-user"></i>
+						<span class="nav-text">Profile</span>
+					</a>
+				</div>
+			</div>
+		</nav>
+
+		<div class="main-container">
+			<!-- Sidebar -->
+			<aside class="user-sidebar">
+				<ul class="sidebar-menu">
+					<li>
+						<a href="/user/profile" class="active">
+							<i class="fas fa-user"></i>
+							Profile
+						</a>
+					</li>
+					<li>
+						<a href="/user/orders">
+							<i class="fas fa-shopping-bag"></i>
+							Orders
+						</a>
+					</li>
+					<li>
+						<a href="/user/addresses">
+							<i class="fas fa-map-marker-alt"></i>
+							Addresses
+						</a>
+					</li>
+					<li>
+						<a href="/user/wallet">
+							<i class="fas fa-wallet"></i>
+							Wallet
+						</a>
+					</li>
+					<li>
+						<a href="/user/settings">
+							<i class="fas fa-cog"></i>
+							Settings
+						</a>
+					</li>
+					<li>
+						<a href="/user/logout" class="logout-btn">
+							<i class="fas fa-sign-out-alt"></i>
+							Logout
+						</a>
+					</li>
+				</ul>
+			</aside>
+
+			<!-- Main Content -->
+			<main class="main-content">
+				<!-- Profile Header -->
+				<div class="profile-header">
+					<h1 class="profile-title">My Profile</h1>
+					<p class="profile-subtitle">
+						Manage your account information and preferences
+					</p>
+
+					<!-- Avatar Section -->
+					<div class="profile-avatar-section">
+						<div class="avatar-container">
+							<% if (user.avatar) { %>
+							<img
+								src="<%= user.avatar %>"
+								alt="Profile Avatar"
+								class="profile-avatar"
+							/>
+							<% } else { %>
+							<div class="default-avatar">
+								<%= user.name ?
+								user.name.charAt(0).toUpperCase() :
+								(user.firstname ?
+								user.firstname.charAt(0).toUpperCase() : 'U') %>
+							</div>
+							<% } %>
+						</div>
+						<div class="avatar-info">
+							<h2>
+								<%= user.name || `${user.firstname || ''}
+								${user.lastname || ''}`.trim() || 'User' %>
+							</h2>
+							<p><%= user.email %></p>
+							<div
+								class="status-badge <%= user.isBlocked ? 'blocked' : (!user.isVerified ? 'unverified' : '') %>"
+							>
+								<i class="fas fa-circle"></i>
+								<% if (user.isBlocked) { %> Account Blocked <% }
+								else if (!user.isVerified) { %> Unverified <% }
+								else { %> Active Account <% } %>
+							</div>
+						</div>
+					</div>
+
+					<!-- Stats Grid -->
+					<div class="stats-grid">
+						<div class="stat-card">
+							<div class="stat-icon account">
+								<i class="fas fa-calendar-alt"></i>
+							</div>
+							<div class="stat-value">
+								<%= new
+								Date(user.createdAt).toLocaleDateString() %>
+							</div>
+							<div class="stat-label">Member Since</div>
+						</div>
+						<div class="stat-card">
+							<div class="stat-icon addresses">
+								<i class="fas fa-map-marker-alt"></i>
+							</div>
+							<div class="stat-value">
+								<%= user.address ? user.address.length : 0 %>
+							</div>
+							<div class="stat-label">Saved Addresses</div>
+						</div>
+						<div class="stat-card">
+							<div class="stat-icon orders">
+								<i class="fas fa-clock"></i>
+							</div>
+							<div class="stat-value">
+								<%= user.lastLogin ? new
+								Date(user.lastLogin).toLocaleDateString() :
+								'Never' %>
+							</div>
+							<div class="stat-label">Last Login</div>
+						</div>
+					</div>
+				</div>
+
+				<!-- Basic Information -->
+				<div class="form-section">
+					<div class="section-header">
+						<h2 class="section-title">Basic Information</h2>
+						<button
+							class="edit-btn"
+							onclick="Profile.toggleEdit('basic')"
+						>
+							<i class="fas fa-edit"></i>
+							Edit
+						</button>
+					</div>
+					<form id="basicForm" class="form-grid">
+						<div class="form-group">
+							<label class="form-label">First Name</label>
+							<input
+								type="text"
+								class="form-input"
+								id="firstname"
+								name="firstname"
+								value="<%= user.firstname || '' %>"
+								readonly
+							/>
+							<div
+								class="error-message"
+								id="firstname-error"
+							></div>
+						</div>
+
+						<div class="form-group">
+							<label class="form-label">Last Name</label>
+							<input
+								type="text"
+								class="form-input"
+								id="lastname"
+								name="lastname"
+								placeholder="Add last name..."
+								value="<%= user.lastname || '' %>"
+								readonly
+							/>
+							<div
+								class="error-message"
+								id="lastname-error"
+							></div>
+						</div>
+						<div class="form-group">
+							<label class="form-label">Email Address</label>
+							<input
+								type="email"
+								class="form-input"
+								id="email"
+								name="email"
+								value="<%= user.email %>"
+								readonly
+							/>
+						</div>
+						<div class="form-group">
+							<label class="form-label">Phone Number</label>
+							<input
+								type="tel"
+								class="form-input"
+								id="phone"
+								name="phone"
+								placeholder="Add phone number..."
+								value="<%= user.phone || '' %>"
+								readonly
+							/>
+							<div class="error-message" id="phone-error"></div>
+						</div>
+						<div class="form-group">
+							<label class="form-label">Account Type</label>
+							<input
+								type="text"
+								class="form-input"
+								value="<%= user.isGoogleUser ? 'Google Account' : 'Regular Account' %>"
+								readonly
+							/>
+						</div>
+					</form>
+				</div>
+
+				<!-- Address Information -->
+				<div class="form-section">
+					<div class="section-header">
+						<h2 class="section-title">Saved Addresses</h2>
+						<button
+							class="edit-btn"
+							onclick="window.location.href='/user/addresses'"
+						>
+							<i class="fas fa-plus"></i>
+							Manage Addresses
+						</button>
+					</div>
+					<div class="address-list">
+						<% if (user.address && user.address.length > 0) { %> <%
+						user.address.forEach(address => { %>
+						<div class="address-card">
+							<div class="address-header">
+								<span class="address-name"
+									><%= address.name || 'Address' %></span
+								>
+							</div>
+							<div class="address-details">
+								<%= address.addressLine1 || '' %><br />
+								<% if (address.addressLine2) { %><%=
+								address.addressLine2 %><br /><% } %> <%=
+								address.city || '' %>, <%= address.state || ''
+								%> <%= address.zipCode || '' %><br />
+								<%= address.country || '' %> <% if
+								(address.phone) { %><br />Phone: <%=
+								address.phone %><% } %>
+							</div>
+						</div>
+						<% }) %> <% } else { %>
+						<div class="no-data">
+							<i
+								class="fas fa-map-marker-alt"
+								style="font-size: 48px; color: #d1d5db; margin-bottom: 16px;"
+							></i>
+							<p>No addresses saved yet</p>
+						</div>
+						<% } %>
+					</div>
+				</div>
+
+				<!-- Account Security -->
+				<div class="form-section">
+					<div class="section-header">
+						<h2 class="section-title">Account Security</h2>
+						<% if (!user.isGoogleUser) { %>
+						<button
+							class="edit-btn"
+							onclick="Profile.changePassword()"
+						>
+							<i class="fas fa-key"></i>
+							Change Password
+						</button>
+						<% } %>
+					</div>
+					<div class="security-grid">
+						<div class="form-group">
+							<label class="form-label">Account Status</label>
+							<input
+								type="text"
+								class="form-input"
+								value="<%= user.isBlocked ? 'Blocked' : 'Active' %>"
+								readonly
+							/>
+						</div>
+						<div class="form-group">
+							<label class="form-label">Email Verification</label>
+							<input
+								type="text"
+								class="form-input"
+								value="<%= user.isVerified ? 'Verified' : 'Not Verified' %>"
+								readonly
+							/>
+						</div>
+						<div class="form-group">
+							<label class="form-label">Login Method</label>
+							<input
+								type="text"
+								class="form-input"
+								value="<%= user.isGoogleUser ? 'Google' : 'Email & Password' %>"
+								readonly
+							/>
+						</div>
+						<div class="security-actions">
+							<% if (!user.isGoogleUser) { %>
+							<a
+								href="/user/change-password"
+								class="security-btn"
+							>
+								<i class="fas fa-key"></i>
+								Change Password
+							</a>
+							<% } %>
+							<a
+								href="/user/send-reset-link"
+								class="security-btn"
+							>
+								<i class="fas fa-envelope"></i>
+								Reset Password
+							</a>
+							<% if (!user.isVerified) { %>
+							<button
+								class="security-btn"
+								onclick="Profile.resendVerification()"
+							>
+								<i class="fas fa-envelope-open"></i>
+								Resend Verification
+							</button>
+							<% } %>
+						</div>
+					</div>
+				</div>
+			</main>
+		</div>
+
+		<script src="/scripts/user/user-profile.js"></script>
+	</body>
+</html>

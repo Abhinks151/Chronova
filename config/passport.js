@@ -1,6 +1,6 @@
 import passport from 'passport';
 import { Strategy as GoogleStrategy } from 'passport-google-oauth20';
-import {User} from '../models/userModels.js';
+import { User } from '../models/userModels.js';
 import dotenv from 'dotenv';
 
 dotenv.config();
@@ -10,7 +10,7 @@ passport.use(
     {
       clientID: process.env.GOOGLE_CLIENT_ID,
       clientSecret: process.env.GOOGLE_CLIENT_SECRET,
-      callbackURL: '/auth/google/callback',
+      callbackURL: 'http://localhost:3000/auth/google/callback',
     },
     async (accessToken, refreshToken, profile, done) => {
       try {
@@ -28,18 +28,21 @@ passport.use(
             user.googleId = googleId;
             user.isGoogleUser = true;
             user.avatar = avatar;
-            user.name = fullName;
+            user.firstname = fullName;
             await user.save();
           } else {
             user = await User.create({
               googleId,
               email,
-              name: fullName,
+              firstname: fullName,
               avatar,
               isGoogleUser: true,
               isVerified: true,
             });
           }
+        }
+        if (user.isBlocked) {
+          return done(null, false, { error: 'User is blocked' });
         }
 
         return done(null, user);
