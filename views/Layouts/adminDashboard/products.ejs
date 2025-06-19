@@ -35,7 +35,7 @@
   <select id="categoryFilter" class="filter-select">
     <option value="All">All Categories</option>
     <% categories.forEach(category => { %>
-      <option value="<%= category %>"><%= category %></option>
+      <option value="<%= category._id %>"><%= category.categoryName %></option>
     <% }) %>
   </select>
       </div>

@@ -16,7 +16,7 @@ export const addCategoryService = async ({ categoryName, type, description, prod
     return { error: "Category description must contain only letters, numbers, spaces, commas and periods" };
   }
 
-  const existing = await Category.findOne({ categoryName: categoryName });
+  const existing = await Category.findOne({ categoryName: { $regex: new RegExp(`^${categoryName}$`, 'i') } });
   if (existing) {
     return { error: "A category with this name already exists" };
   }

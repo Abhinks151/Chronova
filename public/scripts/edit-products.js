@@ -275,7 +275,6 @@ function validateForm() {
         { id: 'sku', name: 'SKU' },
         { id: 'description', name: 'Description' },
         { id: 'strapType', name: 'Strap Type' },
-        { id: 'slypeType', name: 'Style Type' },
         { id: 'color', name: 'Color' },
         { id: 'dialSize', name: 'Dial Size' },
         { id: 'dialShape', name: 'Dial Shape' },

@@ -60,6 +60,6 @@ export const verifyUserOTPService = async ({ email, otp }) => {
   return {
     status: httpStatusCode.OK.code,
     message: 'Account verified successfully.',
-    redirect: '/user/login'
+    redirect: '/user/products'
   };
 };

@@ -6,6 +6,7 @@
     <title><%= product.productName %> - Chronova</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
     <link rel="stylesheet" href="/styles/user/user-product-details.css">
+
 </head>
 <body>
     <!-- Navbar -->
@@ -55,21 +56,27 @@
         <div class="product-container">
             <!-- Image Gallery -->
             <div class="image-gallery">
-                <div class="thumbnail-list">
+                <div class="thumbnail-list" id="gallery">
                     <% product.images.forEach((image, index) => { %>
-                    <div class="thumbnail <%= index === 0 ? 'active' : '' %>" data-index="<%= index %>">
+                    <a href="#" data-image="<%= image.url %>" data-zoom-image="<%= image.url %>">
+                        <div class="thumbnail <%= index === 0 ? 'active' : '' %>" data-index="<%= index %>">
                         <img src="<%= image.url %>" alt="<%= product.productName %> image <%= index + 1 %>">
-                    </div>
+                        </div>
+                    </a>
                     <% }) %>
                 </div>
-                
+
                 <div class="main-image-container">
-                    <img src="<%= product.images[0].url %>" alt="<%= product.productName %>" class="main-image" id="mainImage">
-                    <div class="zoom-overlay" id="zoomOverlay">
-                        <img src="<%= product.images[0].url %>" alt="<%= product.productName %>" class="zoom-image" id="zoomImage">
-                    </div>
+                    <img
+                    src="<%= product.images[0].url %>"
+                    id="mainImage"
+                    class="main-image"
+                    data-zoom-image="<%= product.images[0].url %>"
+                    alt="<%= product.productName %>"
+                    />
                 </div>
             </div>
+
 
             <!-- Product Info -->
             <div class="product-info">
@@ -206,6 +213,11 @@
             </div>
         </div>
     </div>
+
+<!-- jQuery (must come before the plugin) -->
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/elevatezoom/2.2.3/jquery.elevatezoom.min.js" integrity="sha512-UH428GPLVbCa8xDVooDWXytY8WASfzVv3kxCvTAFkxD2vPjouf1I3+RJ2QcSckESsb7sI+gv3yhsgw9ZhM7sDw==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
 </body>
 <script>
 	// Global variables
@@ -216,6 +228,20 @@ let featuredProducts = [];
 let isInWishlist = false;
 let cartCount = 0;
 let wishlistCount = 0;
+
+
+$(function () {
+  $('#mainImage').elevateZoom({
+    zoomType: "lens",
+    lensShape: "square",
+    lensSize: 300,
+    scrollZoom: true,
+    cursor: "crosshair"
+  });
+});
+
+
+
 
 // Initialize page when DOM is loaded
 document.addEventListener('DOMContentLoaded', function() {

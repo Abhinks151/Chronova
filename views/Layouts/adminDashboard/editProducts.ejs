@@ -44,6 +44,7 @@
                         />
                     </div>
 
+
                     <div class="form-group">
                         <label for="brand">
                             Brand <span class="required">*</span>
@@ -52,12 +53,13 @@
                             <option value="">Select Brand</option>
                             <% brands.forEach(brand => { %>
                                 <option value="<%= brand._id %>" 
-                                    <%= product.brand && product.brand.toString() === brand._id.toString() ? 'selected' : '' %>>
+                                    <%= product.brand === brand._id ? 'selected' : '' %>>
                                     <%= brand.name %>
                                 </option>
                             <% }); %>
                         </select>
                     </div>
+
 
                     <div class="form-group">
                         <label for="productType">
@@ -66,12 +68,12 @@
                         </label>
                         <select id="productType" name="productType" required>
                             <option value="">Select Product Type</option>
-                            <% types.forEach(type => { %>
-                                <option value="<%= type._id %>" 
-                                    <%= product.productType && product.productType.toString() === type._id.toString() ? 'selected' : '' %>>
-                                    <%= type.name %>
-                                </option>
-                            <% }); %>
+                           <% types.forEach(type => { %>
+    <option value="<%= type %>" 
+        <%= product.productType === type ? 'selected' : '' %>>
+        <%= type %>
+    </option>
+<% }); %>
                         </select>
                     </div>
 
@@ -129,20 +131,7 @@
                         </select>
                     </div>
 
-                    <div class="form-group">
-                        <label for="slypeType">
-                            Style Type
-                            <span class="required">*</span>
-                        </label>
-                        <select id="slypeType" name="slypeType" required>
-                            <option value="">Select Style Type</option>
-                            <option value="Classic" <%= product.slypeType === 'Classic' ? 'selected' : '' %>>Classic</option>
-                            <option value="Modern" <%= product.slypeType === 'Modern' ? 'selected' : '' %>>Modern</option>
-                            <option value="Vintage" <%= product.slypeType === 'Vintage' ? 'selected' : '' %>>Vintage</option>
-                            <option value="Contemporary" <%= product.slypeType === 'Contemporary' ? 'selected' : '' %>>Contemporary</option>
-                            <option value="Traditional" <%= product.slypeType === 'Traditional' ? 'selected' : '' %>>Traditional</option>
-                        </select>
-                    </div>
+                    
 
                     <div class="form-group">
                         <label for="color">

@@ -47,4 +47,3 @@ app.listen(PORT, () => {
   console.log(`Server running on http://localhost:${PORT}/user/products`);
   console.log(`Server running on http://localhost:${PORT}/admin/dashboard`);
 });
-

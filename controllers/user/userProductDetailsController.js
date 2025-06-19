@@ -10,10 +10,7 @@ export const productDetails = async (req, res) => {
     });
   } catch (error) {
     console.error('Error:', error);
-    res.status(httpStatusCode.INTERNAL_SERVER_ERROR.code).render('Layouts/error', {
-      message: 'Failed to load product details',
-      error
-    });
+    res.status(httpStatusCode.INTERNAL_SERVER_ERROR.code).redirect('/user/products');
   }
 };
 

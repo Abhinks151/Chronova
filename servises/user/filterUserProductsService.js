@@ -2,7 +2,7 @@ import mongoose from 'mongoose';
 import { Products } from '../../models/products.js';
 
 export const fetchFilteredProducts = async (filters) => {
-  const query = { isBlocked: false };
+  const query = { isBlocked: false, isDeleted: false };
   const sort = {};
 
   if (filters.search) {
@@ -86,6 +86,13 @@ export const fetchFilteredProducts = async (filters) => {
     { $skip: skip },
     { $limit: limit }
   ]);
+
+  // console.log("Sort", sort);
+  // console.log("Query", query);
+  // console.log("limit", limit);
+  // console.log("page", page);
+  // console.log("skip", skip);
+  // console.log("products", products);
 
   const totalCountResult = await Products.aggregate([
     { $match: query },

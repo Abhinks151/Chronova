@@ -12,7 +12,6 @@ body {
     background: #f8fafb;
     min-height: 100vh;
 }
-
 /* Toaster Styles */
 #toaster-container {
     position: fixed;
@@ -23,21 +22,24 @@ body {
 
 .toaster {
     background: #fff;
-    border: 1px solid #e1e8ed;
+    color: #000;
     border-radius: 12px;
     box-shadow: 0 4px 16px rgba(0, 0, 0, 0.1);
     padding: 16px 20px;
     margin-bottom: 12px;
     min-width: 320px;
     animation: slideIn 0.3s ease-out;
+    color: white;
 }
 
+/* Solid green background for success */
 .toaster.success {
-    border-left: 4px solid #22c55e;
+    background-color: #22c55e; /* Tailwind green-500 */
 }
 
+/* Solid red background for error */
 .toaster.error {
-    border-left: 4px solid #ef4444;
+    background-color: #ef4444; /* Tailwind red-500 */
 }
 
 @keyframes slideIn {
@@ -50,6 +52,7 @@ body {
         opacity: 1;
     }
 }
+
 
 /* Header/Navbar */
 .navbar {

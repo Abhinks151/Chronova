@@ -9,45 +9,150 @@ export const getFeaturedProducts = async (productId) => {
       throw new Error('Product not found or unavailable');
     }
 
-    const currentProductId = new mongoose.Types.ObjectId(productId);
+    const excludedIds = new Set([productId]);
 
-    let featuredProducts = await Products.find({
-      brand: product.brand,
-      _id: { $ne: currentProductId },
-      isBlocked: false,
-      isDeleted: false
-    })
-      .sort({ averageRating: -1, salesCount: -1 })
-      .limit(4)
-      .lean();
+    const objectId = (id) => new mongoose.Types.ObjectId(id);
 
-    const existingIds = new Set(featuredProducts.map(p => p._id.toString()));
-    existingIds.add(productId);
+    let featuredProducts = await Products.aggregate([
+      {
+        $match: {
+          brand: product.brand,
+          _id: { $ne: objectId(productId) },
+          isBlocked: false,
+          isDeleted: false
+        }
+      },
+      {
+        $lookup: {
+          from: 'categories',
+          localField: 'category',
+          foreignField: '_id',
+          as: 'categoryDetails'
+        }
+      },
+      {
+        $addFields: {
+          validCategories: {
+            $filter: {
+              input: '$categoryDetails',
+              as: 'cat',
+              cond: {
+                $and: [
+                  { $eq: ['$$cat.isBlocked', false] },
+                  { $eq: ['$$cat.isDeleted', false] }
+                ]
+              }
+            }
+          }
+        }
+      },
+      {
+        $match: {
+          $expr: {
+            $eq: [{ $size: '$category' }, { $size: '$validCategories' }]
+          }
+        }
+      },
+      { $sort: { averageRating: -1, salesCount: -1 } },
+      { $limit: 4 }
+    ]);
+
+    featuredProducts.forEach(p => excludedIds.add(p._id.toString()));
 
     if (featuredProducts.length < 4) {
-      const categoryProducts = await Products.find({
-        category: { $in: product.category },
-        _id: { $nin: Array.from(existingIds).map(id => new mongoose.Types.ObjectId(id)) },
-        isBlocked: false,
-        isDeleted: false
-      })
-        .sort({ averageRating: -1, salesCount: -1 })
-        .limit(4 - featuredProducts.length)
-        .lean();
+      const remaining = 4 - featuredProducts.length;
+      const categoryProducts = await Products.aggregate([
+        {
+          $match: {
+            category: { $in: product.category },
+            _id: { $nin: Array.from(excludedIds).map(objectId) },
+            isBlocked: false,
+            isDeleted: false
+          }
+        },
+        {
+          $lookup: {
+            from: 'categories',
+            localField: 'category',
+            foreignField: '_id',
+            as: 'categoryDetails'
+          }
+        },
+        {
+          $addFields: {
+            validCategories: {
+              $filter: {
+                input: '$categoryDetails',
+                as: 'cat',
+                cond: {
+                  $and: [
+                    { $eq: ['$$cat.isBlocked', false] },
+                    { $eq: ['$$cat.isDeleted', false] }
+                  ]
+                }
+              }
+            }
+          }
+        },
+        {
+          $match: {
+            $expr: {
+              $eq: [{ $size: '$category' }, { $size: '$validCategories' }]
+            }
+          }
+        },
+        { $sort: { averageRating: -1, salesCount: -1 } },
+        { $limit: remaining }
+      ]);
 
       featuredProducts.push(...categoryProducts);
-      categoryProducts.forEach(p => existingIds.add(p._id.toString()));
+      categoryProducts.forEach(p => excludedIds.add(p._id.toString()));
     }
 
     if (featuredProducts.length < 4) {
-      const fallbackProducts = await Products.find({
-        _id: { $nin: Array.from(existingIds).map(id => new mongoose.Types.ObjectId(id)) },
-        isBlocked: false,
-        isDeleted: false
-      })
-        .sort({ averageRating: -1, salesCount: -1 })
-        .limit(4 - featuredProducts.length)
-        .lean();
+      const remaining = 4 - featuredProducts.length;
+      const fallbackProducts = await Products.aggregate([
+        {
+          $match: {
+            _id: { $nin: Array.from(excludedIds).map(objectId) },
+            isBlocked: false,
+            isDeleted: false
+          }
+        },
+        {
+          $lookup: {
+            from: 'categories',
+            localField: 'category',
+            foreignField: '_id',
+            as: 'categoryDetails'
+          }
+        },
+        {
+          $addFields: {
+            validCategories: {
+              $filter: {
+                input: '$categoryDetails',
+                as: 'cat',
+                cond: {
+                  $and: [
+                    { $eq: ['$$cat.isBlocked', false] },
+                    { $eq: ['$$cat.isDeleted', false] }
+                  ]
+                }
+              }
+            }
+          }
+        },
+        {
+          $match: {
+            $expr: {
+              $eq: [{ $size: '$category' }, { $size: '$validCategories' }]
+            }
+          }
+        },
+        { $sort: { averageRating: -1, salesCount: -1 } },
+        { $limit: remaining }
+      ]);
 
       featuredProducts.push(...fallbackProducts);
     }

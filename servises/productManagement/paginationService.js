@@ -1,4 +1,6 @@
 import { Products } from "../../models/products.js";
+import { Category } from '../../models/category.js';
+import { getCategories } from "./addProductServise.js";
 
 export const paginationService = async (queryParams) => {
   const {
@@ -12,8 +14,6 @@ export const paginationService = async (queryParams) => {
     search,
     sort,
   } = queryParams;
-  // console.log(sort)
-
 
   const filter = { isDeleted: false };
   if (category && category !== 'All') filter.category = category;
@@ -33,19 +33,17 @@ export const paginationService = async (queryParams) => {
   if (sort === 'stock-low') {
     filter.stockQuantity = { $lte: 5 };
     sortOption = { stockQuantity: 1 };
-  } else if (sort === 'name-asc') sortOption = { productName: -1 };
-  else if (sort === 'name-desc') sortOption = { productName: 1 };
+  } else if (sort === 'name-asc') sortOption = { productName: 1 };
+  else if (sort === 'name-desc') sortOption = { productName: -1 };
   else if (sort === 'price-asc') sortOption = { salePrice: 1 };
   else if (sort === 'price-desc') sortOption = { salePrice: -1 };
   else sortOption = { updatedAt: -1 };
 
-
   const skip = (parseInt(page) - 1) * parseInt(limit);
-  // console.log(filter)
-  // console.log(sortOption)  
+
   const [products, totalCount] = await Promise.all([
     Products.find(filter)
-    .populate('category', 'categoryName')
+      .populate('category', 'categoryName')
       .sort(sortOption)
       .skip(skip)
       .limit(parseInt(limit))
@@ -55,23 +53,6 @@ export const paginationService = async (queryParams) => {
   ]);
 
   const totalPages = Math.ceil(totalCount / limit);
-
-  const categories = [
-    'All',
-    'Men',
-    'Women',
-    'Kids',
-    'Unisex',
-    'Luxury',
-    'Formal',
-    'Casual',
-    'Sports',
-    'Minimalist',
-    'Fashion',
-    'Retro',
-    'Outdoor',
-    'Chronograph'
-  ];
 
   const brands = [
     'All',
@@ -99,9 +80,11 @@ export const paginationService = async (queryParams) => {
     totalPages,
     currentPage: parseInt(page),
     limit: parseInt(limit),
-    categories,
     brands,
     types,
   };
 };
 
+export const getCategory = async () => {
+  return await Category.find({ isBlocked: false, isDeleted: false }).lean();
+};

@@ -66,5 +66,17 @@ GLOBAL:
   Extra:
     ✔ add readme file @done (6/16/2025, 1:19:17 PM)
 
-  
-    
+
+  Review 19/06/2025:
+    ☐ Don't ask the user to enter the email for otp verification
+    ☐ Landing Page is Pending ==>
+    ✔ OTP Timer is missing @done (6/19/2025, 4:52:37 PM)
+    ✔ Make the user logged in directly after signup otp verification @done (6/19/2025, 3:13:46 PM)
+    ✔ Image zoom is not working ==> @done (6/19/2025, 6:00:58 PM)
+    ✔ Out of stock needs to be handled in user side @done (6/19/2025, 4:45:47 PM)
+    ✔ Blocked product url accessing is broken @done (6/19/2025, 3:24:00 PM)
+    ✔ Google User : Lastname is coming undefined @done (6/19/2025, 3:08:33 PM)
+    ✔ Category name should be unique @done (6/19/2025, 3:11:00 PM)
+    ✔ Add Product is broken @done (6/19/2025, 3:05:00 PM)
+    ✔ Edit Product : Some fields are not prefilled @done (6/19/2025, 3:59:09 PM)
+    ☐ Single Image updation is not working ==> -- important

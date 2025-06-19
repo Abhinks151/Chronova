@@ -2,8 +2,9 @@ import httpStatusCode from '../../utils/httpStatusCode.js';
 import { addProductService, getCategories } from '../../servises/productManagement/addProductServise.js';
 import { blockProductService } from '../../servises/productManagement/blockProductServise.js';
 import { deleteProductService } from '../../servises/productManagement/daleteProductServise.js';
-import { paginationService } from '../../servises/productManagement/paginationService.js';
+import { getCategory, paginationService } from '../../servises/productManagement/paginationService.js';
 import { getProduct, updateProductService } from '../../servises/productManagement/editProductService.js';
+import mongoose from 'mongoose';
 
 const types = [
   { _id: 'mechanical', name: 'Mechanical' },
@@ -26,10 +27,11 @@ const brands = [
 export const getProductsPage = async (req, res) => {
   try {
     const paginated = await paginationService(req.query);
+    const categories = await getCategory();
     res.status(httpStatusCode.OK.code).render('Layouts/adminDashboard/products', {
       title: 'Products',
       products: paginated.products,
-      categories: paginated.categories,
+      categories,
       brands: paginated.brands,
       types: paginated.types,
       success: true,
@@ -46,10 +48,11 @@ export const getProductsPage = async (req, res) => {
 export const getFilteredProducts = async (req, res) => {
   try {
     const paginated = await paginationService(req.query);
+    const categories = await getCategory();
     res.status(httpStatusCode.OK.code).json({
       success: true,
       products: paginated.products,
-      categories: paginated.categories,
+      categories,
       brands: paginated.brands,
       types: paginated.types,
       currentPage: paginated.currentPage,
@@ -138,14 +141,30 @@ export const postAddProducts = async (req, res) => {
   }
 };
 
+
 export const getEditProducts = async (req, res) => {
   try {
     const { id } = req.params;
     const categories = await getCategories();
     const product = await getProduct(id);
 
+    const brands = [
+      { _id: 'Fossil', name: 'Fossil' },
+      { _id: 'Casio', name: 'Casio' },
+      { _id: 'Titan', name: 'Titan' },
+      { _id: 'Timex', name: 'Timex' },
+      { _id: 'Rolex', name: 'Rolex' },
+      { _id: 'Seiko', name: 'Seiko' },
+      { _id: 'Tissot', name: 'Tissot' },
+      { _id: 'Michael Kors', name: 'Michael Kors' }
+    ];
+
+    const types = ['Analog', 'Digital', 'Smart', 'Chronograph'];
+
     if (!product) {
-      return res.status(httpStatusCode.NOT_FOUND.code).render('error', { message: 'Product not found' });
+      return res.status(httpStatusCode.NOT_FOUND.code).render('error', {
+        message: 'Product not found'
+      });
     }
 
     res.render('Layouts/adminDashboard/editProducts', {
@@ -160,17 +179,19 @@ export const getEditProducts = async (req, res) => {
     console.error('Error fetching product for edit:', error);
     res.status(httpStatusCode.INTERNAL_SERVER_ERROR.code).render('Layouts/adminDashboard/editProducts', {
       message: 'Server error while fetching product',
-      categories,
-      brands,
-      types
+      categories: [],
+      brands: [],
+      types: []
     });
   }
 };
+
 
 export const patchEditProducts = async (req, res) => {
   try {
     const { id } = req.params;
     const { body, files } = req;
+    // console.log(body)
     const result = await updateProductService(id, body, files);
 
     if (!result.success) {

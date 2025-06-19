@@ -50,39 +50,56 @@ export const updateProductService = async (productId, body, files) => {
     const parsedPrice = Number(price);
     const parsedStock = Number(stockQuantity);
 
-    if (!productName || !productName.trim() || !/^[a-zA-Z\s]+$/.test(productName.trim())) {
+    if (!productName || !productName.trim() || !/^[a-zA-Z0-9\s]+$/i.test(productName.trim())) {
       return {
-        error: "Product name is required and must contain only letters and spaces",
+        success: false,
+        statusCode: httpStatusCode.BAD_REQUEST.code,
+        message: "Product name is required and must contain only letters , numbers and spaces",
       };
     }
 
-    if (!description || !description.trim() || !/^.{10,}$/.test(description.trim())) {
+    if (!description || !description.trim() || description.trim().length < 10) {
       return {
-        error: "Product description is required and must be at least 10 characters",
+        success: false,
+        statusCode: httpStatusCode.BAD_REQUEST.code,
+        message: "Product description is required and must be at least 10 characters",
       };
     }
 
     if (isNaN(parsedPrice) || parsedPrice < 0) {
-      return { error: "Product price must be a valid non-negative number" };
+      return {
+        success: false,
+        statusCode: httpStatusCode.BAD_REQUEST.code,
+        message: "Product price must be a valid non-negative number",
+      };
     }
 
     if (isNaN(parsedStock) || parsedStock < 0) {
-      return { error: "Product stock must be a valid non-negative number" };
+      return {
+        success: false,
+        statusCode: httpStatusCode.BAD_REQUEST.code,
+        message: "Product stock must be a valid non-negative number",
+      };
     }
 
     if (!Array.isArray(category) || !category.every((id) => mongoose.Types.ObjectId.isValid(id))) {
-      return { error: "Invalid category id" };
+      return {
+        success: false,
+        statusCode: httpStatusCode.BAD_REQUEST.code,
+        message: "Invalid category id",
+      };
     }
 
-    if (brand && (!/^[a-zA-Z\s]+$/.test(brand) || typeof brand !== "string")) {
+    if (brand && (!/^[a-zA-Z\s]+$/i.test(brand) || typeof brand !== "string")) {
       return {
-        error: "Brand must be a string containing only letters and spaces",
+        success: false,
+        statusCode: httpStatusCode.BAD_REQUEST.code,
+        message: "Brand must be a string containing only letters and spaces",
       };
     }
 
     const updatedProduct = await Products.findByIdAndUpdate(productId, productData, {
       new: true,
-      runValidators: true,
     });
 
     return {
@@ -93,24 +110,6 @@ export const updateProductService = async (productId, body, files) => {
   } catch (error) {
     console.error("Service error in updateProductService:", error);
 
-    if (error.name === "ValidationError") {
-      const errors = Object.values(error.errors)
-        .map((err) => err.message)
-        .join(", ");
-      return {
-        success: false,
-        statusCode: httpStatusCode.BAD_REQUEST.code,
-        message: errors,
-      };
-    }
-    if (error.code === 11000) {
-      return {
-        success: false,
-        statusCode: httpStatusCode.BAD_REQUEST.code,
-        message: "SKU already exists. Please use a different SKU.",
-      };
-    }
-
     return {
       success: false,
       statusCode: httpStatusCode.INTERNAL_SERVER_ERROR.code,
@@ -118,3 +117,4 @@ export const updateProductService = async (productId, body, files) => {
     };
   }
 };
+
