@@ -2,8 +2,12 @@ import crypto from 'crypto';
 import { User } from '../../models/userModels.js';
 import { sendWelcome } from '../../utils/sendVerificationOTP.js';
 import httpStatusCode from '../../utils/httpStatusCode.js';
+import { generateToken } from '../../utils/generateToken.js';
 
-export const verifyUserOTPService = async ({ email, otp }) => {
+export const verifyUserOTPService = async (session, body) => {
+  const email = session.emailForVerification;
+  const otp = body.otp;
+  console.log(email, otp);
   if (!email || !otp) {
     return {
       status: httpStatusCode.BAD_REQUEST.code,
@@ -56,10 +60,14 @@ export const verifyUserOTPService = async ({ email, otp }) => {
 
   await user.save();
   sendWelcome(user);
+ const token = generateToken(user._id);
+
+  session.emailForVerification = null;
 
   return {
     status: httpStatusCode.OK.code,
     message: 'Account verified successfully.',
-    redirect: '/user/products'
+    redirect: '/user/products',
+    token
   };
 };

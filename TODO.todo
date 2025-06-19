@@ -17,7 +17,7 @@ User:
   0auth:
     ✔ set up passport js google auth strategy @done (6/13/2025, 9:37:49 AM)
     ✔ add google auth in login page @done (6/13/2025, 9:37:29 AM)
-    ☐ check accesstoken and refresh toekn inside passport.js
+    ✔ check accesstoken and refresh toekn inside passport.js @done (6/19/2025, 6:26:06 PM)
     ✔ add 0auth to user register page @done (6/17/2025, 2:42:41 PM)
 
   Product details page:
@@ -29,8 +29,8 @@ Admin:
   
   Product management:
     ☐ cloudinary image delete
-    ☐ testing
-    ☐ edit page population with old data bug fixes
+    ✔ testing @done (6/19/2025, 6:26:10 PM)
+    ✔ edit page population with old data bug fixes @done (6/19/2025, 6:26:12 PM)
     ✔ validation for items in backend in cateogry add @done (6/17/2025, 7:31:23 PM)
     ✔ check duplication @done (6/17/2025, 7:31:24 PM)
   

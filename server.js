@@ -6,6 +6,7 @@ import { fileURLToPath } from "url";
 import './config/passport.js';
 import passport from "passport";
 import nochace from "nocache";
+import session from 'express-session';
 // import csurf from "csurf";
 
 import connection from "./config/dbConnection.js";
@@ -32,7 +33,12 @@ app.use(cookieParser());
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 // app.use(csurf());
-
+app.use(session({
+  secret: 'Abhin is a good boy',
+  resave: false,
+  saveUninitialized: true,
+  cookie: { secure: false }
+}));
 
 // Error handler
 // app.use(errorMiddleware);

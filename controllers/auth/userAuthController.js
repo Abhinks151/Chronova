@@ -70,6 +70,7 @@ export const postUserRegister = async (req, res) => {
       errors.array().forEach(err => {
         formattedErrors[err.path] = err.msg;
       });
+      console.log('Stored session email:', req.session.emailForVerification);
 
       return res.status(httpStatusCode.BAD_REQUEST.code).json({
         success: false,
@@ -77,7 +78,7 @@ export const postUserRegister = async (req, res) => {
       });
     }
 
-    const response = await registerUser(req.body);
+    const response = await registerUser(req,req.body);
     return res.status(response.status).json(response.body);
 
   } catch (error) {
@@ -94,7 +95,8 @@ export const postUserRegister = async (req, res) => {
 
 
 export const getVerifyUserOTP = async (req, res) => {
-  const email = req.query.email || '';
+   const email = req.session.emailForVerification || 'dsfs';
+   console.log(email);
   try {
     res.status(httpStatusCode.OK.code).render('Layouts/userVerify', {
       title: "Verify account",
@@ -117,7 +119,18 @@ export const getVerifyUserOTP = async (req, res) => {
 
 export const postVerifyUserOTP = async (req, res) => {
   try {
-    const result = await verifyUserOTPService(req.body);
+    const result = await verifyUserOTPService(req.session, req.body);
+
+    if (result.token) {
+      const isProd = process.env.NODE_ENV === 'production';
+
+      res.cookie('token', result.token, {
+        httpOnly: true,
+        secure: isProd,
+        sameSite: isProd ? 'Strict' : 'Lax',
+        maxAge: 7 * 24 * 60 * 60 * 1000 
+      });
+    }
 
     return res.status(result.status).json({
       message: result.message,
@@ -130,6 +143,7 @@ export const postVerifyUserOTP = async (req, res) => {
     });
   }
 };
+
 
 
 export const resendVerificationCode = async (req, res) => {

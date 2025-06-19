@@ -4,8 +4,7 @@ import { sendVerificationOTP } from "../../utils/sendVerificationOTP.js";
 const SALT = 10;
 import httpStatusCode from '../../utils/httpStatusCode.js';
 
-
-export const registerUser = async (userData) => {
+export const registerUser = async (req, userData) => {
   const { firstname, lastname, email, password, confirmPassword } = userData;
 
   if (password !== confirmPassword) {
@@ -44,8 +43,10 @@ export const registerUser = async (userData) => {
 
   await newUser.save();
 
-  await sendVerificationOTP(newUser);
+  req.session.emailForVerification = newUser.email;
 
+  await sendVerificationOTP(newUser);
+  
   return {
     status: httpStatusCode.CREATED.code,
     body: {
@@ -55,5 +56,3 @@ export const registerUser = async (userData) => {
     }
   };
 };
-
-
