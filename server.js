@@ -34,7 +34,7 @@ app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 // app.use(csurf());
 app.use(session({
-  secret: 'Abhin is a good boy',
+  secret: 'Abhin is the batman',
   resave: false,
   saveUninitialized: true,
   cookie: { secure: false }
@@ -50,6 +50,6 @@ app.use("/", indexRoutes);
 
 
 app.listen(PORT, () => {
-  console.log(`Server running on http://localhost:${PORT}/user/products`);
+  console.log(`Server running on http://localhost:${PORT}/user/home`);
   console.log(`Server running on http://localhost:${PORT}/admin/dashboard`);
 });

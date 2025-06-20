@@ -59,7 +59,7 @@ userAuthRouter.get('/logout', userLogout)
 
 
 
-userAuthRouter.get('/home', authenticateUser, (req, res) => res.status(200).render('Layouts/home'));
+// userAuthRouter.get('/home', authenticateUser, (req, res) => res.status(200).render('Layouts/home'));
 
 
 
