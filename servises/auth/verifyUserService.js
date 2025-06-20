@@ -5,9 +5,8 @@ import httpStatusCode from '../../utils/httpStatusCode.js';
 import { generateToken } from '../../utils/generateToken.js';
 
 export const verifyUserOTPService = async (session, body) => {
-  const email = session.emailForVerification;
-  const otp = body.otp;
-  console.log(email, otp);
+  const { email, otp } = { ...session, ...body };
+
   if (!email || !otp) {
     return {
       status: httpStatusCode.BAD_REQUEST.code,
@@ -46,7 +45,11 @@ export const verifyUserOTPService = async (session, body) => {
     };
   }
 
-  const hashedOTP = crypto.createHash('sha256').update(otp.trim()).digest('hex');
+  const hashedOTP = crypto
+    .createHash('sha256')
+    .update(otp.trim())
+    .digest('hex');
+
   if (user.verificationToken !== hashedOTP) {
     return {
       status: httpStatusCode.BAD_REQUEST.code,
@@ -60,7 +63,7 @@ export const verifyUserOTPService = async (session, body) => {
 
   await user.save();
   sendWelcome(user);
- const token = generateToken(user._id);
+  const token = generateToken(user._id);
 
   session.emailForVerification = null;
 
@@ -71,3 +74,4 @@ export const verifyUserOTPService = async (session, body) => {
     token
   };
 };
+

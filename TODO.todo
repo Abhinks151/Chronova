@@ -28,7 +28,7 @@ Admin:
   user management:
   
   Product management:
-    ☐ cloudinary image delete
+    ✔ cloudinary image delete @done (6/20/2025, 1:25:15 PM)
     ✔ testing @done (6/19/2025, 6:26:10 PM)
     ✔ edit page population with old data bug fixes @done (6/19/2025, 6:26:12 PM)
     ✔ validation for items in backend in cateogry add @done (6/17/2025, 7:31:23 PM)
@@ -45,8 +45,8 @@ Admin:
   ✔ delete button @done (6/15/2025, 12:05:58 PM)
   ✔ add the changes to product add and edit @done (6/15/2025, 12:06:00 PM)
   ✔ update product listing in product management to show on delted category and categoryName @done (6/16/2025, 1:19:11 PM)
-    ✔ validation for items in backend in cateogry add @done (6/17/2025, 7:31:26 PM)
-    ✔ check duplication @done (6/17/2025, 7:31:27 PM)
+  ✔ validation for items in backend in cateogry add @done (6/17/2025, 7:31:26 PM)
+  ✔ check duplication @done (6/17/2025, 7:31:27 PM)
 
   Review management:
     ☐ dynamically update inside the product schema
@@ -68,15 +68,17 @@ GLOBAL:
 
 
   Review 19/06/2025:
-    ☐ Don't ask the user to enter the email for otp verification
-    ☐ Landing Page is Pending ==>
+    ✔ Don't ask the user to enter the email for otp verification @done (6/19/2025, 7:06:16 PM)
     ✔ OTP Timer is missing @done (6/19/2025, 4:52:37 PM)
     ✔ Make the user logged in directly after signup otp verification @done (6/19/2025, 3:13:46 PM)
-    ✔ Image zoom is not working ==> @done (6/19/2025, 6:00:58 PM)
+    ✔ Image zoom is not working ==> @done (6/20/2025, 9:51:02 AM)
     ✔ Out of stock needs to be handled in user side @done (6/19/2025, 4:45:47 PM)
     ✔ Blocked product url accessing is broken @done (6/19/2025, 3:24:00 PM)
     ✔ Google User : Lastname is coming undefined @done (6/19/2025, 3:08:33 PM)
-    ✔ Category name should be unique @done (6/19/2025, 3:11:00 PM)
+    ✔ Category name should be unique @done (6/19/2025, 10:18:59 PM)
+    ✔ product name should be unique @done (6/19/2025, 10:18:58 PM)
     ✔ Add Product is broken @done (6/19/2025, 3:05:00 PM)
-    ✔ Edit Product : Some fields are not prefilled @done (6/19/2025, 3:59:09 PM)
-    ☐ Single Image updation is not working ==> -- important
+    ✔ Edit Product : Some fields are not prefilled///delete the product for _id matching @done (6/20/2025, 12:17:45 PM)
+    ☐ Landing Page is Pending ==>
+    ✔ Single Image updation is not working ==> -- important @done (6/20/2025, 9:50:59 AM)
+    ✔ cludinary delete @done (6/20/2025, 1:24:56 PM)

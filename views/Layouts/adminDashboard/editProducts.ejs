@@ -44,8 +44,7 @@
                         />
                     </div>
 
-
-                    <div class="form-group">
+                     <div class="form-group">
                         <label for="brand">
                             Brand <span class="required">*</span>
                         </label>
@@ -60,7 +59,6 @@
                         </select>
                     </div>
 
-
                     <div class="form-group">
                         <label for="productType">
                             Product Type
@@ -69,11 +67,11 @@
                         <select id="productType" name="productType" required>
                             <option value="">Select Product Type</option>
                            <% types.forEach(type => { %>
-    <option value="<%= type %>" 
-        <%= product.productType === type ? 'selected' : '' %>>
-        <%= type %>
-    </option>
-<% }); %>
+                                <option value="<%= type %>" 
+                                    <%= product.productType === type ? 'selected' : '' %>>
+                                    <%= type %>
+                                </option>
+                            <% }); %>
                         </select>
                     </div>
 
@@ -130,8 +128,6 @@
                             <option value="NATO" <%= product.strapType === 'NATO' ? 'selected' : '' %>>NATO</option>
                         </select>
                     </div>
-
-                    
 
                     <div class="form-group">
                         <label for="color">
@@ -318,86 +314,78 @@
 
             <!-- Product Images -->
             <div class="form-section">
-                <h2 class="section-title">
-                    Product Images
-                    <span style="color: #666; font-size: 14px;">
-                        (Leave empty to keep existing images, upload new ones to replace all)
-                    </span>
-                </h2>
-                
-                <!-- Current Images Display -->
-                <div class="current-images" id="currentImages">
-                    <h4>Current Images:</h4>
-                    <div class="current-images-grid">
-                        <% if (product.images && product.images.length > 0) { %>
-                            <% product.images.forEach((image, index) => { %>
-                                <div class="current-image-item">
-                                    <img src="<%= image.url %>" alt="Product Image <%= index + 1 %>" />
-                                    <span>Image <%= index + 1 %></span>
-                                </div>
-                            <% }); %>
-                        <% } else { %>
-                            <p>No current images</p>
-                        <% } %>
-                    </div>
-                </div>
-
-                <!-- New Images Upload -->
+                <h2 class="section-title">Product Images</h2>
                 <div class="image-upload-container">
+                    <!-- Image slot 1 -->
                     <div class="image-upload-box" data-index="0">
-                        <div class="upload-icon">📷</div>
-                        <div class="upload-text">
-                            <strong>New Image 1</strong><br />
-                            Click to upload
-                        </div>
-                        <input
-                            type="file"
-                            accept="image/*"
-                            style="display: none;"
-                            data-index="0"
-                        />
+                        <% if (product.images && product.images[0]) { %>
+                            <img src="<%= product.images[0].url %>" alt="Product Image 1" class="image-preview" />
+                            <button type="button" class="remove-image" onclick="removeExistingImage(0)">Remove</button>
+                            <div class="upload-text" style="margin-top: 10px;">
+                                <strong>Click to change image</strong>
+                            </div>
+                        <% } else { %>
+                            <div class="upload-icon">📷</div>
+                            <div class="upload-text">
+                                <strong>Image 1</strong><br />
+                                Click to upload
+                            </div>
+                        <% } %>
+                        <input type="file" accept="image/*" style="display: none;" data-index="0" />
                     </div>
 
+                    <!-- Image slot 2 -->
                     <div class="image-upload-box" data-index="1">
-                        <div class="upload-icon">📷</div>
-                        <div class="upload-text">
-                            <strong>New Image 2</strong><br />
-                            Click to upload
-                        </div>
-                        <input
-                            type="file"
-                            accept="image/*"
-                            style="display: none;"
-                            data-index="1"
-                        />
+                        <% if (product.images && product.images[1]) { %>
+                            <img src="<%= product.images[1].url %>" alt="Product Image 2" class="image-preview" />
+                            <button type="button" class="remove-image" onclick="removeExistingImage(1)">Remove</button>
+                            <div class="upload-text" style="margin-top: 10px;">
+                                <strong>Click to change image</strong>
+                            </div>
+                        <% } else { %>
+                            <div class="upload-icon">📷</div>
+                            <div class="upload-text">
+                                <strong>Image 2</strong><br />
+                                Click to upload
+                            </div>
+                        <% } %>
+                        <input type="file" accept="image/*" style="display: none;" data-index="1" />
                     </div>
 
+                    <!-- Image slot 3 -->
                     <div class="image-upload-box" data-index="2">
-                        <div class="upload-icon">📷</div>
-                        <div class="upload-text">
-                            <strong>New Image 3</strong><br />
-                            Click to upload
-                        </div>
-                        <input
-                            type="file"
-                            accept="image/*"
-                            style="display: none;"
-                            data-index="2"
-                        />
+                        <% if (product.images && product.images[2]) { %>
+                            <img src="<%= product.images[2].url %>" alt="Product Image 3" class="image-preview" />
+                            <button type="button" class="remove-image" onclick="removeExistingImage(2)">Remove</button>
+                            <div class="upload-text" style="margin-top: 10px;">
+                                <strong>Click to change image</strong>
+                            </div>
+                        <% } else { %>
+                            <div class="upload-icon">📷</div>
+                            <div class="upload-text">
+                                <strong>Image 3</strong><br />
+                                Click to upload
+                            </div>
+                        <% } %>
+                        <input type="file" accept="image/*" style="display: none;" data-index="2" />
                     </div>
 
+                    <!-- Image slot 4 -->
                     <div class="image-upload-box" data-index="3">
-                        <div class="upload-icon">📷</div>
-                        <div class="upload-text">
-                            <strong>New Image 4</strong><br />
-                            Click to upload
-                        </div>
-                        <input
-                            type="file"
-                            accept="image/*"
-                            style="display: none;"
-                            data-index="3"
-                        />
+                        <% if (product.images && product.images[3]) { %>
+                            <img src="<%= product.images[3].url %>" alt="Product Image 4" class="image-preview" />
+                            <button type="button" class="remove-image" onclick="removeExistingImage(3)">Remove</button>
+                            <div class="upload-text" style="margin-top: 10px;">
+                                <strong>Click to change image</strong>
+                            </div>
+                        <% } else { %>
+                            <div class="upload-icon">📷</div>
+                            <div class="upload-text">
+                                <strong>Image 4</strong><br />
+                                Click to upload
+                            </div>
+                        <% } %>
+                        <input type="file" accept="image/*" style="display: none;" data-index="3" />
                     </div>
                 </div>
             </div>
@@ -446,9 +434,10 @@
         </div>
     </div>
 
-    <!-- Pass product ID to JavaScript -->
+    <!-- Pass product data to JavaScript -->
     <script>
         window.PRODUCT_ID = '<%= product._id %>';
+        window.EXISTING_IMAGES = <%- JSON.stringify(product.images || []) %>;
     </script>
     
     <!-- External JavaScript -->

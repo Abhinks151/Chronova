@@ -732,3 +732,111 @@ body {
 		margin: 0 16px;
 	}
 }
+.product-gallery {
+    display: flex;
+    gap: 20px;
+    max-width: 800px;
+}
+
+.thumbnail-container {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+.thumbnail-item {
+    width: 80px;
+    height: 80px;
+    border: 2px solid transparent;
+    border-radius: 8px;
+    overflow: hidden;
+    cursor: pointer;
+    transition: border-color 0.3s ease;
+}
+
+.thumbnail-item.active {
+    border-color: #007bff;
+}
+
+.thumbnail-item:hover {
+    border-color: #0056b3;
+}
+
+.thumbnail-item img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+.main-image-container {
+    flex: 1;
+    position: relative;
+}
+
+.main-product-image {
+    width: 100%;
+    max-width: 500px;
+    height: auto;
+    border-radius: 8px;
+    cursor: zoom-in;
+}
+
+/* Drift zoom container styles */
+.drift-zoom-pane {
+    position: absolute;
+    top: 0;
+    right: -320px;
+    width: 300px;
+    height: 300px;
+    border: 1px solid #ddd;
+    border-radius: 8px;
+    background: #fff;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+}
+
+@media (max-width: 768px) {
+    .product-gallery {
+        flex-direction: column;
+    }
+    
+    .thumbnail-container {
+        flex-direction: row;
+        overflow-x: auto;
+        padding: 10px 0;
+    }
+    
+    .drift-zoom-pane {
+        display: none; /* Hide zoom pane on mobile */
+    }
+}
+
+/* Additional Drift.js fixes */
+.drift-zoom-pane {
+    position: absolute !important;
+    top: 0 !important;
+    left: calc(100% + 20px) !important;
+    width: 300px !important;
+    height: 300px !important;
+    border: 1px solid #ddd !important;
+    border-radius: 8px !important;
+    background: #fff !important;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.15) !important;
+    z-index: 1000 !important;
+}
+
+.drift-bounding-box {
+    border: 2px solid #3b82f6 !important;
+    background: rgba(59, 130, 246, 0.1) !important;
+}
+
+@media (max-width: 768px) {
+    .drift-zoom-pane {
+        display: none !important;
+    }
+}
+
+/* Ensure main image container has proper positioning */
+.main-image-container {
+    position: relative !important;
+    overflow: visible !important;
+}

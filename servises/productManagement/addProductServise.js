@@ -7,13 +7,13 @@ export const addProductService = async (productData) => {
 
   const parsedPrice = Number(price);
   const parsedStock = Number(stockQuantity);
-
-  if (!productName || !productName.trim() || !/^[a-zA-Z\s]+$/.test(productName.trim())) {
-    return { error: "Product name is required and must contain only letters and spaces" };
+  console.log(description);
+  if (!productName || !productName.trim() || !/^[a-zA-Z0-9\s-_]+$/i.test(productName.trim())) {
+    return { error: "Product name is required and must contain only letters, numbers, spaces, hyphens and underscores" };
   }
 
-  if (!description || !description.trim() || !/^.{10,}$/.test(description.trim())) {
-    return { error: "Product description is required and must be at least 10 characters" };
+  if (!description || typeof description !== 'string' || description.trim().length < 10) {
+    return { error: "Product description is required and must be at least 10 characters long" };
   }
 
   if (isNaN(parsedPrice) || parsedPrice < 0) {
@@ -32,7 +32,7 @@ export const addProductService = async (productData) => {
     return { error: "Brand must be a string containing only letters and spaces" };
   }
 
-  const nameExists = await Products.findOne({ productName: productName.trim() });
+  const nameExists = await Products.findOne({ productName: new RegExp(`^${productName.trim()}$`, 'i') });
   if (nameExists) {
     return { error: "A product with this name already exists" };
   }
