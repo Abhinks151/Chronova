@@ -131,5 +131,4 @@ const productSchema = new mongoose.Schema({
   timestamps: true,
 });
 
-export const Products = mongoose.model('Products', productSchema);
-
+export const Products = mongoose.models.Products || mongoose.model('Products', productSchema);

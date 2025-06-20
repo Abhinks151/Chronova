@@ -1,0 +1,780 @@
+<!DOCTYPE html>
+<html lang="en">
+	<head>
+		<meta charset="UTF-8" />
+		<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+		<title>Chronova - Timeless Luxury Watches</title>
+		<link rel="stylesheet" href="/styles/user/userLanding.css" />
+		<link
+			rel="stylesheet"
+			href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css"
+		/>
+		<script src="https://cdnjs.cloudflare.com/ajax/libs/axios/1.3.4/axios.min.js"></script>
+	</head>
+	<body>
+		<!-- Header -->
+		<header class="header">
+			<div class="container">
+				<div class="nav-brand">
+					<h2>Chronova</h2>
+				</div>
+
+				<!-- Search Bar -->
+				<div class="search-container"></div>
+
+				<!-- Navigation Actions -->
+				<div class="nav-actions">
+					<div class="nav-item_1">
+						<div class="nav-item auth-btn register-btn">
+							<a href="/user/register">Register Now</a>
+						</div>
+						<div class="nav-item auth-btn login-btn">
+							<a href="/user/login">Login</a>
+						</div>
+					</div>
+					<div class="nav-item">
+						<i class="far fa-heart"></i>
+						<!-- <span class="nav-text">Wishlist</span> -->
+						<a href="/user/wishlist" class="nav-text">Wishlist</a>
+						<span class="badge">0</span>
+					</div>
+					<div class="nav-item">
+						<i class="fas fa-shopping-cart"></i>
+						<!-- <span class="nav-text">Cart</span> -->
+						<a href="/user/cart" class="nav-text">Cart</a>
+						<span class="badge">0</span>
+					</div>
+					<div class="nav-item profile-item">
+						<i class="fas fa-user-circle"></i>
+						<!-- <span class="nav-text">Profile</span> -->
+						<a href="/user/profile" class="nav-text">Profile</a>
+					</div>
+				</div>
+			</div>
+		</header>
+
+		<!-- Hero Section with Slider -->
+		<section id="home" class="hero-section">
+			<div class="slider-container">
+				<div class="slider-wrapper">
+					<div class="slide active">
+						<div class="slide-image">
+							<img
+								src="https://images.unsplash.com/photo-1523275335684-37898b6baf30?w=800&h=600&fit=crop"
+								alt="Luxury Watch"
+							/>
+						</div>
+						<div class="slide-content">
+							<h1>Timeless Luxury for Every Wrist</h1>
+							<p>
+								Discover our exquisite collection of premium
+								timepieces that blend tradition with innovation
+							</p>
+							<!-- <button class="cta-button">Shop Now</button> -->
+							<a
+								href="/user/products"
+								class="cta-button"
+								style="text-decoration: none;"
+								>Shop Now</a
+							>
+						</div>
+					</div>
+					<div class="slide">
+						<div class="slide-image">
+							<img
+								src="https://images.unsplash.com/photo-1524592094714-0f0654e20314?w=800&h=600&fit=crop"
+								alt="Premium Collection"
+							/>
+						</div>
+						<div class="slide-content">
+							<h1>Crafted to Perfection</h1>
+							<p>
+								Each watch tells a story of precision, elegance,
+								and uncompromising quality
+							</p>
+							<!-- <button class="cta-button">Explore Collection</button> -->
+							<a
+								href="/user/products"
+								class="cta-button"
+								style="text-decoration: none;"
+								>Shop Now</a
+							>
+						</div>
+					</div>
+					<div class="slide">
+						<div class="slide-image">
+							<img
+								src="https://images.unsplash.com/photo-1523170335258-f5ed11844a49?q=80&w=1180&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D"
+								alt="Swiss Made"
+							/>
+						</div>
+						<div class="slide-content">
+							<h1>Swiss Engineering Excellence</h1>
+							<p>
+								Experience the pinnacle of horological mastery
+								with our authentic Swiss timepieces
+							</p>
+							<!-- <button class="cta-button">View Premium</button> -->
+							<a
+								href="/user/products"
+								class="cta-button"
+								style="text-decoration: none;"
+								>Shop Now</a
+							>
+						</div>
+					</div>
+				</div>
+				<div class="slider-nav">
+					<button class="slider-btn prev-btn">
+						<i class="fas fa-chevron-left"></i>
+					</button>
+					<button class="slider-btn next-btn">
+						<i class="fas fa-chevron-right"></i>
+					</button>
+				</div>
+				<div class="slider-dots">
+					<span class="dot active" data-slide="0"></span>
+					<span class="dot" data-slide="1"></span>
+					<span class="dot" data-slide="2"></span>
+				</div>
+			</div>
+		</section>
+
+		<!-- Trust Badges -->
+		<section class="trust-badges">
+			<div class="container">
+				<div class="badges-grid">
+					<div class="badge">
+						<div class="badge-icon">
+							<i class="fas fa-shipping-fast"></i>
+						</div>
+						<div class="badge-content">
+							<h3>Free Shipping</h3>
+							<p>On orders over ₹500</p>
+						</div>
+					</div>
+					<div class="badge">
+						<div class="badge-icon">
+							<i class="fas fa-undo"></i>
+						</div>
+						<div class="badge-content">
+							<h3>Easy Returns</h3>
+							<p>30-day return policy</p>
+						</div>
+					</div>
+					<div class="badge">
+						<div class="badge-icon">
+							<i class="fas fa-certificate"></i>
+						</div>
+						<div class="badge-content">
+							<h3>100% Authentic</h3>
+							<p>Certified genuine products</p>
+						</div>
+					</div>
+					<div class="badge">
+						<div class="badge-icon">
+							<i class="fas fa-shield-alt"></i>
+						</div>
+						<div class="badge-content">
+							<h3>Warranty</h3>
+							<p>2-year manufacturer warranty</p>
+						</div>
+					</div>
+				</div>
+			</div>
+		</section>
+
+		<!-- Featured Products -->
+		<section id="products" class="products-section">
+			<div class="container">
+				<div class="section-header">
+					<h2>Featured Collections</h2>
+					<p>
+						Discover our handpicked selection of exceptional
+						timepieces
+					</p>
+				</div>
+
+				<!-- Category Filters -->
+				<div class="category-filters" id="categoryFilters">
+					<!-- Categories will be loaded dynamically -->
+				</div>
+
+				<!-- Products Grid -->
+				<div class="products-container">
+					<div class="products-grid" id="productsGrid">
+						<!-- Products will be loaded here dynamically -->
+					</div>
+
+					<div
+						class="loading-spinner"
+						id="loadingSpinner"
+						style="display: none;"
+					>
+						<div class="spinner"></div>
+						<p>Loading products...</p>
+					</div>
+
+					<div
+						class="error-message"
+						id="errorMessage"
+						style="display: none;"
+					>
+						<i class="fas fa-exclamation-triangle"></i>
+						<p>Failed to load products. Please try again.</p>
+						<button
+							class="retry-btn"
+							onclick="productManager.retryLoad()"
+						>
+							Retry
+						</button>
+					</div>
+				</div>
+			</div>
+		</section>
+
+		<!-- Testimonials -->
+		<section class="testimonials-section">
+			<div class="container">
+				<div class="section-header">
+					<h2>What Our Customers Say</h2>
+					<p>Real experiences from our valued customers</p>
+				</div>
+				<div class="testimonials-grid">
+					<div class="testimonial-card">
+						<div class="testimonial-content">
+							<div class="quote-icon">
+								<i class="fas fa-quote-left"></i>
+							</div>
+							<p>
+								"Absolutely stunning timepiece! The
+								craftsmanship is exceptional and the customer
+								service was outstanding. Worth every penny."
+							</p>
+						</div>
+						<div class="testimonial-author">
+							<div class="author-avatar">
+								<img
+									src="https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=60&h=60&fit=crop&crop=face"
+									alt="John Smith"
+								/>
+							</div>
+							<div class="author-info">
+								<h4>John Smith</h4>
+								<span>Verified Buyer</span>
+								<div class="rating">
+									<i class="fas fa-star"></i>
+									<i class="fas fa-star"></i>
+									<i class="fas fa-star"></i>
+									<i class="fas fa-star"></i>
+									<i class="fas fa-star"></i>
+								</div>
+							</div>
+						</div>
+					</div>
+
+					<div class="testimonial-card">
+						<div class="testimonial-content">
+							<div class="quote-icon">
+								<i class="fas fa-quote-left"></i>
+							</div>
+							<p>
+								"The watch exceeded my expectations. Beautiful
+								design, precise timing, and excellent build
+								quality. Highly recommend Chronova!"
+							</p>
+						</div>
+						<div class="testimonial-author">
+							<div class="author-avatar">
+								<img
+									src="https://images.unsplash.com/photo-1494790108755-2616b612b786?w=60&h=60&fit=crop&crop=face"
+									alt="Sarah Johnson"
+								/>
+							</div>
+							<div class="author-info">
+								<h4>Sarah Johnson</h4>
+								<span>Verified Buyer</span>
+								<div class="rating">
+									<i class="fas fa-star"></i>
+									<i class="fas fa-star"></i>
+									<i class="fas fa-star"></i>
+									<i class="fas fa-star"></i>
+									<i class="fas fa-star"></i>
+								</div>
+							</div>
+						</div>
+					</div>
+
+					<div class="testimonial-card">
+						<div class="testimonial-content">
+							<div class="quote-icon">
+								<i class="fas fa-quote-left"></i>
+							</div>
+							<p>
+								"Fast delivery, authentic product, and amazing
+								customer support. This is my third purchase from
+								Chronova and won't be the last!"
+							</p>
+						</div>
+						<div class="testimonial-author">
+							<div class="author-avatar">
+								<img
+									src="https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=60&h=60&fit=crop&crop=face"
+									alt="Michael Chen"
+								/>
+							</div>
+							<div class="author-info">
+								<h4>Michael Chen</h4>
+								<span>Verified Buyer</span>
+								<div class="rating">
+									<i class="fas fa-star"></i>
+									<i class="fas fa-star"></i>
+									<i class="fas fa-star"></i>
+									<i class="fas fa-star"></i>
+									<i class="fas fa-star"></i>
+								</div>
+							</div>
+						</div>
+					</div>
+				</div>
+			</div>
+		</section>
+
+		<!-- Footer -->
+		<footer class="footer">
+			<div class="container">
+				<div class="footer-content">
+					<div class="footer-section">
+						<h3>Chronova</h3>
+						<p>
+							Your premier destination for luxury timepieces. We
+							bring you the finest collection of authentic watches
+							from renowned brands worldwide.
+						</p>
+						<div class="social-links">
+							<a href="#"><i class="fab fa-facebook"></i></a>
+							<a href="#"><i class="fab fa-instagram"></i></a>
+							<a href="#"><i class="fab fa-twitter"></i></a>
+							<a href="#"><i class="fab fa-youtube"></i></a>
+						</div>
+					</div>
+					<div class="footer-section">
+						<h4>Quick Links</h4>
+						<ul>
+							<li><a href="#home">Home</a></li>
+							<li><a href="#products">Products</a></li>
+							<li><a href="#about">About Us</a></li>
+							<li><a href="#contact">Contact</a></li>
+						</ul>
+					</div>
+					<div class="footer-section">
+						<h4>Customer Service</h4>
+						<ul>
+							<li><a href="#">Shipping Info</a></li>
+							<li><a href="#">Returns</a></li>
+							<li><a href="#">Size Guide</a></li>
+							<li><a href="#">FAQ</a></li>
+						</ul>
+					</div>
+					<div class="footer-section">
+						<h4>Contact Info</h4>
+						<div class="contact-info">
+							<p>
+								<i class="fas fa-phone"></i> +1 (555) 123-4567
+							</p>
+							<p>
+								<i class="fas fa-envelope"></i>
+								info@chronova.com
+							</p>
+							<p>
+								<i class="fas fa-map-marker-alt"></i> 123 Luxury
+								Ave, Watch City, WC 12345
+							</p>
+						</div>
+					</div>
+				</div>
+				<div class="footer-bottom">
+					<p>&copy; 2025 Chronova. All rights reserved.</p>
+				</div>
+			</div>
+		</footer>
+
+		<!-- Notification Toast -->
+		<div class="notification-container" id="notificationContainer"></div>
+
+		<script>
+			// Global variables
+			let categories = [];
+			let currentCategoryId = null;
+			let heroSlider;
+			let productManager;
+
+			// Slider functionality
+			class HeroSlider {
+			    constructor() {
+			        this.currentSlide = 0;
+			        this.slides = document.querySelectorAll('.slide');
+			        this.dots = document.querySelectorAll('.dot');
+			        this.nextBtn = document.querySelector('.next-btn');
+			        this.prevBtn = document.querySelector('.prev-btn');
+			        this.autoSlideInterval = null;
+
+			        this.init();
+			    }
+
+			    init() {
+			        this.nextBtn.addEventListener('click', () => this.nextSlide());
+			        this.prevBtn.addEventListener('click', () => this.prevSlide());
+
+			        this.dots.forEach((dot, index) => {
+			            dot.addEventListener('click', () => this.goToSlide(index));
+			        });
+
+			        this.startAutoSlide();
+
+			        // Pause auto-slide on hover
+			        const sliderContainer = document.querySelector('.slider-container');
+			        sliderContainer.addEventListener('mouseenter', () => this.stopAutoSlide());
+			        sliderContainer.addEventListener('mouseleave', () => this.startAutoSlide());
+			    }
+
+			    nextSlide() {
+			        this.currentSlide = (this.currentSlide + 1) % this.slides.length;
+			        this.updateSlider();
+			    }
+
+			    prevSlide() {
+			        this.currentSlide = (this.currentSlide - 1 + this.slides.length) % this.slides.length;
+			        this.updateSlider();
+			    }
+
+			    goToSlide(index) {
+			        this.currentSlide = index;
+			        this.updateSlider();
+			    }
+
+			    updateSlider() {
+			        this.slides.forEach((slide, index) => {
+			            slide.classList.toggle('active', index === this.currentSlide);
+			        });
+
+			        this.dots.forEach((dot, index) => {
+			            dot.classList.toggle('active', index === this.currentSlide);
+			        });
+			    }
+
+			    startAutoSlide() {
+			        this.autoSlideInterval = setInterval(() => {
+			            this.nextSlide();
+			        }, 5000);
+			    }
+
+			    stopAutoSlide() {
+			        clearInterval(this.autoSlideInterval);
+			    }
+			}
+
+			// Product management
+			class ProductManager {
+			    constructor() {
+			        this.currentCategoryId = null;
+			        this.products = [];
+			        this.init();
+			    }
+
+			    async init() {
+			        await this.loadCategories();
+			        if (categories.length > 0) {
+			            this.currentCategoryId = categories[0]._id;
+			            await this.loadProducts(this.currentCategoryId);
+			        }
+			    }
+
+			    async loadCategories() {
+			        try {
+			            const response = await axios.get('/user/products/categories');
+			            categories = response.data.categories || [];
+			            this.renderCategoryFilters();
+			        } catch (error) {
+			            console.error('Error loading categories:', error);
+			            this.showNotification('Failed to load categories', 'error');
+			        }
+			    }
+
+			    renderCategoryFilters() {
+			        const filtersContainer = document.getElementById('categoryFilters');
+
+			        if (categories.length === 0) {
+			            filtersContainer.innerHTML = '<p class="no-categories">No categories available</p>';
+			            return;
+			        }
+
+			        const filtersHTML = categories.map((category, index) => `
+			            <button class="filter-btn ${index === 0 ? 'active' : ''}" data-category-id="${category._id}">
+			                ${category.categoryName}
+			            </button>
+			        `).join('');
+
+			        filtersContainer.innerHTML = filtersHTML;
+
+			        // Add event listeners
+			        const filterBtns = document.querySelectorAll('.filter-btn');
+			        filterBtns.forEach(btn => {
+			            btn.addEventListener('click', (e) => {
+			                filterBtns.forEach(b => b.classList.remove('active'));
+			                e.target.classList.add('active');
+			                this.currentCategoryId = e.target.dataset.categoryId;
+			                this.loadProducts(this.currentCategoryId);
+			            });
+			        });
+			    }
+
+			    async loadProducts(categoryId) {
+			        const loadingSpinner = document.getElementById('loadingSpinner');
+			        const productsGrid = document.getElementById('productsGrid');
+			        const errorMessage = document.getElementById('errorMessage');
+
+			        loadingSpinner.style.display = 'block';
+			        productsGrid.innerHTML = '';
+			        errorMessage.style.display = 'none';
+
+			        try {
+			            const response = await axios.get(`/user/products/category/${categoryId}`);
+			            const products = response.data.categoryProducts || [];
+
+			            // Limit to 3 products for landing page
+			            const limitedProducts = products.slice(0, 3);
+
+			            this.renderProducts(limitedProducts);
+			            loadingSpinner.style.display = 'none';
+
+			        } catch (error) {
+			            console.error('Error loading products:', error);
+			            loadingSpinner.style.display = 'none';
+			            errorMessage.style.display = 'block';
+			        }
+			    }
+
+			    renderProducts(products) {
+			        const productsGrid = document.getElementById('productsGrid');
+
+			        if (products.length === 0) {
+			            productsGrid.innerHTML = '<div class="no-products"><i class="fas fa-box-open"></i><p>No products found in this category.</p></div>';
+			            return;
+			        }
+
+			        const productsHTML = products.map(product => `
+			            <div class="product-card" data-product-id="${product._id}">
+			                <div class="product-image">
+			                    <img src="${product.images && product.images[0].url ? product.images[0].url : '/images/placeholder-watch.jpg'}" alt="${product.name}">
+			                    <div class="product-overlay">
+			                        <button class="quick-view-btn" onclick="productManager.quickView('${product._id}')">
+			                            <i class="fas fa-eye"></i> View
+			                        </button>
+			                    </div>
+			                    ${product.salePrice < product.regularPrice ? `
+			                        <div class="discount-badge">
+			                            ${Math.round(((product.regularPrice - product.salePrice) / product.regularPrice) * 100)}% OFF
+			                        </div>
+			                    ` : ''}
+			                </div>
+			                <div class="product-info">
+			                    <div class="product-brand">${product.brand || 'Premium Brand'}</div>
+			                    <h3 class="product-name">${product.productName}</h3>
+			                    <div class="product-description">${product.description ? product.description.substring(0, 60) + '...' : 'Premium timepiece with exceptional craftsmanship'}</div>
+			                    <div class="product-rating">
+			                        <div class="stars">
+			                            <i class="fas fa-star"></i>
+			                            <i class="fas fa-star"></i>
+			                            <i class="fas fa-star"></i>
+			                            <i class="fas fa-star"></i>
+			                            <i class="fas fa-star"></i>
+			                        </div>
+			                        <span class="review-count">(0 reviews)</span>
+			                    </div>
+			                    <div class="product-price">
+			                        <span class="current-price">₹${product.salePrice ? product.salePrice.toLocaleString() : '0'}</span>
+			                        ${product.salePrice < product.regularPrice ? `
+			                            <span class="original-price">₹${product.regularPrice.toLocaleString()}</span>
+			                        ` : ''}
+			                    </div>
+			                    <div class="product-actions">
+			                        <button class="add-to-cart-btn" onclick="productManager.addToCart('${product._id}')">
+			                            <i class="fas fa-shopping-cart"></i> Add to Cart
+			                        </button>
+			                        <button class="wishlist-btn" onclick="productManager.toggleWishlist('${product._id}', this)">
+			                            <i class="far fa-heart"></i>
+			                        </button>
+			                    </div>
+			                </div>
+			            </div>
+			        `).join('');
+
+			        productsGrid.innerHTML = productsHTML;
+			    }
+
+			    async addToCart(productId) {
+			        try {
+			            const response = await axios.post('/api/cart/add', {
+			                productId: productId,
+			                quantity: 1
+			            });
+
+			            if (response.data.success) {
+			                this.showNotification('Product added to cart!', 'success');
+			                this.updateCartCount();
+			            } else {
+			                this.showNotification(response.data.message || 'Failed to add to cart', 'error');
+			            }
+			        } catch (error) {
+			            console.error('Error adding to cart:', error);
+			            this.showNotification('Failed to add product to cart', 'error');
+			        }
+			    }
+
+			    async toggleWishlist(productId, btn) {
+			        try {
+			            const icon = btn.querySelector('i');
+			            const isWishlisted = icon.classList.contains('fas');
+
+			            const response = await axios.post('/api/wishlist/toggle', {
+			                productId: productId
+			            });
+
+			            if (response.data.success) {
+			                if (isWishlisted) {
+			                    icon.classList.remove('fas');
+			                    icon.classList.add('far');
+			                    this.showNotification('Removed from wishlist', 'info');
+			                } else {
+			                    icon.classList.remove('far');
+			                    icon.classList.add('fas');
+			                    this.showNotification('Added to wishlist', 'success');
+			                }
+			                this.updateWishlistCount();
+			            } else {
+			                this.showNotification(response.data.message || 'Failed to update wishlist', 'error');
+			            }
+			        } catch (error) {
+			            console.error('Error updating wishlist:', error);
+			            this.showNotification('Failed to update wishlist', 'error');
+			        }
+			    }
+
+			    quickView(productId) {
+			        window.location.href = `/user/product/${productId}`;
+			    }
+
+			    async retryLoad() {
+			        if (this.currentCategoryId) {
+			            await this.loadProducts(this.currentCategoryId);
+			        }
+			    }
+
+			    async updateCartCount() {
+			        try {
+			            const response = await axios.get('/api/cart/count');
+			            const badge = document.querySelector('.nav-actions .badge');
+			            if (badge && response.data.count !== undefined) {
+			                badge.textContent = response.data.count;
+			            }
+			        } catch (error) {
+			            console.error('Error updating cart count:', error);
+			        }
+			    }
+
+			    async updateWishlistCount() {
+			        try {
+			            const response = await axios.get('/api/wishlist/count');
+			            const wishlistBadges = document.querySelectorAll('.nav-actions .badge');
+			            if (wishlistBadges.length > 0 && response.data.count !== undefined) {
+			                wishlistBadges[0].textContent = response.data.count;
+			            }
+			        } catch (error) {
+			            console.error('Error updating wishlist count:', error);
+			        }
+			    }
+
+			    showNotification(message, type = 'info') {
+			        const container = document.getElementById('notificationContainer');
+			        const notification = document.createElement('div');
+			        notification.className = `notification ${type}`;
+
+			        const icon = type === 'success' ? 'fas fa-check-circle' :
+			                   type === 'error' ? 'fas fa-exclamation-circle' :
+			                   'fas fa-info-circle';
+
+			        notification.innerHTML = `
+			            <i class="${icon}"></i>
+			            <span>${message}</span>
+			            <button class="close-btn" onclick="this.parentElement.remove()">
+			                <i class="fas fa-times"></i>
+			            </button>
+			        `;
+
+			        container.appendChild(notification);
+
+			        setTimeout(() => {
+			            notification.classList.add('show');
+			        }, 100);
+
+			        setTimeout(() => {
+			            notification.classList.remove('show');
+			            setTimeout(() => {
+			                if (notification.parentElement) {
+			                    notification.parentElement.removeChild(notification);
+			                }
+			            }, 300);
+			        }, 5000);
+			    }
+			}
+
+			// Search functionality
+			function setupSearch() {
+			    const searchInput = document.querySelector('.search-input');
+			    const searchBtn = document.querySelector('.search-btn');
+
+			    function performSearch() {
+			        const query = searchInput.value.trim();
+			        if (query) {
+			            window.location.href = `/user/search?q=${encodeURIComponent(query)}`;
+			        }
+			    }
+
+			    searchBtn.addEventListener('click', performSearch);
+			    searchInput.addEventListener('keypress', (e) => {
+			        if (e.key === 'Enter') {
+			            performSearch();
+			        }
+			    });
+			}
+
+			// Initialize everything when DOM is loaded
+			document.addEventListener('DOMContentLoaded', () => {
+			    heroSlider = new HeroSlider();
+			    productManager = new ProductManager();
+			    setupSearch();
+
+			    // Smooth scrolling for navigation links
+			    document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+			        anchor.addEventListener('click', function (e) {
+			            e.preventDefault();
+			            const target = document.querySelector(this.getAttribute('href'));
+			            if (target) {
+			                target.scrollIntoView({
+			                    behavior: 'smooth',
+			                    block: 'start'
+			                });
+			            }
+			        });
+			    });
+
+			    // Initial cart and wishlist count load
+			    if (productManager) {
+			        productManager.updateCartCount();
+			        productManager.updateWishlistCount();
+			    }
+			});
+		</script>
+	</body>
+</html>
