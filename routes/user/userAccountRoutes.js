@@ -4,9 +4,10 @@ import { User } from '../../models/userModels.js'
 
 import { authenticateUser } from '../../middlewares/userAuthMiddleware.js'
 import { sendResetPasswordToken } from '../../utils/sendVerificationOTP.js';
+import { updateUserData } from '../../controllers/user/userProfileController.js';
 
 
-userAccountRoutes.get('/user/profile', authenticateUser, async (req, res) => {
+userAccountRoutes.get('/profile', authenticateUser, async (req, res) => {
   try {
     const userId = req.user.id || req.user._id;
 
@@ -50,7 +51,7 @@ userAccountRoutes.get('/user/profile', authenticateUser, async (req, res) => {
 });
 
 
-userAccountRoutes.get('/user/send-reset-link', authenticateUser, async (req, res) => {
+userAccountRoutes.get('/send-reset-link', authenticateUser, async (req, res) => {
 
   try {
     const userId = req.user.id || req.user._id;
@@ -63,5 +64,7 @@ userAccountRoutes.get('/user/send-reset-link', authenticateUser, async (req, res
   }
 })
 
+
+userAccountRoutes.patch('/profile/update',authenticateUser,updateUserData)
 
 export default userAccountRoutes;

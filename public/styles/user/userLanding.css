@@ -898,11 +898,11 @@ body {
 }
 
 .notification.success {
-  border-left-color: #10b981;
+  background-color: #10b981;
 }
 
 .notification.error {
-  border-left-color: #ef4444;
+  background-color: red;
 }
 
 .notification i {
@@ -910,15 +910,15 @@ body {
 }
 
 .notification.success i {
-  color: #10b981;
+  color: #fff;
 }
 
 .notification.error i {
-  color: #ef4444;
+  color: #fff;
 }
 
 .notification.info i {
-  color: #3b82f6;
+  color: #fff;
 }
 
 .close-btn {

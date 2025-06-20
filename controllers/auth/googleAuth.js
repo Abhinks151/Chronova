@@ -1,6 +1,5 @@
 import passport from "passport";
 import { generateToken } from "../../utils/generateToken.js";
-import HttpStatusCode from "../../utils/httpStatusCode.js";
 
 export const googleAuth = passport.authenticate('google', {
   scope: ['profile', 'email'],

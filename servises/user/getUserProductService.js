@@ -11,19 +11,33 @@ export const getActiveProducts = async () => {
     },
     {
       $lookup: {
-        from: 'categories',
-        localField: 'category',
-        foreignField: '_id',
-        as: 'categoryDetails'
+        from: "categories",
+        localField: "category",
+        foreignField: "_id",
+        as: "categoryDetails"
       }
     },
     {
       $match: {
-        'categoryDetails.isBlocked': { $ne: true },
-        'categoryDetails.isDeleted': { $ne: true }
+        "categoryDetails.isBlocked": { $ne: true },
+        "categoryDetails.isDeleted": { $ne: true }
       }
     }
   ]);
+};
+
+export const getProductByCategoryId = async (categoryId) => {
+  try {
+    const products = await Products.find({
+      isDeleted: false,
+      isBlocked: false,
+      category: { $in: [categoryId] }
+    }).lean();
+
+    return products;
+  } catch (error) {
+    console.error(error);
+  }
 };
 
 export const getActiveCategories = async () => {

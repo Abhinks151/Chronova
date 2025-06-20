@@ -29,6 +29,7 @@ passport.use(
             user.isGoogleUser = true;
             user.avatar = avatar;
             user.firstname = fullName;
+            user.lastLogin = Date.now();
             await user.save();
           } else {
             user = await User.create({
@@ -38,6 +39,7 @@ passport.use(
               avatar,
               isGoogleUser: true,
               isVerified: true,
+              lastLogin: Date.now(),
             });
           }
         }
@@ -53,3 +55,4 @@ passport.use(
     }
   )
 );
+

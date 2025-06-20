@@ -25,7 +25,7 @@ indexRoutes.use('/admin', categoryRouter)
 indexRoutes.use('/user', userProductPageRoutes);
 indexRoutes.use('/user',userLandingRoutes)
 
-indexRoutes.use('/',userAccountRoutes)
+indexRoutes.use('/user',userAccountRoutes)
 
 
 export default indexRoutes;

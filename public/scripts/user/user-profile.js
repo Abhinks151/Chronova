@@ -73,7 +73,7 @@ const Profile = {
         if (inputs[0].readOnly) {
             // Enable editing mode
             inputs.forEach(input => {
-                if (input.id !== 'email') { // Don't allow email editing
+                if (input.id !== 'email' && input.id !== 'accountType') { // Don't allow email editing
                     input.readOnly = false;
                     input.classList.add('editable');
                     input.style.backgroundColor = '#fff';
@@ -108,7 +108,7 @@ const Profile = {
                 data[input.id] = input.value.trim();
             }
         });
-
+        // data.userId = user._id;
         // Validate data before sending
         const validation = this.validateBasicInfo(data);
         if (!validation.isValid) {
@@ -118,7 +118,7 @@ const Profile = {
         }
 
         try {
-            const response = await axios.post('/user/profile/update', data, {
+            const response = await axios.patch('/user/profile/update', data, {
                 headers: {
                     'Content-Type': 'application/json',
                 },
@@ -268,70 +268,70 @@ const Profile = {
         }
     },
 
-    // Change password function
-    changePassword() {
-        this.showToast('Redirecting to change password...', 'info');
-        setTimeout(() => {
-            window.location.href = '/user/change-password';
-        }, 1000);
-    },
+    // // Change password function
+    // changePassword() {
+    //     this.showToast('Redirecting to change password...', 'info');
+    //     setTimeout(() => {
+    //         window.location.href = '/user/change-password';
+    //     }, 1000);
+    // },
 
-    // Resend verification email
-    async resendVerification() {
-        try {
-            this.showToast('Sending verification email...', 'info');
+    // // Resend verification email
+    // async resendVerification() {
+    //     try {
+    //         this.showToast('Sending verification email...', 'info');
 
-            const response = await axios.post('/user/resend-verification', {}, {
-                timeout: 10000
-            });
+    //         const response = await axios.post('/user/resend-verification', {}, {
+    //             timeout: 10000
+    //         });
 
-            if (response.data.success) {
-                this.showToast('Verification email sent successfully!', 'success');
-            } else {
-                throw new Error(response.data.message || 'Failed to send verification email');
-            }
-        } catch (error) {
-            console.error('Error resending verification:', error);
-            const errorMessage = error.response?.data?.message || 'Failed to send verification email';
-            this.showToast(errorMessage, 'error');
-        }
-    },
+    //         if (response.data.success) {
+    //             this.showToast('Verification email sent successfully!', 'success');
+    //         } else {
+    //             throw new Error(response.data.message || 'Failed to send verification email');
+    //         }
+    //     } catch (error) {
+    //         console.error('Error resending verification:', error);
+    //         const errorMessage = error.response?.data?.message || 'Failed to send verification email';
+    //         this.showToast(errorMessage, 'error');
+    //     }
+    // },
 
-    // Delete account (with confirmation)
-    async deleteAccount() {
-        const confirmed = confirm(
-            'Are you sure you want to delete your account? This action cannot be undone and will permanently remove all your data.'
-        );
+    // // Delete account (with confirmation)
+    // async deleteAccount() {
+    //     const confirmed = confirm(
+    //         'Are you sure you want to delete your account? This action cannot be undone and will permanently remove all your data.'
+    //     );
 
-        if (!confirmed) return;
+    //     if (!confirmed) return;
 
-        const doubleConfirm = confirm(
-            'This is your final warning. Are you absolutely sure you want to delete your account? Type "DELETE" to confirm.'
-        );
+    //     const doubleConfirm = confirm(
+    //         'This is your final warning. Are you absolutely sure you want to delete your account? Type "DELETE" to confirm.'
+    //     );
 
-        if (!doubleConfirm) return;
+    //     if (!doubleConfirm) return;
 
-        try {
-            this.showToast('Processing account deletion...', 'warning');
+    //     try {
+    //         this.showToast('Processing account deletion...', 'warning');
 
-            const response = await axios.delete('/user/account', {
-                timeout: 15000
-            });
+    //         const response = await axios.delete('/user/account', {
+    //             timeout: 15000
+    //         });
 
-            if (response.data.success) {
-                this.showToast('Account deleted successfully. Redirecting...', 'success');
-                setTimeout(() => {
-                    window.location.href = '/';
-                }, 2000);
-            } else {
-                throw new Error(response.data.message || 'Failed to delete account');
-            }
-        } catch (error) {
-            console.error('Error deleting account:', error);
-            const errorMessage = error.response?.data?.message || 'Failed to delete account';
-            this.showToast(errorMessage, 'error');
-        }
-    },
+    //         if (response.data.success) {
+    //             this.showToast('Account deleted successfully. Redirecting...', 'success');
+    //             setTimeout(() => {
+    //                 window.location.href = '/';
+    //             }, 2000);
+    //         } else {
+    //             throw new Error(response.data.message || 'Failed to delete account');
+    //         }
+    //     } catch (error) {
+    //         console.error('Error deleting account:', error);
+    //         const errorMessage = error.response?.data?.message || 'Failed to delete account';
+    //         this.showToast(errorMessage, 'error');
+    //     }
+    // },
 
     // Search functionality
     performSearch() {
