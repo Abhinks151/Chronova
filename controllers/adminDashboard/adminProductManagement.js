@@ -6,23 +6,7 @@ import { getCategory, paginationService } from '../../servises/productManagement
 import { getProduct, updateProductService } from '../../servises/productManagement/editProductService.js';
 import mongoose from 'mongoose';
 
-const types = [
-  { _id: 'mechanical', name: 'Mechanical' },
-  { _id: 'automatic', name: 'Automatic' },
-  { _id: 'quartz', name: 'Quartz' },
-  { _id: 'smartwatch', name: 'Smartwatch' }
-];
 
-const brands = [
-  { _id: 'fossil', name: 'Fossil' },
-  { _id: 'casio', name: 'Casio' },
-  { _id: 'titan', name: 'Titan' },
-  { _id: 'timex', name: 'Timex' },
-  { _id: 'rolex', name: 'Rolex' },
-  { _id: 'seiko', name: 'Seiko' },
-  { _id: 'tissot', name: 'Tissot' },
-  { _id: 'mk', name: 'Michael Kors' }
-];
 
 export const getProductsPage = async (req, res) => {
   try {
