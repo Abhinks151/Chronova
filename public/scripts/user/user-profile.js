@@ -1,4 +1,5 @@
 
+
 const Profile = {
     // Initialize the profile page
     init() {
@@ -267,7 +268,19 @@ const Profile = {
             inputElement.classList.remove('error');
         }
     },
-
+    async sentEmailChangeLink(){
+        try {
+            const response = await axios.get('/user/send-reset-link')
+            if(response.data && response.data.success){
+                this.showToast('Resent link sent to registered email', 'success');
+            }else{
+                this.showToast('Something went wrong', 'error');
+            }
+        } catch (error) {
+            console.log(error);
+            this.showToast('Failed to reset password', 'error');
+        }
+    },
     // // Change password function
     // changePassword() {
     //     this.showToast('Redirecting to change password...', 'info');
@@ -396,3 +409,5 @@ document.addEventListener('visibilitychange', function () {
         Profile.loadWishlistCount();
     }
 });
+
+

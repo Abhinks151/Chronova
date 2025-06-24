@@ -9,6 +9,7 @@
 			href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css"
 		/>
 		<link rel="stylesheet" href="/styles/user/user-profile.css" />
+		<link rel="stylesheet" href="/styles/user/user-profile-sidebar.css" />
 	</head>
 	<body>
 		<div id="toast" class="toast">
@@ -16,46 +17,7 @@
 			<span id="toast-message">This is a toast</span>
 		</div>
 		<div class="main-container">
-			<aside class="user-sidebar">
-				<ul class="sidebar-menu">
-					<li>
-						<a href="/user/profile" class="active">
-							<i class="fas fa-user"></i>
-							Profile
-						</a>
-					</li>
-					<li>
-						<a href="/user/orders">
-							<i class="fas fa-shopping-bag"></i>
-							Orders
-						</a>
-					</li>
-					<li>
-						<a href="/user/addresses">
-							<i class="fas fa-map-marker-alt"></i>
-							Addresses
-						</a>
-					</li>
-					<li>
-						<a href="/user/wallet">
-							<i class="fas fa-wallet"></i>
-							Wallet
-						</a>
-					</li>
-					<li>
-						<a href="/user/settings">
-							<i class="fas fa-cog"></i>
-							Settings
-						</a>
-					</li>
-					<li>
-						<a href="/user/logout" class="logout-btn">
-							<i class="fas fa-sign-out-alt"></i>
-							Logout
-						</a>
-					</li>
-				</ul>
-			</aside>
+			<%- include('../../partials/user-profile-sidebar') %>
 
 			<main class="main-content">
 				<div class="profile-header">
@@ -105,8 +67,11 @@
 							</div>
 							<div class="stat-value">
 								<%= new
-								Date(user.createdAt).toLocaleDateString() %>
+								Date(user.createdAt).toLocaleDateString('en-IN',
+								{ year: 'numeric', month: 'short', day:
+								'numeric' }) %>
 							</div>
+
 							<div class="stat-label">Member Since</div>
 						</div>
 						<div class="stat-card">
@@ -123,10 +88,13 @@
 								<i class="fas fa-clock"></i>
 							</div>
 							<div class="stat-value">
-								<%= user.lastLogin ? new
-								Date(user.lastLogin).toLocaleDateString() :
-								'Never' %>
+								<%= (user.lastLogin ? new Date(user.lastLogin) :
+								new
+								Date(user.createdAt)).toLocaleDateString('en-IN',
+								{ year: 'numeric', month: 'short', day:
+								'numeric' }) %>
 							</div>
+
 							<div class="stat-label">Last Login</div>
 						</div>
 					</div>
@@ -218,7 +186,7 @@
 						<h2 class="section-title">Saved Addresses</h2>
 						<button
 							class="edit-btn"
-							onclick="window.location.href='/user/addresses'"
+							onclick="window.location.href='/user/profile/address'"
 						>
 							<i class="fas fa-plus"></i>
 							Manage Addresses
@@ -227,29 +195,58 @@
 					<div class="address-list">
 						<% if (user.address && user.address.length > 0) { %> <%
 						user.address.forEach(address => { %>
-						<div class="address-card">
+						<div
+							class="address-card <%= address.isDefault ? 'default-address' : '' %>"
+						>
 							<div class="address-header">
-								<span class="address-name"
-									><%= address.name || 'Address' %></span
-								>
+								<div class="address-name">
+									<%= address.addressName || 'Address' %>
+								</div>
+								<% if (address.isDefault) { %>
+								<span class="default-badge">Default</span>
+								<% } %>
 							</div>
+
 							<div class="address-details">
-								<%= address.addressLine1 || '' %><br />
-								<% if (address.addressLine2) { %><%=
-								address.addressLine2 %><br /><% } %> <%=
-								address.city || '' %>, <%= address.state || ''
-								%> <%= address.zipCode || '' %><br />
-								<% if (address.phone) { %><br />Phone: <%=
-								address.phone %><% } %>
+								<p class="address-name-full">
+									<%= address.fullName %>
+								</p>
+								<p class="address-line">
+									<%= address.addressLine %>
+								</p>
+								<% if (address.landmark) { %>
+								<p class="address-landmark">
+									Near: <%= address.landmark %>
+								</p>
+								<% } %>
+								<p class="address-location">
+									<%= address.city %>, <%= address.state %>
+									<%= address.pincode %>
+								</p>
+								<p class="address-country">
+									<%= address.country %>
+								</p>
+								<p class="address-phone">
+									Phone: <%= address.phone %>
+								</p>
+								<p class="address-created">
+									Added: <%= new
+									Date(address.createdAt).toLocaleDateString('en-IN',
+									{ year: 'numeric', month: 'short', day:
+									'numeric' }) %>
+								</p>
 							</div>
 						</div>
 						<% }) %> <% } else { %>
-						<div class="no-data">
-							<i
-								class="fas fa-map-marker-alt"
-								style="font-size: 48px; color: #d1d5db; margin-bottom: 16px;"
-							></i>
-							<p>No addresses saved yet</p>
+						<div class="empty-state">
+							<div class="empty-icon">📍</div>
+							<h3>No addresses saved yet</h3>
+							<p>Add your first address to get started</p>
+							<a
+								href="/user/profile#add-address"
+								class="btn-set-default"
+								>Add Address</a
+							>
 						</div>
 						<% } %>
 					</div>
@@ -288,13 +285,13 @@
 							/>
 						</div>
 						<div class="security-actions">
-							<a
-								href="/user/send-reset-link"
+							<button
 								class="security-btn"
+								onclick="Profile.sentEmailChangeLink()"
 							>
-								<i class="fas fa-envelope"></i>
-								Reset Password
-							</a>
+								<i class="fas fa-lock"></i>
+								Reset password
+							</button>
 							<% if (!user.isVerified) { %>
 							<button
 								class="security-btn"
@@ -304,6 +301,15 @@
 								Resend Verification
 							</button>
 							<% } %>
+						</div>
+						<div class="form-group">
+							<button
+								class="security-btn"
+								onclick="Profile.sentEmailChangeLink()"
+							>
+								<i class="fas fa-envelope"></i>
+								Change email
+							</button>
 						</div>
 					</div>
 				</div>

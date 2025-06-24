@@ -196,58 +196,6 @@ body {
 	font-weight: 600;
 }
 
-/* Sidebar Styles */
-.user-sidebar {
-	width: 240px;
-	background: #fff;
-	padding: 24px 16px;
-	border-right: 1px solid #e5e7eb;
-	height: 100vh;
-	position: sticky;
-	top: 0px;
-	display: flex;
-	flex-direction: column;
-	gap: 16px;
-}
-
-.sidebar-menu {
-	list-style: none;
-	padding: 0;
-	margin: 0;
-	margin-top: 10px;
-}
-
-.sidebar-menu li {
-	margin-bottom: 16px;
-}
-
-.sidebar-menu a {
-	text-decoration: none;
-	font-size: 16px;
-	color: #374151;
-	display: flex;
-	align-items: center;
-	gap: 12px;
-	padding: 10px 12px;
-	border-radius: 8px;
-	transition: all 0.2s ease;
-}
-
-.sidebar-menu a:hover {
-	background-color: #f3f4f6;
-	color: #111827;
-}
-
-.sidebar-menu a.active {
-	background-color: #e0f2fe;
-	color: #0277bd;
-	font-weight: 600;
-}
-
-.logout-btn {
-	color: #ef4444 !important;
-	font-weight: 600;
-}
 
 /* Main Content Styles */
 .main-container {
@@ -442,24 +390,41 @@ body {
 }
 
 /* Address Section */
+/* Container */
 .address-list {
-	display: flex;
-	flex-direction: column;
-	gap: 16px;
+	display: grid;
+	grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+	gap: 24px;
+	padding: 20px;
+	justify-content: center;
 }
 
+/* Card */
 .address-card {
-	border: 1px solid #e5e7eb;
-	border-radius: 8px;
-	padding: 20px;
 	background: #f9fafb;
-	transition: all 0.2s ease;
+	border: 1px solid #e5e7eb;
+	border-radius: 12px;
+	padding: 20px;
+	width: 100%;
+	max-width: 320px;
+	transition: all 0.25s ease;
+	box-shadow: 0 2px 6px rgba(0, 0, 0, 0.04);
+	position: relative;
+	margin: 0 auto;
 }
 
 .address-card:hover {
-	box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+	box-shadow: 0 6px 18px rgba(37, 99, 235, 0.15);
+	transform: translateY(-2px);
 }
 
+/* Highlight default address */
+.address-card.default-address {
+	border: 2px solid #2563eb;
+	background: #eff6ff;
+}
+
+/* Header */
 .address-header {
 	display: flex;
 	justify-content: space-between;
@@ -467,23 +432,151 @@ body {
 	margin-bottom: 12px;
 }
 
-.address-name {
+/* Icon */
+.address-icon {
+	font-size: 24px;
+	width: 48px;
+	height: 48px;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	background: #2563eb;
+	border-radius: 12px;
+	color: white;
 	font-weight: 600;
-	color: #1f2937;
-	font-size: 16px;
 }
 
+/* Info beside icon */
+.address-info {
+	display: flex;
+	flex-direction: column;
+	gap: 4px;
+	margin-left: 12px;
+}
+
+.address-name {
+	font-weight: 600;
+	font-size: 18px;
+	color: #1f2937;
+}
+
+/* Badge */
+.default-badge {
+	background: #719bf5;
+	color: white;
+	font-size: 12px;
+	font-weight: 600;
+	padding: 4px 12px;
+	border-radius: 20px;
+	text-transform: uppercase;
+	letter-spacing: 0.5px;
+	width: fit-content;
+}
+
+/* Action Buttons */
+.address-actions {
+	display: flex;
+	gap: 4px;
+	flex-shrink: 0;
+}
+
+/* Details */
 .address-details {
+	margin-top: 16px;
 	color: #6b7280;
 	line-height: 1.6;
 }
 
-.no-data {
-	text-align: center;
-	color: #6b7280;
-	font-style: italic;
-	padding: 40px;
+.address-details p {
+	margin-bottom: 8px;
+	font-size: 14px;
 }
+
+.address-name-full {
+	font-weight: 600;
+	color: #111827;
+	font-size: 16px;
+}
+
+.address-line {
+	color: #374151;
+	font-weight: 500;
+}
+
+.address-location,
+.address-country,
+.address-landmark,
+.address-phone {
+	color: #6b7280;
+}
+
+.address-landmark {
+	font-style: italic;
+}
+
+.address-phone {
+	font-weight: 500;
+}
+
+/* Created Info */
+.address-created {
+	color: #9ca3af;
+	font-size: 12px;
+	margin-top: 12px;
+	padding-top: 12px;
+	border-top: 1px solid #f3f4f6;
+}
+
+/* Footer Actions */
+.address-footer {
+	margin-top: 16px;
+	padding-top: 16px;
+	border-top: 1px solid #f3f4f6;
+	display: flex;
+	gap: 8px;
+}
+
+/* Set Default Button */
+.btn-set-default {
+	background: #2563eb;
+	color: white;
+	font-size: 12px;
+	padding: 6px 12px;
+	border-radius: 6px;
+	transition: background 0.2s ease;
+}
+
+.btn-set-default:hover {
+	background: #1d4ed8;
+}
+
+/* Empty State */
+.empty-state {
+	grid-column: 1 / -1;
+	text-align: center;
+	padding: 80px 20px;
+	border: 2px dashed #e5e7eb;
+	border-radius: 12px;
+}
+
+.empty-icon {
+	font-size: 48px;
+	margin-bottom: 16px;
+	color: #a1a1aa;
+}
+
+.empty-state h3 {
+	font-size: 20px;
+	font-weight: 600;
+	color: #1a1a1a;
+	margin-bottom: 8px;
+}
+
+.empty-state p {
+	color: #6b7280;
+	margin-bottom: 24px;
+}
+
 
 /* Stats Cards */
 .stats-grid {
