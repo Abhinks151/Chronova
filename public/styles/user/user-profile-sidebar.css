@@ -1,0 +1,64 @@
+* {
+	margin: 0;
+	padding: 0;
+	box-sizing: border-box;
+}
+
+body {
+	font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+	background-color: #f5f5f5;
+	color: #333;
+}
+
+/* Sidebar Styles */
+.user-sidebar {
+	width: 240px;
+	background: #fff;
+	padding: 24px 16px;
+	border-right: 1px solid #e5e7eb;
+	height: 100vh;
+	position: sticky;
+	top: 0px;
+	display: flex;
+	flex-direction: column;
+	gap: 16px;
+}
+
+.sidebar-menu {
+	list-style: none;
+	padding: 0;
+	margin: 0;
+	margin-top: 10px;
+}
+
+.sidebar-menu li {
+	margin-bottom: 16px;
+}
+
+.sidebar-menu a {
+	text-decoration: none;
+	font-size: 16px;
+	color: #374151;
+	display: flex;
+	align-items: center;
+	gap: 12px;
+	padding: 10px 12px;
+	border-radius: 8px;
+	transition: all 0.2s ease;
+}
+
+.sidebar-menu a:hover {
+	background-color: #f3f4f6;
+	color: #111827;
+}
+
+.sidebar-menu a.active {
+	background-color: #e0f2fe;
+	color: #0277bd;
+	font-weight: 600;
+}
+
+.logout-btn {
+	color: #ef4444 !important;
+	font-weight: 600;
+}

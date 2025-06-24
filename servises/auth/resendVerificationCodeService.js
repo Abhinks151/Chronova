@@ -7,22 +7,12 @@ import httpStatusCode from '../../utils/httpStatusCode.js';
 
 
 export const handleResendVerification = async (req) => {
-  const errors = validationResult(req);
-
-  if (!errors.isEmpty()) {
-    const errorMsg = errors.array()[0].msg || 'Validation error';
-    return {
-      status: httpStatusCode.BAD_REQUEST.code,
-      message: errorMsg,
-    };
-  }
-
-  const { email } = req.body;
-
+  const email = req.session.emailForVerification;
+  // console.log(email)
   if (!email) {
     return {
       status: httpStatusCode.BAD_REQUEST.code,
-      message: 'Email is required.',
+      message: 'Session expired. Please sign up again.',
     };
   }
 
@@ -42,12 +32,17 @@ export const handleResendVerification = async (req) => {
     };
   }
 
-  // await sendWelcome(user);
-  await sendVerificationOTP(user);
-
-  return {
-    status: httpStatusCode.OK.code,
-    message: 'Verification code sent successfully. Please check your inbox.',
-  };
+  try {
+    await sendVerificationOTP(user);
+    return {
+      status: httpStatusCode.OK.code,
+      message: 'Verification code sent successfully. Please check your inbox.',
+    };
+  } catch (err) {
+    console.error('Error sending OTP:', err);
+    return {
+      status: httpStatusCode.INTERNAL_SERVER.code,
+      message: 'Failed to send verification code. Please try again later.',
+    };
+  }
 };
-

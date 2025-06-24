@@ -5,7 +5,12 @@ import httpStatusCode from '../../utils/httpStatusCode.js';
 import { generateToken } from '../../utils/generateToken.js';
 
 export const verifyUserOTPService = async (session, body) => {
-  const { email, otp } = { ...session, ...body };
+  // const { email, otp } = { ...session, ...body };
+  const otp = body.otp;
+  const email = session.emailForVerification;
+  // console.log(email);
+  // console.log(otp);
+
 
   if (!email || !otp) {
     return {
@@ -70,7 +75,7 @@ export const verifyUserOTPService = async (session, body) => {
   return {
     status: httpStatusCode.OK.code,
     message: 'Account verified successfully.',
-    redirect: '/user/products',
+    redirect: '/user/home',
     token
   };
 };
