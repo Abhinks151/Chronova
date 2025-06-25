@@ -3,7 +3,7 @@ import { generateNumericOTP, hashOTP } from './otp.js';
 import { sendOTPEmail, sendResetPasswordEmail, sendWelcomeEmail } from '../servises/emailService.js';
 import { User } from '../models/userModels.js';
 
-export const sendVerificationOTP = async (user) => {
+export const sendVerificationOTP = async (user,newEmail) => {
   const otp = generateNumericOTP();
   const hashed = hashOTP(otp);
   const expiry = Date.now() + 10 * 60 * 1000;
@@ -12,7 +12,7 @@ export const sendVerificationOTP = async (user) => {
   user.verificationTokenExpireAt = expiry;
   await user.save();
 
-  await sendOTPEmail(user.email, otp, user.firstname);
+  await sendOTPEmail(newEmail, otp, user.firstname);
 };
 
 export const sendResetPasswordToken = async (user) => {

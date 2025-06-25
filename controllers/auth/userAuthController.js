@@ -78,7 +78,7 @@ export const postUserRegister = async (req, res) => {
       });
     }
 
-    const response = await registerUser(req,req.body);
+    const response = await registerUser(req, req.body);
     return res.status(response.status).json(response.body);
 
   } catch (error) {
@@ -95,8 +95,8 @@ export const postUserRegister = async (req, res) => {
 
 
 export const getVerifyUserOTP = async (req, res) => {
-   const email = req.session.emailForVerification || 'dsfs';
-   console.log(email);
+  const email = req.session.emailForVerification || 'dsfs';
+  console.log(email);
   try {
     res.status(httpStatusCode.OK.code).render('Layouts/userVerify', {
       title: "Verify account",
@@ -119,6 +119,7 @@ export const getVerifyUserOTP = async (req, res) => {
 
 export const postVerifyUserOTP = async (req, res) => {
   try {
+
     const result = await verifyUserOTPService(req.session, req.body);
 
     if (result.token) {
@@ -128,7 +129,7 @@ export const postVerifyUserOTP = async (req, res) => {
         httpOnly: true,
         secure: isProd,
         sameSite: isProd ? 'Strict' : 'Lax',
-        maxAge: 7 * 24 * 60 * 60 * 1000 
+        maxAge: 7 * 24 * 60 * 60 * 1000
       });
     }
 

@@ -28,24 +28,26 @@
 
 					<div class="profile-avatar-section">
 						<div class="avatar-container">
-							<% if (user.avatar) { %>
+							<% if (user && user.avatar) { %>
 							<img
 								src="<%= user.avatar %>"
 								alt="Profile Avatar"
 								class="profile-avatar"
 							/>
-							<% } else { %>
+							<% } else if (user) { %>
 							<div class="default-avatar">
-								<%= user.name ?
-								user.name.charAt(0).toUpperCase() :
+								<%= user.firstname ?
+								user.firstname.charAt(0).toUpperCase() :
 								(user.firstname ?
 								user.firstname.charAt(0).toUpperCase() : 'U') %>
 							</div>
+							<% } else { %>
+							<div class="default-avatar">U</div>
 							<% } %>
 						</div>
 						<div class="avatar-info">
 							<h2>
-								<%= user.name || `${user.firstname || ''}
+								<%= user.firstname || `${user.firstname || ''}
 								${user.lastname || ''}`.trim() || 'User' %>
 							</h2>
 							<p><%= user.email %></p>
@@ -243,7 +245,7 @@
 							<h3>No addresses saved yet</h3>
 							<p>Add your first address to get started</p>
 							<a
-								href="/user/profile#add-address"
+								href="/user/profile/address"
 								class="btn-set-default"
 								>Add Address</a
 							>
@@ -305,7 +307,7 @@
 						<div class="form-group">
 							<button
 								class="security-btn"
-								onclick="Profile.sentEmailChangeLink()"
+								onclick="window.location.href='/user/profile/change-email'"
 							>
 								<i class="fas fa-envelope"></i>
 								Change email
