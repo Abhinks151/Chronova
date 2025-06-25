@@ -931,7 +931,9 @@ body {
   transition: all 0.2s ease;
   margin-left: auto;
 }
-
+.filled {
+    color: #e11d48 !important; /* red-600 from Tailwind */
+}
 .close-btn:hover {
   background: #f3f4f6;
   color: #374151;

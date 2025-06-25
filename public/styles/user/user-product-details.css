@@ -450,6 +450,10 @@ body {
 	border-color: #fecaca;
 }
 
+.wishlist-btn i.filled {
+    color: red;
+}
+
 /* Product Details Tabs */
 .product-details {
 	grid-column: 1 / -1;

@@ -31,6 +31,15 @@ body {
     animation: slideIn 0.3s ease-out;
     color: white;
 }
+.heart-icon {
+  color: gray;
+  transition: color 0.3s ease;
+  cursor: pointer;
+}
+
+.heart-icon.filled {
+  color: red;
+}
 
 /* Solid green background for success */
 .toaster.success {

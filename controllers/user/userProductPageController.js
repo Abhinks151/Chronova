@@ -1,5 +1,6 @@
 import { fetchFilteredProducts } from "../../servises/user/filterUserProductsService.js";
 import { getActiveCategories, getActiveProducts } from "../../servises/user/getUserProductService.js";
+import { countWishlistProductByUserId, findWishlistByUserId } from "../../servises/user/wishlistServices.js";
 import HttpStatusCode from "../../utils/httpStatusCode.js";
 
 
@@ -8,11 +9,15 @@ export const getProductListingPage = async (req, res) => {
   try {
     const products = await getActiveProducts();
     const categories = await getActiveCategories();
+    // console.log(products);
 
+    let wishedProductIds = await findWishlistByUserId(req.user.id);
+    
     res.status(HttpStatusCode.OK.code).render('Layouts/users/ProductListing', {
       title: 'Chronova',
       products,
-      categories
+      categories,
+      wishedProductIds: JSON.stringify(wishedProductIds.map(id => id.toString()))
     });
   } catch (error) {
     console.error('Error rendering product listing:', error);

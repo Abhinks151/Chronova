@@ -20,17 +20,7 @@
             </div>
 
             <div class="nav-search">
-                <div class="search-container">
-                    <input
-                        type="text"
-                        id="searchInput"
-                        placeholder="Search premium watches..."
-                        class="search-input"
-                    />
-                    <button class="search-btn" onclick="performSearch()">
-                        Search
-                    </button>
-                </div>
+                
             </div>
 
             <div class="nav-actions">
@@ -127,8 +117,9 @@
                         Buy Now
                     </button>
                     <button class="wishlist-btn" onclick="toggleWishlist()">
-                        <i class="far fa-heart"></i>
+                        <i id="wishlist-icon" class="<%= isInWishlist ? 'fas fa-heart filled' : 'far fa-heart' %>"></i>
                     </button>
+
                 </div>
             </div>
 
@@ -373,6 +364,9 @@
         updateQuantityButtons();
     }
 
+
+    
+
     function validateQuantity() {
         const quantityInput = document.getElementById('quantityInput');
         if (!quantityInput) return;
@@ -547,38 +541,43 @@
     }
 
     async function toggleWishlist() {
-        try {
-            const pathParts = window.location.pathname.split('/');
-            const productId = pathParts[pathParts.length - 1];
-            
-            const response = await fetch('/api/user/wishlist/toggle', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                },
-                body: JSON.stringify({
-                    productId: productId
-                })
-            });
-            
-            if (response.ok) {
-                const result = await response.json();
-                isInWishlist = result.inWishlist;
-                updateWishlistButton();
-                updateWishlistCount(result.wishlistCount || wishlistCount);
-                showNotification(
-                    isInWishlist ? 'Added to wishlist!' : 'Removed from wishlist!',
-                    'success'
-                );
-            } else {
-                const error = await response.json();
-                showNotification(error.message || 'Failed to update wishlist', 'error');
+    try {
+        const pathParts = window.location.pathname.split('/');
+        const productId = pathParts[pathParts.length - 1];
+
+        const response = await fetch('/user/profile/wishlist/toggle', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({ productId })
+        });
+
+        const data = await response.json();
+
+        if (response.ok) {
+            const action = data.action || 'updated'; // expected: 'added' or 'removed'
+            const message = action === 'added' ? 'Product added to wishlist!' : 'Product removed from wishlist!';
+            showNotification(message, 'success');
+
+            // Toggle heart icon on product page
+            const heartIcon = document.querySelector('#wishlist-icon');
+            if (heartIcon) {
+                heartIcon.classList.toggle('fas', action === 'added');
+                heartIcon.classList.toggle('far', action !== 'added');
+                heartIcon.classList.toggle('filled', action === 'added'); // optional for styling
             }
-        } catch (error) {
-            console.error('Error toggling wishlist:', error);
-            showNotification('An error occurred while updating wishlist', 'error');
+
+            updateWishlistCount(); 
+        } else {
+            showNotification(data.message || 'Failed to update wishlist', 'error');
         }
+    } catch (error) {
+        console.error('Error toggling wishlist:', error);
+        showNotification('An error occurred while updating wishlist', 'error');
     }
+}
+
 
     function performSearch() {
         const searchInput = document.getElementById('searchInput');
@@ -589,6 +588,7 @@
     }
 
     function displayFeaturedProducts() {
+        updateWishlistCount()
         const featuredGrid = document.getElementById('featuredGrid');
         if (!featuredGrid || !featuredProducts.length) {
             displayFeaturedProductsError();
@@ -601,36 +601,40 @@
     }
 
     function createFeaturedProductCard(product) {
-        const discountPercentage = product.price !== product.salePrice 
-            ? Math.round(((product.price - product.salePrice) / product.price) * 100)
-            : 0;
-        
-        return `
-            <div class="featured-card" onclick="goToProduct('${product._id}')">
-                <img src="${product.images[0]?.url || '/images/placeholder.jpg'}" alt="${product.productName}" class="featured-image">
-                <div class="featured-info">
-                    <h3 class="featured-title">${product.productName}</h3>
-                    <div class="featured-brand">${product.brand}</div>
-                    <div class="featured-price">
-                        <span class="featured-current-price">₹${product.salePrice.toLocaleString()}</span>
-                        ${product.price !== product.salePrice ? `
-                            <span class="featured-original-price">₹${product.price.toLocaleString()}</span>
-                            <span class="featured-discount">${discountPercentage}% OFF</span>
-                        ` : ''}
-                    </div>
-                    <div class="featured-actions">
-                        <button class="featured-btn featured-btn-primary" onclick="event.stopPropagation(); addFeaturedToCart('${product._id}')">
-                            <i class="fas fa-shopping-cart"></i>
-                            Add to Cart
-                        </button>
-                        <button class="featured-btn featured-btn-secondary" onclick="event.stopPropagation(); toggleFeaturedWishlist('${product._id}')">
-                            <i class="far fa-heart"></i>
-                        </button>
-                    </div>
+    const discountPercentage = product.price !== product.salePrice 
+        ? Math.round(((product.price - product.salePrice) / product.price) * 100)
+        : 0;
+
+    const heartClass = product.isInWishlist ? 'fas filled' : 'far';
+    const heartStyle = product.isInWishlist ? 'color: #e11d48;' : ''; // optional: use a red color when active
+
+    return `
+        <div class="featured-card" onclick="goToProduct('${product._id}')">
+            <img src="${product.images[0]?.url || '/images/placeholder.jpg'}" alt="${product.productName}" class="featured-image">
+            <div class="featured-info">
+                <h3 class="featured-title">${product.productName}</h3>
+                <div class="featured-brand">${product.brand}</div>
+                <div class="featured-price">
+                    <span class="featured-current-price">₹${product.salePrice.toLocaleString()}</span>
+                    ${product.price !== product.salePrice ? `
+                        <span class="featured-original-price">₹${product.price.toLocaleString()}</span>
+                        <span class="featured-discount">${discountPercentage}% OFF</span>
+                    ` : ''}
+                </div>
+                <div class="featured-actions">
+                    <button class="featured-btn featured-btn-primary" onclick="event.stopPropagation(); addFeaturedToCart('${product._id}')">
+                        <i class="fas fa-shopping-cart"></i>
+                        Add to Cart
+                    </button>
+                    <button class="featured-btn featured-btn-secondary" onclick="event.stopPropagation(); toggleFeaturedWishlist('${product._id}')">
+                        <i id="featured-heart-${product._id}" class="${heartClass} fa-heart" style="${heartStyle}"></i>
+                    </button>
                 </div>
             </div>
-        `;
-    }
+        </div>
+    `;
+}
+
 
     function displayFeaturedProductsError() {
         const featuredGrid = document.getElementById('featuredGrid');
@@ -670,34 +674,44 @@
         }
     }
 
-    async function toggleFeaturedWishlist(productId) {
-        try {
-            const response = await fetch('/api/user/wishlist/toggle', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                },
-                body: JSON.stringify({
-                    productId: productId
-                })
-            });
-            
-            if (response.ok) {
-                const result = await response.json();
-                showNotification(
-                    result.inWishlist ? 'Added to wishlist!' : 'Removed from wishlist!',
-                    'success'
-                );
-                updateWishlistCount(result.wishlistCount || wishlistCount);
-            } else {
-                const error = await response.json();
-                showNotification(error.message || 'Failed to update wishlist', 'error');
+async function toggleFeaturedWishlist(productId) {
+    try {
+        const response = await fetch('/user/profile/wishlist/toggle', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({ productId })
+        });
+
+        const result = await response.json();
+
+        if (response.ok && result.success) {
+            const isAdded = result.action === 'added';
+            showNotification(
+                result.message || (isAdded ? 'Added to wishlist!' : 'Removed from wishlist!'),
+                'success'
+            );
+
+            updateWishlistCount();
+
+            const heartIcon = document.querySelector(`#featured-heart-${productId}`);
+            if (heartIcon) {
+                heartIcon.classList.toggle('fas', isAdded);
+                heartIcon.classList.toggle('far', !isAdded);
+                heartIcon.classList.toggle('filled', isAdded);
+                heartIcon.style.color = isAdded ? '#e11d48' : '';
             }
-        } catch (error) {
-            console.error('Error toggling featured product wishlist:', error);
-            showNotification('An error occurred while updating wishlist', 'error');
+        } else {
+            showNotification(result.message || 'Failed to update wishlist', 'error');
         }
+    } catch (error) {
+        console.error('Error toggling featured product wishlist:', error);
+        showNotification('An error occurred while updating wishlist', 'error');
     }
+}
+
+
 
     function updateCartCount(count) {
         cartCount = count;
@@ -708,14 +722,25 @@
         }
     }
 
-    function updateWishlistCount(count) {
-        wishlistCount = count;
-        const wishlistCountElement = document.getElementById('wishlist-count');
-        if (wishlistCountElement) {
+    async function updateWishlistCount() {
+        try {
+            const response = await fetch('/user/profile/wishlist/count');
+            if (!response.ok) throw new Error();
+
+            const data = await response.json();
+            const wishlistCountElement = document.getElementById('wishlist-count');
+
+            if (wishlistCountElement) {
+            const count = data.wishlistCount  || 0;
+            // console.log(count);
             wishlistCountElement.textContent = count;
             wishlistCountElement.style.display = count > 0 ? 'flex' : 'none';
+            }
+        } catch (error) {
+            console.error('Error updating wishlist count:', error);
         }
     }
+
 
     function updateWishlistButton() {
         const wishlistBtn = document.querySelector('.wishlist-btn i');
