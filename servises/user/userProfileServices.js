@@ -2,6 +2,7 @@
 import { Address } from '../../models/address.js';
 import { User } from '../../models/userModels.js'
 import httpStatusCode from '../../utils/httpStatusCode.js'
+import { sendVerificationOTP } from '../../utils/sendVerificationOTP.js';
 
 export const validateAndUpdateUser = async (userId, userData) => {
   let { firstname, lastname, phone } = userData
@@ -65,12 +66,45 @@ export const validateAndUpdateUser = async (userId, userData) => {
 }
 
 export const finduserById = async (userId) => {
-  return await User.findById(userId).lean();  
+  return await User.findById(userId);
 }
 
 
+
+export const changeEmail = async (req, userId, newEmail) => {
+  const user = await User.findById(userId);
+
+  if (!user) {
+    return {
+      success: false,
+      message: "User not found"
+    };
+  }
+
+  if (user.email === newEmail || user.newEmail === newEmail) {
+    return {
+      success: false,
+      message: "This email is already in use."
+    };
+  }
+
+  user.newEmail = newEmail;
+  await user.save();
+
+  req.session.emailForVerification = newEmail;
+  req.session.userIdForVerification = user._id.toString();
+
+  await sendVerificationOTP(user, newEmail);
+
+  return {
+    success: true,
+    message: "OTP sent successfully to your new email."
+  };
+};
+
+
 export const getAllAddress = async (userId) => {
-  const addresses = await Address.find({ userId, isDeleted: false }).sort({createdAt:-1}).lean();
+  const addresses = await Address.find({ userId, isDeleted: false }).sort({ createdAt: -1 }).lean();
   return addresses;
 }
 
@@ -100,9 +134,9 @@ export const editAddressService = async (addressId, data) => {
   return updatedAddress;
 };
 
-export const editDefaultByIdService  = async (userId,addressId)=>{
-  await Address.updateOne({userId,_id:addressId},{$set:{isDefault:true}});
-  const address = await Address.updateMany({userId,_id:{$ne:addressId}},{ $set: { isDefault: false } });
+export const editDefaultByIdService = async (userId, addressId) => {
+  await Address.updateOne({ userId, _id: addressId }, { $set: { isDefault: true } });
+  const address = await Address.updateMany({ userId, _id: { $ne: addressId } }, { $set: { isDefault: false } });
   return address;
 }
 

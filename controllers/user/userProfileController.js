@@ -1,5 +1,5 @@
 
-import { addAddressService, deleteAddressService, editAddressService, editDefaultByIdService, finduserById, getAllAddress, validateAndUpdateUser } from "../../servises/user/userProfileServices.js"
+import { addAddressService, changeEmail, deleteAddressService, editAddressService, editDefaultByIdService, finduserById, getAllAddress, validateAndUpdateUser } from "../../servises/user/userProfileServices.js"
 import httpStatusCode from "../../utils/httpStatusCode.js"
 import { sendResetPasswordToken } from "../../utils/sendVerificationOTP.js";
 
@@ -8,19 +8,23 @@ export const getProfile = async (req, res) => {
   try {
     const userId = req.user.id || req.user._id;
 
-    const user = await finduserById(userId);
+    let user = await finduserById(userId);
+    user = user.toObject();
     if (!user) {
       return res.status(httpStatusCode.NOT_FOUND.code).redirect('/user/products');
     }
 
     user.address = await getAllAddress(userId);
-    // console.log(user);
+    console.log(user);
     res.render('Layouts/users/userAccountPage', {
       user
     });
   } catch (err) {
     console.error('Error loading user profile:', err);
-    res.status(httpStatusCode.INTERNAL_SERVER_ERROR.code).render('Layouts/users/userAccountPage', { message: 'Internal Server Error' });
+    res.status(httpStatusCode.INTERNAL_SERVER_ERROR.code).render('Layouts/users/userAccountPage', { 
+      message: 'Internal Server Error',
+      user : null
+     });
   }
 }
 
@@ -39,6 +43,56 @@ export const sentPasswordReset = async (req, res) => {
     })
   }
 }
+
+export const getChangeEmail = async (req, res) => {
+  res.status(httpStatusCode.OK.code).render('Layouts/users/changeEmail', {
+    success: null,
+    error: null
+  });
+}
+
+export const postChangeEmail = async (req, res) => {
+  try {
+    const userId = req.user.id || req.user._id;
+    const { newEmail } = req.body;
+    if(!newEmail){
+      return res.status(httpStatusCode.BAD_REQUEST.code).render('Layouts/users/changeEmail', {
+        success: null,
+        error: "Email is required"
+      })
+    }
+    if(newEmail === req.user.email){
+      return res.status(httpStatusCode.BAD_REQUEST.code).render('Layouts/users/changeEmail', {
+        success: null,
+        error: "This email is already in use."
+      })
+    }
+    if(!/^[a-zA-Z0-9._-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,4}$/.test(newEmail)){
+      return res.status(httpStatusCode.BAD_REQUEST.code).render('Layouts/users/changeEmail', {
+        success: null,
+        error: "Invalid email address"
+      })
+    }
+    const result = await changeEmail(req,userId, newEmail);
+
+    if (!result.success) {
+      return res.status(httpStatusCode.NOT_FOUND.code).render('Layouts/users/changeEmail', {
+        error: result.message,
+        success: null
+      });
+    }
+
+    res.status(httpStatusCode.OK.code).redirect('/user/verify-otp');
+  } catch (error) {
+    console.error(error);
+    res.status(httpStatusCode.INTERNAL_SERVER_ERROR.code).json({
+      success: false,
+      message: "Internal server error",
+    });
+  }
+};
+
+
 
 export const updateUserData = async (req, res) => {
   try {
@@ -311,7 +365,7 @@ export const addAddress = async (req, res) => {
 export const editAddress = async (req, res) => {
   try {
     const addressId = req.params.id;
-    if(!addressId){
+    if (!addressId) {
       return res.status(httpStatusCode.BAD_REQUEST.code).json({
         success: false,
         message: "Something went wrong"
@@ -525,7 +579,7 @@ export const editDefaultById = async (req, res) => {
   try {
 
 
-    if(!req.params.id){
+    if (!req.params.id) {
       return res.json({
         success: false,
         message: "Somethign went wrong"
@@ -551,7 +605,7 @@ export const editDefaultById = async (req, res) => {
 export const deleteAddress = async (req, res) => {
   try {
     const addressId = req.params.id;
-    if(!addressId){
+    if (!addressId) {
       return res.json({
         success: false,
         message: "Something went wrong"

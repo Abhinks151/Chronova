@@ -8,7 +8,9 @@ import {
   editDefaultById,
   getAddress,
   getAddressMangemnt,
+  getChangeEmail,
   getProfile,
+  postChangeEmail,
   sentPasswordReset,
   updateUserData
 } from '../../controllers/user/userProfileController.js';
@@ -18,6 +20,8 @@ import {
 userAccountRoutes.get('/profile', authenticateUser, getProfile);
 userAccountRoutes.get('/send-reset-link', authenticateUser, sentPasswordReset)
 userAccountRoutes.patch('/profile/update', authenticateUser, updateUserData)
+userAccountRoutes.get('/profile/change-email',authenticateUser,getChangeEmail)
+userAccountRoutes.post('/profile/changeEmialVerificationCode',authenticateUser,postChangeEmail)
 
 userAccountRoutes.get('/profile/address', authenticateUser, getAddressMangemnt)
 userAccountRoutes.get('/profile/get-address', authenticateUser, getAddress)
