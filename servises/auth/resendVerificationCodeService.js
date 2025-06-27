@@ -33,7 +33,7 @@ export const handleResendVerification = async (req) => {
   }
 
   try {
-    await sendVerificationOTP(user);
+    await sendVerificationOTP(user,user.email);
     return {
       status: httpStatusCode.OK.code,
       message: 'Verification code sent successfully. Please check your inbox.',

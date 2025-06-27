@@ -14,10 +14,10 @@ let filters = {
 };
 
 // Initialize the page
-document.addEventListener('DOMContentLoaded', function() {
+document.addEventListener('DOMContentLoaded', function () {
     // Get initial products from server
     products = window.initialProducts || [];
-    
+
     // Initial load
     loadProducts();
     setupEventListeners();
@@ -29,8 +29,8 @@ document.addEventListener('DOMContentLoaded', function() {
 function setupEventListeners() {
     // Search functionality with Enter key
     const searchInput = document.getElementById('searchInput');
-    
-    searchInput.addEventListener('keypress', function(e) {
+
+    searchInput.addEventListener('keypress', function (e) {
         if (e.key === 'Enter') {
             performSearch();
         }
@@ -57,7 +57,7 @@ function debounce(func, wait) {
 async function loadProducts() {
     try {
         showLoading();
-        
+
         // Construct query parameters
         const params = new URLSearchParams();
         if (filters.search) params.append('search', filters.search);
@@ -77,7 +77,7 @@ async function loadProducts() {
             totalPages = data.totalPages || 1;
             currentPage = data.currentPage || 1;
             totalProducts = data.totalProducts || 0;
-            
+
             renderProducts();
             renderPagination();
             updateResultsCount();
@@ -95,7 +95,7 @@ async function loadProducts() {
 // Render products grid
 function renderProducts() {
     const grid = document.getElementById('productsGrid');
-    
+
     if (products.length === 0) {
         grid.innerHTML = `
             <div class="no-products">
@@ -115,10 +115,12 @@ function renderProducts() {
                      onerror="this.src='/images/placeholder-watch.jpg'">
                 ${product.isNew ? '<span class="product-badge new">New</span>' : ''}
                 ${product.salePrice < product.regularPrice ? '<span class="product-badge sale">Sale</span>' : ''}
-                <button class="wishlist-btn-card" onclick="event.stopPropagation(); toggleWishlist('${product._id}')" 
-                        title="Add to Wishlist">
-                    <i class="far fa-heart"></i>
+                <button class="wishlist-btn-card" 
+                    onclick="event.stopPropagation(); toggleWishlist('${product._id}')" 
+                    title="Add to Wishlist">
+                    <i class="${wishedProductIds.includes(product._id) ? 'fas fa-heart heart-icon filled' : 'far fa-heart heart-icon'}"></i>
                 </button>
+
             </div>
             <div class="product-info">
                 <div class="product-brand">${product.brand || 'Premium'}</div>
@@ -134,11 +136,11 @@ function renderProducts() {
                 
                 <div class="product-price">
                     <span class="current-price">₹${formatPrice(product.salePrice || product.regularPrice)}</span>
-                    ${product.salePrice && product.salePrice < product.regularPrice ? 
-                        `<span class="original-price">₹${formatPrice(product.regularPrice)}</span>
-                         <span class="discount">${Math.round(((product.regularPrice - product.salePrice) / product.regularPrice) * 100)}% off</span>` 
-                        : ''
-                    }
+                    ${product.salePrice && product.salePrice < product.regularPrice ?
+            `<span class="original-price">₹${formatPrice(product.regularPrice)}</span>
+                         <span class="discount">${Math.round(((product.regularPrice - product.salePrice) / product.regularPrice) * 100)}% off</span>`
+            : ''
+        }
                 </div>
                 
                 <div class="product-actions">
@@ -161,24 +163,24 @@ function generateStars(rating) {
     const fullStars = Math.floor(rating);
     const hasHalfStar = rating % 1 !== 0;
     const emptyStars = 5 - fullStars - (hasHalfStar ? 1 : 0);
-    
+
     let stars = '';
-    
+
     // Full stars
     for (let i = 0; i < fullStars; i++) {
         stars += '<i class="fas fa-star"></i>';
     }
-    
+
     // Half star
     if (hasHalfStar) {
         stars += '<i class="fas fa-star-half-alt"></i>';
     }
-    
+
     // Empty stars
     for (let i = 0; i < emptyStars; i++) {
         stars += '<i class="far fa-star"></i>';
     }
-    
+
     return stars;
 }
 
@@ -198,22 +200,22 @@ function renderPagination() {
     const pageNumbers = document.getElementById('pageNumbers');
     const prevBtn = document.getElementById('prevBtn');
     const nextBtn = document.getElementById('nextBtn');
-    
+
     // Update navigation buttons
     prevBtn.disabled = currentPage <= 1;
     nextBtn.disabled = currentPage >= totalPages;
-    
+
     // Generate page numbers
     let paginationHTML = '';
     const maxVisiblePages = 5;
     let startPage = Math.max(1, currentPage - Math.floor(maxVisiblePages / 2));
     let endPage = Math.min(totalPages, startPage + maxVisiblePages - 1);
-    
+
     // Adjust start page if we're near the end
     if (endPage - startPage + 1 < maxVisiblePages) {
         startPage = Math.max(1, endPage - maxVisiblePages + 1);
     }
-    
+
     // First page and ellipsis
     if (startPage > 1) {
         paginationHTML += `<span class="page-number ${currentPage === 1 ? 'active' : ''}" onclick="goToPage(1)">1</span>`;
@@ -221,12 +223,12 @@ function renderPagination() {
             paginationHTML += '<span class="page-ellipsis">...</span>';
         }
     }
-    
+
     // Page numbers
     for (let i = startPage; i <= endPage; i++) {
         paginationHTML += `<span class="page-number ${currentPage === i ? 'active' : ''}" onclick="goToPage(${i})">${i}</span>`;
     }
-    
+
     // Last page and ellipsis
     if (endPage < totalPages) {
         if (endPage < totalPages - 1) {
@@ -234,9 +236,9 @@ function renderPagination() {
         }
         paginationHTML += `<span class="page-number ${currentPage === totalPages ? 'active' : ''}" onclick="goToPage(${totalPages})">${totalPages}</span>`;
     }
-    
+
     pageNumbers.innerHTML = paginationHTML;
-    
+
     // Update page info
     const startItem = (currentPage - 1) * itemsPerPage + 1;
     const endItem = Math.min(currentPage * itemsPerPage, totalProducts);
@@ -298,13 +300,13 @@ function applyBrandFilter() {
 function applyPriceFilter() {
     const minPrice = document.getElementById('minPrice').value;
     const maxPrice = document.getElementById('maxPrice').value;
-    
+
     // Validate price range
     if (minPrice && maxPrice && parseFloat(minPrice) > parseFloat(maxPrice)) {
         showToaster('Minimum price cannot be greater than maximum price', 'error');
         return;
     }
-    
+
     filters.minPrice = minPrice;
     filters.maxPrice = maxPrice;
     currentPage = 1;
@@ -322,7 +324,7 @@ function clearAllFilters() {
         minPrice: '',
         maxPrice: ''
     };
-    
+
     // Reset form elements
     document.getElementById('searchInput').value = '';
     document.getElementById('sortFilter').value = '';
@@ -330,7 +332,7 @@ function clearAllFilters() {
     document.getElementById('brandFilter').value = '';
     document.getElementById('minPrice').value = '';
     document.getElementById('maxPrice').value = '';
-    
+
     // Reset page and reload
     currentPage = 1;
     loadProducts();
@@ -349,9 +351,9 @@ async function addToCart(productId) {
                 quantity: 1
             })
         });
-        
+
         const data = await response.json();
-        
+
         if (response.ok) {
             showToaster('Product added to cart successfully!', 'success');
             updateCartCount();
@@ -366,7 +368,7 @@ async function addToCart(productId) {
 
 async function toggleWishlist(productId) {
     try {
-        const response = await fetch('/user/wishlist/toggle', {
+        const response = await fetch('/user/profile/wishlist/toggle', {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
@@ -375,19 +377,21 @@ async function toggleWishlist(productId) {
                 productId: productId
             })
         });
-        
+
         const data = await response.json();
-        
+
         if (response.ok) {
             const action = data.action || 'updated';
             const message = action === 'added' ? 'Product added to wishlist!' : 'Product removed from wishlist!';
             showToaster(message, 'success');
             updateWishlistCount();
-            
+
             // Update heart icon
             const heartIcon = document.querySelector(`[onclick*="${productId}"] i`);
             if (heartIcon) {
-                heartIcon.className = action === 'added' ? 'fas fa-heart' : 'far fa-heart';
+                heartIcon.classList.toggle('filled');
+                heartIcon.classList.toggle('fas');
+                heartIcon.classList.toggle('far');
             }
         } else {
             showToaster(data.message || 'Failed to update wishlist', 'error');
@@ -422,13 +426,13 @@ async function updateCartCount() {
 // Update wishlist count
 async function updateWishlistCount() {
     try {
-        const response = await fetch('/user/wishlist/count');
+        const response = await fetch('/user/profile/wishlist/count');
         if (response.ok) {
             const data = await response.json();
             const wishlistCountElement = document.getElementById('wishlist-count');
             if (wishlistCountElement) {
-                wishlistCountElement.textContent = data.count || 0;
-                wishlistCountElement.style.display = data.count > 0 ? 'flex' : 'none';
+                wishlistCountElement.textContent = data.wishlistCount || 0;
+                wishlistCountElement.style.display = data.wishlistCount > 0 ? 'flex' : 'none';
             }
         }
     } catch (error) {
@@ -440,7 +444,7 @@ async function updateWishlistCount() {
 function showLoading() {
     const spinner = document.getElementById('loadingSpinner');
     const grid = document.getElementById('productsGrid');
-    
+
     if (spinner) spinner.style.display = 'block';
     if (grid) grid.style.opacity = '0.5';
 }
@@ -448,7 +452,7 @@ function showLoading() {
 function hideLoading() {
     const spinner = document.getElementById('loadingSpinner');
     const grid = document.getElementById('productsGrid');
-    
+
     if (spinner) spinner.style.display = 'none';
     if (grid) grid.style.opacity = '1';
 }
@@ -456,7 +460,7 @@ function hideLoading() {
 // Toaster notifications
 function showToaster(message, type = 'success') {
     const container = document.getElementById('toaster-container');
-    
+
     const toaster = document.createElement('div');
     toaster.className = `toaster ${type}`;
     toaster.innerHTML = `
@@ -465,9 +469,9 @@ function showToaster(message, type = 'success') {
             <span>${message}</span>
         </div>
     `;
-    
+
     container.appendChild(toaster);
-    
+
     // Auto remove after 3 seconds
     setTimeout(() => {
         if (toaster.parentNode) {
@@ -484,7 +488,7 @@ window.addEventListener('resize', debounce(() => {
     // Recalculate items per page based on screen size
     const screenWidth = window.innerWidth;
     let newItemsPerPage;
-    
+
     if (screenWidth <= 768) {
         newItemsPerPage = 6; // 2 columns on mobile
     } else if (screenWidth <= 1024) {
@@ -492,7 +496,7 @@ window.addEventListener('resize', debounce(() => {
     } else {
         newItemsPerPage = 9; // 3 columns on desktop
     }
-    
+
     if (newItemsPerPage !== itemsPerPage) {
         itemsPerPage = newItemsPerPage;
         currentPage = 1;

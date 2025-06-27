@@ -1,17 +1,28 @@
 import { getFeaturedProducts } from "../../servises/user/featuredProduct.js";
 import { getProductDetails } from "../../servises/user/productDetailsService.js";
+import { findWishlistByUserId } from "../../servises/user/wishlistServices.js";
 import httpStatusCode from '../../utils/httpStatusCode.js';
 
 export const productDetails = async (req, res) => {
     try {
         const result = await getProductDetails(req.params.id);
+        const userId = req.user ? req.user.id : null;
+        let isInWishlist = false;
+
+        if (userId) {
+            const productIdsInWishlist = await findWishlistByUserId(userId);
+            isInWishlist = productIdsInWishlist.some(
+                id => id.toString() === req.params.id.toString()
+            );
+        }
 
         if (!result.success) {
             return res.status(httpStatusCode.NOT_FOUND.code).redirect('/user/products');
         }
 
         res.status(httpStatusCode.OK.code).render('Layouts/users/ProductDetails', {
-            product: result.data
+            product: result.data,
+            isInWishlist
         });
     } catch (error) {
         console.error('Error in productDetails:', error.message);
@@ -23,9 +34,26 @@ export const productDetails = async (req, res) => {
 export const featuredProducts = async (req, res) => {
     try {
         const featuredProducts = await getFeaturedProducts(req.params.id);
-        res.status(httpStatusCode.OK.code).json({
-            featuredProducts
+        const userId = req.user ? req.user.id : null;
+
+        let wishlistProductIds = [];
+
+        if (userId) {
+            wishlistProductIds = await findWishlistByUserId(userId);
+            wishlistProductIds = wishlistProductIds.map(id => id.toString());
+        }
+
+        const updatedProducts = featuredProducts.map(product => {
+            return {
+                ...product, 
+                isInWishlist: wishlistProductIds.includes(product._id.toString())
+            };
         });
+
+        res.status(httpStatusCode.OK.code).json({
+            featuredProducts: updatedProducts
+        });
+
     } catch (error) {
         console.error('Error:', error);
         res.status(httpStatusCode.INTERNAL_SERVER_ERROR.code).json({

@@ -1,0 +1,224 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>My Wishlist</title>
+    <link rel="stylesheet" href="/styles/user/wishlist.css">
+    <link rel="stylesheet" href="/styles/user/user-profile-sidebar.css" />
+    <link rel="stylesheet" href="/styles/user/toast-modal.css" />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/axios/1.6.0/axios.min.js"></script>
+</head>
+<body>
+    <!-- Toast Notification -->
+    <div id="toast" class="toast">
+        <span id="toast-message"></span>
+    </div>
+
+    <!-- Confirmation Modal -->
+    <div id="confirmModal" class="modal-overlay">
+        <div class="modal">
+            <div class="modal-header">
+                <div class="modal-icon">
+                    <i class="fas fa-exclamation-triangle"></i>
+                </div>
+                <h3 class="modal-title">Remove from Wishlist</h3>
+            </div>
+            <div class="modal-body">
+                <p class="modal-text">Are you sure you want to remove this item from your wishlist? This action cannot be undone.</p>
+            </div>
+            <div class="modal-actions">
+                <button type="button" class="modal-btn modal-btn-cancel" onclick="closeModal()">Cancel</button>
+                <button type="button" class="modal-btn modal-btn-confirm" id="confirmRemoveBtn">
+                    <span id="confirmBtnText">Remove</span>
+                    <div id="confirmBtnSpinner" class="spinner" style="display: none;"></div>
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Loading Overlay -->
+    <div id="loadingOverlay" class="loading-overlay">
+        <div class="loading-content">
+            <div class="spinner"></div>
+            <p id="loadingMessage">Loading...</p>
+        </div>
+    </div>
+
+    <div class="wishlist-flex-wrapper">
+        <div class="sidebar-container">
+            <%- include('../../partials/user-profile-sidebar') %>
+        </div>
+        <div class="main-content">
+            <div class="wishlist-header">
+                <h1>My Wishlist</h1>
+                <p>Manage your saved products</p>
+            </div>
+
+            <div class="wishlist-container">
+                <div class="wishlist-grid" id="wishlistGrid"></div>
+                <div class="empty-wishlist" id="emptyWishlist" style="display: none;">
+                    <div class="empty-wishlist-icon">
+                        <i class="fas fa-heart"></i>
+                    </div>
+                    <h3>Your wishlist is empty</h3>
+                    <p>Start adding products you love to keep track of them</p>
+                    <a href="/products" class="btn btn-primary" style="margin-top: 16px;">
+                        <i class="fas fa-shopping-bag"></i> Browse Products
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let productToRemove = null;
+
+        async function fetchWishlistProducts() {
+            try {
+                showLoading("Fetching wishlist...");
+                const response = await axios.get('/user/profile/wishlist/data');
+                hideLoading();
+
+                if (response.data.success && response.data.products.length > 0) {
+                    renderWishlistItems(response.data.products);
+                } else {
+                    document.getElementById('wishlistGrid').innerHTML = '';
+                    document.getElementById('emptyWishlist').style.display = 'block';
+                }
+            } catch (error) {
+                hideLoading();
+                console.error("Failed to fetch wishlist:", error);
+                showNotification("Failed to load wishlist", "error");
+            }
+        }
+
+        function renderWishlistItems(products) {
+            const grid = document.getElementById('wishlistGrid');
+            grid.innerHTML = '';
+            document.getElementById('emptyWishlist').style.display = 'none';
+
+            products.forEach(product => {
+                const item = document.createElement('div');
+                item.className = 'wishlist-item';
+                item.setAttribute('data-product-id', product._id);
+
+                item.innerHTML = `
+                    <button class="remove-wishlist" onclick="showRemoveModal('${product._id}')">
+                        <i class="fas fa-times"></i>
+                    </button>
+                    <img src="${product.images?.[0]?.url || '/images/placeholder.jpg'}" class="product-image" onerror="this.src='/images/placeholder.jpg'">
+                    <div class="product-info">
+                        <div class="stock-status ${product.stockQuantity > 0 ? 'in-stock' : 'out-of-stock'}">
+                            ${product.stockQuantity > 0 ? `In Stock (${product.stockQuantity})` : 'Out of Stock'}
+                        </div>
+                        <h3 class="product-name">${product.productName}</h3>
+                        <p class="product-brand">${product.brand}</p>
+                        ${product.salePrice ? `<div class="product-price">₹${product.salePrice.toLocaleString()}</div>` : ''}
+                        <div class="product-actions">
+                            <button class="btn btn-primary ${product.stockQuantity === 0 ? 'btn-disabled' : ''}" onclick="buyNow('${product._id}')" ${product.stockQuantity === 0 ? 'disabled' : ''}>
+                                <i class="fas fa-shopping-bag"></i> Buy Now
+                            </button>
+                            <button class="btn btn-secondary ${product.stockQuantity === 0 ? 'btn-disabled' : ''}" onclick="addToCart('${product._id}')" ${product.stockQuantity === 0 ? 'disabled' : ''}>
+                                <i class="fas fa-shopping-cart"></i> Add to Cart
+                            </button>
+                        </div>
+                    </div>
+                `;
+                grid.appendChild(item);
+            });
+        }
+
+        function showRemoveModal(productId) {
+            productToRemove = productId;
+            const modal = document.getElementById('confirmModal');
+            modal.classList.add('show');
+            document.getElementById('confirmRemoveBtn').onclick = confirmRemoveFromWishlist;
+        }
+
+        function closeModal() {
+            document.getElementById('confirmModal').classList.remove('show');
+            productToRemove = null;
+        }
+
+        async function confirmRemoveFromWishlist() {
+            if (!productToRemove) return;
+            try {
+                const response = await axios.post('/user/profile/wishlist/toggle', { productId: productToRemove });
+                if (response.data.success) {
+                    document.querySelector(`[data-product-id="${productToRemove}"]`).remove();
+                    showNotification('Product removed from wishlist');
+                    const remaining = document.querySelectorAll('.wishlist-item');
+                    if (remaining.length === 0) location.reload();
+                } else {
+                    showNotification(response.data.message || 'Failed to remove', 'error');
+                }
+                closeModal();
+            } catch (err) {
+                console.error(err);
+                showNotification('Server error', 'error');
+                closeModal();
+            }
+        }
+
+        async function addToCart(productId) {
+            try {
+                showLoading('Adding to cart...');
+                const response = await axios.post('/api/cart/add', { productId, quantity: 1 });
+                hideLoading();
+                if (response.data.success) {
+                    showNotification('Added to cart');
+                    updateCartCount(response.data.cartCount);
+                } else {
+                    showNotification(response.data.message || 'Failed', 'error');
+                }
+            } catch (err) {
+                hideLoading();
+                showNotification('Server error', 'error');
+            }
+        }
+
+        async function buyNow(productId) {
+            try {
+                showLoading('Redirecting...');
+                const response = await axios.post('/api/cart/add', { productId, quantity: 1 });
+                hideLoading();
+                if (response.data.success) {
+                    window.location.href = `/checkout?product=${productId}`;
+                } else {
+                    showNotification('Failed', 'error');
+                }
+            } catch (err) {
+                hideLoading();
+                showNotification('Server error', 'error');
+            }
+        }
+
+        function showNotification(message, type = 'success') {
+            const toast = document.getElementById('toast');
+            const msg = document.getElementById('toast-message');
+            if (toast && msg) {
+                msg.textContent = message;
+                toast.className = `toast toast-${type} show`;
+                setTimeout(() => toast.classList.remove('show'), 4000);
+            }
+        }
+
+        function showLoading(msg = 'Loading...') {
+            document.getElementById('loadingMessage').textContent = msg;
+            document.getElementById('loadingOverlay').style.display = 'flex';
+        }
+
+        function hideLoading() {
+            document.getElementById('loadingOverlay').style.display = 'none';
+        }
+
+        function updateCartCount(count) {
+            document.querySelectorAll('.cart-count').forEach(el => el.textContent = count);
+        }
+
+        document.addEventListener('DOMContentLoaded', fetchWishlistProducts);
+    </script>
+</body>
+</html>

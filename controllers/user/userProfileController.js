@@ -15,7 +15,7 @@ export const getProfile = async (req, res) => {
     }
 
     user.address = await getAllAddress(userId);
-    console.log(user);
+    // console.log(user);
     res.render('Layouts/users/userAccountPage', {
       user
     });

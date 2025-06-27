@@ -43,14 +43,12 @@ export const updateProductService = async (productId, body, files) => {
       const index = match ? parseInt(match[1], 10) : null;
 
       if (index !== null && index >= 0 && index < 4) {
-        // If there's an old image in this slot, delete it from Cloudinary
         if (images[index]?.public_id) {
           cloudinary.uploader.destroy(images[index].public_id)
             .then((res) => console.log(`Deleted ${images[index].public_id}:`, res))
             .catch((err) => console.error(`Error deleting ${images[index].public_id}:`, err));
         }
 
-        // Replace with the new image
         updatedImages[index] = {
           url: file.path,
           public_id: file.filename,

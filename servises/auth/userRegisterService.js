@@ -45,7 +45,7 @@ export const registerUser = async (req, userData) => {
 
   req.session.emailForVerification = newUser.email;
 
-  await sendVerificationOTP(newUser);
+  await sendVerificationOTP(newUser, newUser.email);
   
   return {
     status: httpStatusCode.CREATED.code,

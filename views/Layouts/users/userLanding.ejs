@@ -29,6 +29,7 @@
 
 				<!-- Navigation Actions -->
 				<div class="nav-actions">
+					<% if (!isLoggedIn) { %>
 					<div class="nav-item_1">
 						<div class="nav-item auth-btn register-btn">
 							<a href="/user/register">Register Now</a>
@@ -37,16 +38,17 @@
 							<a href="/user/login">Login</a>
 						</div>
 					</div>
+					<% } %>
 					<div class="nav-item">
 						<i class="far fa-heart"></i>
 						<!-- <span class="nav-text">Wishlist</span> -->
-						<a href="/user/wishlist" class="nav-text">Wishlist</a>
+						<a href="/user/profile/wishlist" class="nav-text">Wishlist</a>
 						<span class="badge">0</span>
 					</div>
 					<div class="nav-item">
 						<i class="fas fa-shopping-cart"></i>
 						<!-- <span class="nav-text">Cart</span> -->
-						<a href="/user/cart" class="nav-text">Cart</a>
+						<a href="/user/profile/cart" class="nav-text">Cart</a>
 						<span class="badge">0</span>
 					</div>
 					<div class="nav-item profile-item">
@@ -384,16 +386,14 @@
 					<div class="footer-section">
 						<h4>Contact Info</h4>
 						<div class="contact-info">
-							<p>
-								<i class="fas fa-phone"></i> +91 000 000 0000
-							</p>
+							<p><i class="fas fa-phone"></i> +91 000 000 0000</p>
 							<p>
 								<i class="fas fa-envelope"></i>
 								chronova123@gmail.com
 							</p>
 							<p>
-								<i class="fas fa-map-marker-alt"></i> hai building
-								central plaza , India
+								<i class="fas fa-map-marker-alt"></i> hai
+								building central plaza , India
 							</p>
 						</div>
 					</div>
@@ -408,13 +408,12 @@
 		<div class="notification-container" id="notificationContainer"></div>
 
 		<script>
-			// Global variables
-			let categories = [];
+						// Global variables
+						let categories = [];
 			let currentCategoryId = null;
 			let heroSlider;
 			let productManager;
 
-			// Slider functionality
 			class HeroSlider {
 			    constructor() {
 			        this.currentSlide = 0;
@@ -437,7 +436,6 @@
 
 			        this.startAutoSlide();
 
-			        // Pause auto-slide on hover
 			        const sliderContainer = document.querySelector('.slider-container');
 			        sliderContainer.addEventListener('mouseenter', () => this.stopAutoSlide());
 			        sliderContainer.addEventListener('mouseleave', () => this.startAutoSlide());
@@ -479,7 +477,6 @@
 			    }
 			}
 
-			// Product management
 			class ProductManager {
 			    constructor() {
 			        this.currentCategoryId = null;
@@ -493,6 +490,7 @@
 			            this.currentCategoryId = categories[0]._id;
 			            await this.loadProducts(this.currentCategoryId);
 			        }
+			        await this.updateWishlistCount();
 			    }
 
 			    async loadCategories() {
@@ -522,7 +520,6 @@
 
 			        filtersContainer.innerHTML = filtersHTML;
 
-			        // Add event listeners
 			        const filterBtns = document.querySelectorAll('.filter-btn');
 			        filterBtns.forEach(btn => {
 			            btn.addEventListener('click', (e) => {
@@ -546,13 +543,9 @@
 			        try {
 			            const response = await axios.get(`/user/products/category/${categoryId}`);
 			            const products = response.data.categoryProducts || [];
-
-			            // Limit to 3 products for landing page
 			            const limitedProducts = products.slice(0, 3);
-
 			            this.renderProducts(limitedProducts);
 			            loadingSpinner.style.display = 'none';
-
 			        } catch (error) {
 			            console.error('Error loading products:', error);
 			            loadingSpinner.style.display = 'none';
@@ -604,11 +597,14 @@
 			                        ` : ''}
 			                    </div>
 			                    <div class="product-actions">
-			                        <button class="add-to-cart-btn" onclick="productManager.addToCart('${product._id}')">
+			                        <button 
+			                            class="add-to-cart-btn"
+			                            onclick="productManager.addToCart('${product._id}')"
+			                            ${product.stockQuantity === 0 ? 'disabled style="background:#ccc; color:#888; cursor:not-allowed;"' : ''}>
 			                            <i class="fas fa-shopping-cart"></i> Add to Cart
 			                        </button>
 			                        <button class="wishlist-btn" onclick="productManager.toggleWishlist('${product._id}', this)">
-			                            <i class="far fa-heart"></i>
+			                             <i class="fa-heart ${product.isInWishlist ? 'fas filled' : 'far'}"></i>
 			                        </button>
 			                    </div>
 			                </div>
@@ -618,45 +614,20 @@
 			        productsGrid.innerHTML = productsHTML;
 			    }
 
-			    async addToCart(productId) {
-			        try {
-			            const response = await axios.post('/api/cart/add', {
-			                productId: productId,
-			                quantity: 1
-			            });
-
-			            if (response.data.success) {
-			                this.showNotification('Product added to cart!', 'success');
-			                this.updateCartCount();
-			            } else {
-			                this.showNotification(response.data.message || 'Failed to add to cart', 'error');
-			            }
-			        } catch (error) {
-			            console.error('Error adding to cart:', error);
-			            this.showNotification('Failed to add product to cart', 'error');
-			        }
-			    }
-
 			    async toggleWishlist(productId, btn) {
 			        try {
-			            const icon = btn.querySelector('i');
-			            const isWishlisted = icon.classList.contains('fas');
-
-			            const response = await axios.post('/api/wishlist/toggle', {
-			                productId: productId
-			            });
-
+			            const icon = btn.querySelector('i') || btn;
+			            const response = await axios.post('/user/profile/wishlist/toggle', { productId });
 			            if (response.data.success) {
-			                if (isWishlisted) {
-			                    icon.classList.remove('fas');
-			                    icon.classList.add('far');
-			                    this.showNotification('Removed from wishlist', 'info');
-			                } else {
-			                    icon.classList.remove('far');
-			                    icon.classList.add('fas');
-			                    this.showNotification('Added to wishlist', 'success');
-			                }
-			                this.updateWishlistCount();
+			                const isAdded = response.data.action === 'added';
+			                icon.classList.toggle('fas', isAdded);
+			                icon.classList.toggle('far', !isAdded);
+			                icon.classList.toggle('filled', isAdded);
+			                this.showNotification(
+			                    response.data.message || (isAdded ? 'Added to wishlist' : 'Removed from wishlist'),
+			                    isAdded ? 'success' : 'info'
+			                );
+			                await this.updateWishlistCount();
 			            } else {
 			                this.showNotification(response.data.message || 'Failed to update wishlist', 'error');
 			            }
@@ -666,15 +637,25 @@
 			        }
 			    }
 
-			    quickView(productId) {
-			        window.location.href = `/user/product/${productId}`;
-			    }
-
-			    async retryLoad() {
-			        if (this.currentCategoryId) {
-			            await this.loadProducts(this.currentCategoryId);
+			async updateWishlistCount() {
+			    try {
+			        const response = await axios.get('/user/profile/wishlist/count');
+			        if (response.data && typeof response.data.wishlistCount !== 'undefined') {
+			            const badge = document.querySelector('.nav-actions .badge');
+			            if (badge) {
+			                badge.textContent = response.data.wishlistCount;
+			                badge.style.display = response.data.wishlistCount > 0 ? 'flex' : 'none';
+			            }
 			        }
+			    } catch (error) {
+			        console.error('User probably not logged in or error fetching count:', error.message);
+			        // Optionally hide count on failure
+			        const badge = document.querySelector('.nav-actions .badge');
+			        if (badge) badge.style.display = 'none';
 			    }
+			}
+
+
 
 			    async updateCartCount() {
 			        try {
@@ -688,27 +669,20 @@
 			        }
 			    }
 
-			    async updateWishlistCount() {
-			        try {
-			            const response = await axios.get('/api/wishlist/count');
-			            const wishlistBadges = document.querySelectorAll('.nav-actions .badge');
-			            if (wishlistBadges.length > 0 && response.data.count !== undefined) {
-			                wishlistBadges[0].textContent = response.data.count;
-			            }
-			        } catch (error) {
-			            console.error('Error updating wishlist count:', error);
-			        }
+			    addToCart(productId) {
+			        // Implement as needed
+			    }
+
+			    quickView(productId) {
+			        window.location.href = `/user/product/${productId}`;
 			    }
 
 			    showNotification(message, type = 'info') {
 			        const container = document.getElementById('notificationContainer');
 			        const notification = document.createElement('div');
 			        notification.className = `notification ${type}`;
-
 			        const icon = type === 'success' ? 'fas fa-check-circle' :
-			                   type === 'error' ? 'fas fa-exclamation-circle' :
-			                   'fas fa-info-circle';
-
+			            type === 'error' ? 'fas fa-exclamation-circle' : 'fas fa-info-circle';
 			        notification.innerHTML = `
 			            <i class="${icon}"></i>
 			            <span>${message}</span>
@@ -716,13 +690,10 @@
 			                <i class="fas fa-times"></i>
 			            </button>
 			        `;
-
 			        container.appendChild(notification);
-
 			        setTimeout(() => {
 			            notification.classList.add('show');
 			        }, 100);
-
 			        setTimeout(() => {
 			            notification.classList.remove('show');
 			            setTimeout(() => {
@@ -734,51 +705,9 @@
 			    }
 			}
 
-			// Search functionality
-			function setupSearch() {
-			    const searchInput = document.querySelector('.search-input');
-			    const searchBtn = document.querySelector('.search-btn');
-
-			    function performSearch() {
-			        const query = searchInput.value.trim();
-			        if (query) {
-			            window.location.href = `/user/search?q=${encodeURIComponent(query)}`;
-			        }
-			    }
-
-			    searchBtn.addEventListener('click', performSearch);
-			    searchInput.addEventListener('keypress', (e) => {
-			        if (e.key === 'Enter') {
-			            performSearch();
-			        }
-			    });
-			}
-
-			// Initialize everything when DOM is loaded
 			document.addEventListener('DOMContentLoaded', () => {
 			    heroSlider = new HeroSlider();
 			    productManager = new ProductManager();
-			    setupSearch();
-
-			    // Smooth scrolling for navigation links
-			    document.querySelectorAll('a[href^="#"]').forEach(anchor => {
-			        anchor.addEventListener('click', function (e) {
-			            e.preventDefault();
-			            const target = document.querySelector(this.getAttribute('href'));
-			            if (target) {
-			                target.scrollIntoView({
-			                    behavior: 'smooth',
-			                    block: 'start'
-			                });
-			            }
-			        });
-			    });
-
-			    // Initial cart and wishlist count load
-			    if (productManager) {
-			        productManager.updateCartCount();
-			        productManager.updateWishlistCount();
-			    }
 			});
 		</script>
 	</body>

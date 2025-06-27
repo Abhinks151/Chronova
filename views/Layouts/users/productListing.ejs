@@ -42,12 +42,12 @@
 
 				<!-- Nav Actions -->
 				<div class="nav-actions">
-					<a href="/user/wishlist" class="nav-btn">
+					<a href="/user/profile/wishlist" class="nav-btn">
 						<i class="far fa-heart"></i>
 						<span class="nav-text">Wishlist</span>
 						<span class="badge" id="wishlist-count">0</span>
 					</a>
-					<a href="/user/cart" class="nav-btn">
+					<a href="/user/profile/cart" class="nav-btn">
 						<i class="fas fa-shopping-cart"></i>
 						<span class="nav-text">Cart</span>
 						<span class="badge" id="cart-count">0</span>
@@ -203,6 +203,7 @@
 		<script>
 			window.initialProducts = <%- JSON.stringify(products || []) %>;
 			window.categories = <%- JSON.stringify(categories || []) %>;
+			window.wishedProductIds = <%- wishedProductIds %>;
 		</script>
 
 		<script src="/scripts/user/user-product-listing.js"></script>
