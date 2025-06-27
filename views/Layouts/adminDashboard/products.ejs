@@ -514,7 +514,12 @@ function viewProductDetails(productId) {
         <div class="product-basic-info">
           <h2>${product.productName}</h2>
           <p><strong>Brand:</strong> ${product.brand}</p>
-          <p><strong>Category:</strong> ${Array.isArray(product.category) ? product.category.join(' > ') : product.category}</p>
+          <p><strong>Category:</strong> 
+            ${Array.isArray(product.category) 
+              ? product.category.map(cat => cat.categoryName).join(' > ') 
+              : product.categoryName}
+          </p>
+
 
           <div class="price-info">
             <span class="detail-sale-price">₹${formatPrice(product.salePrice)}</span>

@@ -24,12 +24,12 @@
             </div>
 
             <div class="nav-actions">
-                <a href="/user/wishlist" class="nav-btn">
+                <a href="/user/profile/wishlist" class="nav-btn">
                     <i class="far fa-heart"></i>
                     <span class="nav-text">Wishlist</span>
                     <span class="badge" id="wishlist-count">0</span>
                 </a>
-                <a href="/user/cart" class="nav-btn">
+                <a href="/user/profile/cart" class="nav-btn">
                     <i class="fas fa-shopping-cart"></i>
                     <span class="nav-text">Cart</span>
                     <span class="badge" id="cart-count">0</span>
@@ -108,19 +108,30 @@
                 </div>
 
                 <div class="action-buttons">
-                    <button class="btn-primary" onclick="addToCart()" <%= product.stockQuantity === 0 ? 'disabled' : '' %>>
-                        <i class="fas fa-shopping-cart"></i>
-                        Add to Cart
-                    </button>
-                    <button class="btn-secondary" onclick="buyNow()" <%= product.stockQuantity === 0 ? 'disabled' : '' %>>
-                        <i class="fas fa-bolt"></i>
-                        Buy Now
-                    </button>
-                    <button class="wishlist-btn" onclick="toggleWishlist()">
-                        <i id="wishlist-icon" class="<%= isInWishlist ? 'fas fa-heart filled' : 'far fa-heart' %>"></i>
-                    </button>
+	<!-- Add to Cart -->
+	<button
+		class="btn-primary <%= product.stockQuantity === 0 ? 'btn-disabled' : '' %>"
+		onclick="addToCart()"
+		<%= product.stockQuantity === 0 ? 'disabled' : '' %>>
+		<i class="fas fa-shopping-cart"></i>
+		Add to Cart
+	</button>
 
-                </div>
+	<!-- Buy Now -->
+	<button
+		class="btn-secondary <%= product.stockQuantity === 0 ? 'btn-disabled-secondary' : '' %>"
+		onclick="buyNow()"
+		<%= product.stockQuantity === 0 ? 'disabled' : '' %>>
+		<i class="fas fa-bolt"></i>
+		Buy Now
+	</button>
+
+	<!-- Wishlist -->
+	<button class="wishlist-btn" onclick="toggleWishlist()">
+		<i id="wishlist-icon" class="far fa-heart <%= isInWishlist ? 'fas filled' : '' %>"></i>
+	</button>
+</div>
+
             </div>
 
             <!-- Product Details Tabs -->

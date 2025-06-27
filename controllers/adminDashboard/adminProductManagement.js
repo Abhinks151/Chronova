@@ -126,6 +126,10 @@ export const getEditProducts = async (req, res) => {
       });
     }
 
+    if (product.category && Array.isArray(product.category)) {
+      product.category = product.category.map(cat => cat.toString());
+    }
+
     res.render('Layouts/adminDashboard/editProducts', {
       title: 'Edit Product',
       product,

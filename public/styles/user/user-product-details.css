@@ -431,6 +431,23 @@ body {
 	background: #2563eb;
 }
 
+/* Disabled: Add to Cart */
+.btn-primary.btn-disabled {
+	background: #ccc !important;
+	color: #888 !important;
+	cursor: not-allowed !important;
+	pointer-events: none;
+}
+
+/* Disabled: Buy Now */
+.btn-secondary.btn-disabled-secondary {
+	background: #eee !important;
+	color: #aaa !important;
+	cursor: not-allowed !important;
+	pointer-events: none;
+}
+
+
 .wishlist-btn {
 	background: #f3f4f6;
 	border: 1px solid #d1d5db;

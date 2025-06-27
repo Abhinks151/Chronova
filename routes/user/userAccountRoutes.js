@@ -15,7 +15,9 @@ import {
   updateUserData
 } from '../../controllers/user/userProfileController.js';
 import {
+  getWishlistController,
   getWishlistCount,
+  getWishlistData,
   toggleWishlistController
 } from '../../controllers/user/wishlistManagementController.js';
 
@@ -34,7 +36,9 @@ userAccountRoutes.put('/profile/address/edit/:id', authenticateUser, editAddress
 userAccountRoutes.patch('/profile/address/set-default/:id', authenticateUser, editDefaultById)
 userAccountRoutes.delete('/profile/address/delete/:id', authenticateUser, deleteAddress)
 
+userAccountRoutes.get('/profile/wishlist', authenticateUser, getWishlistController)
 userAccountRoutes.post('/profile/wishlist/toggle', authenticateUser, toggleWishlistController)
 userAccountRoutes.get('/profile/wishlist/count', authenticateUser, getWishlistCount)
+userAccountRoutes.get('/profile/wishlist/data', authenticateUser, getWishlistData);
 
 export default userAccountRoutes;

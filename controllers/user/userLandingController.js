@@ -10,8 +10,22 @@ const config = {
 };
 
 export const getLandingPage = async (req, res) => {
+  let isLoggedIn = false;
+  const token = req.cookies?.token || req.headers.authorization?.split(' ')[1];
+
+  if (token) {
+    try {
+      const decoded = jwt.verify(token, config.JWT_SECRET);
+      if (decoded && (decoded.id || decoded._id)) {
+        isLoggedIn = true;
+      }
+    } catch (err) {
+      console.warn('Invalid or expired token:', err.message);
+    }
+  }
+
   try {
-    res.status(httpStatusCode.OK.code).render('Layouts/users/userLanding');
+    res.status(httpStatusCode.OK.code).render('Layouts/users/userLanding', { isLoggedIn });
   } catch (error) {
     console.error('Error rendering landing page:', error);
     res.status(httpStatusCode.INTERNAL_SERVER_ERROR.code).send('Internal Server Error');

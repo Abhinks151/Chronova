@@ -29,6 +29,7 @@
 
 				<!-- Navigation Actions -->
 				<div class="nav-actions">
+					<% if (!isLoggedIn) { %>
 					<div class="nav-item_1">
 						<div class="nav-item auth-btn register-btn">
 							<a href="/user/register">Register Now</a>
@@ -37,16 +38,17 @@
 							<a href="/user/login">Login</a>
 						</div>
 					</div>
+					<% } %>
 					<div class="nav-item">
 						<i class="far fa-heart"></i>
 						<!-- <span class="nav-text">Wishlist</span> -->
-						<a href="/user/wishlist" class="nav-text">Wishlist</a>
+						<a href="/user/profile/wishlist" class="nav-text">Wishlist</a>
 						<span class="badge">0</span>
 					</div>
 					<div class="nav-item">
 						<i class="fas fa-shopping-cart"></i>
 						<!-- <span class="nav-text">Cart</span> -->
-						<a href="/user/cart" class="nav-text">Cart</a>
+						<a href="/user/profile/cart" class="nav-text">Cart</a>
 						<span class="badge">0</span>
 					</div>
 					<div class="nav-item profile-item">
@@ -384,16 +386,14 @@
 					<div class="footer-section">
 						<h4>Contact Info</h4>
 						<div class="contact-info">
-							<p>
-								<i class="fas fa-phone"></i> +91 000 000 0000
-							</p>
+							<p><i class="fas fa-phone"></i> +91 000 000 0000</p>
 							<p>
 								<i class="fas fa-envelope"></i>
 								chronova123@gmail.com
 							</p>
 							<p>
-								<i class="fas fa-map-marker-alt"></i> hai building
-								central plaza , India
+								<i class="fas fa-map-marker-alt"></i> hai
+								building central plaza , India
 							</p>
 						</div>
 					</div>
@@ -408,305 +408,307 @@
 		<div class="notification-container" id="notificationContainer"></div>
 
 		<script>
-			// Global variables
-			let categories = [];
-let currentCategoryId = null;
-let heroSlider;
-let productManager;
+						// Global variables
+						let categories = [];
+			let currentCategoryId = null;
+			let heroSlider;
+			let productManager;
 
-class HeroSlider {
-    constructor() {
-        this.currentSlide = 0;
-        this.slides = document.querySelectorAll('.slide');
-        this.dots = document.querySelectorAll('.dot');
-        this.nextBtn = document.querySelector('.next-btn');
-        this.prevBtn = document.querySelector('.prev-btn');
-        this.autoSlideInterval = null;
+			class HeroSlider {
+			    constructor() {
+			        this.currentSlide = 0;
+			        this.slides = document.querySelectorAll('.slide');
+			        this.dots = document.querySelectorAll('.dot');
+			        this.nextBtn = document.querySelector('.next-btn');
+			        this.prevBtn = document.querySelector('.prev-btn');
+			        this.autoSlideInterval = null;
 
-        this.init();
-    }
+			        this.init();
+			    }
 
-    init() {
-        this.nextBtn.addEventListener('click', () => this.nextSlide());
-        this.prevBtn.addEventListener('click', () => this.prevSlide());
+			    init() {
+			        this.nextBtn.addEventListener('click', () => this.nextSlide());
+			        this.prevBtn.addEventListener('click', () => this.prevSlide());
 
-        this.dots.forEach((dot, index) => {
-            dot.addEventListener('click', () => this.goToSlide(index));
-        });
+			        this.dots.forEach((dot, index) => {
+			            dot.addEventListener('click', () => this.goToSlide(index));
+			        });
 
-        this.startAutoSlide();
+			        this.startAutoSlide();
 
-        const sliderContainer = document.querySelector('.slider-container');
-        sliderContainer.addEventListener('mouseenter', () => this.stopAutoSlide());
-        sliderContainer.addEventListener('mouseleave', () => this.startAutoSlide());
-    }
+			        const sliderContainer = document.querySelector('.slider-container');
+			        sliderContainer.addEventListener('mouseenter', () => this.stopAutoSlide());
+			        sliderContainer.addEventListener('mouseleave', () => this.startAutoSlide());
+			    }
 
-    nextSlide() {
-        this.currentSlide = (this.currentSlide + 1) % this.slides.length;
-        this.updateSlider();
-    }
+			    nextSlide() {
+			        this.currentSlide = (this.currentSlide + 1) % this.slides.length;
+			        this.updateSlider();
+			    }
 
-    prevSlide() {
-        this.currentSlide = (this.currentSlide - 1 + this.slides.length) % this.slides.length;
-        this.updateSlider();
-    }
+			    prevSlide() {
+			        this.currentSlide = (this.currentSlide - 1 + this.slides.length) % this.slides.length;
+			        this.updateSlider();
+			    }
 
-    goToSlide(index) {
-        this.currentSlide = index;
-        this.updateSlider();
-    }
+			    goToSlide(index) {
+			        this.currentSlide = index;
+			        this.updateSlider();
+			    }
 
-    updateSlider() {
-        this.slides.forEach((slide, index) => {
-            slide.classList.toggle('active', index === this.currentSlide);
-        });
+			    updateSlider() {
+			        this.slides.forEach((slide, index) => {
+			            slide.classList.toggle('active', index === this.currentSlide);
+			        });
 
-        this.dots.forEach((dot, index) => {
-            dot.classList.toggle('active', index === this.currentSlide);
-        });
-    }
+			        this.dots.forEach((dot, index) => {
+			            dot.classList.toggle('active', index === this.currentSlide);
+			        });
+			    }
 
-    startAutoSlide() {
-        this.autoSlideInterval = setInterval(() => {
-            this.nextSlide();
-        }, 5000);
-    }
+			    startAutoSlide() {
+			        this.autoSlideInterval = setInterval(() => {
+			            this.nextSlide();
+			        }, 5000);
+			    }
 
-    stopAutoSlide() {
-        clearInterval(this.autoSlideInterval);
-    }
-}
+			    stopAutoSlide() {
+			        clearInterval(this.autoSlideInterval);
+			    }
+			}
 
-class ProductManager {
-    constructor() {
-        this.currentCategoryId = null;
-        this.products = [];
-        this.init();
-    }
+			class ProductManager {
+			    constructor() {
+			        this.currentCategoryId = null;
+			        this.products = [];
+			        this.init();
+			    }
 
-    async init() {
-        await this.loadCategories();
-        if (categories.length > 0) {
-            this.currentCategoryId = categories[0]._id;
-            await this.loadProducts(this.currentCategoryId);
-        }
-        await this.updateWishlistCount();
-    }
+			    async init() {
+			        await this.loadCategories();
+			        if (categories.length > 0) {
+			            this.currentCategoryId = categories[0]._id;
+			            await this.loadProducts(this.currentCategoryId);
+			        }
+			        await this.updateWishlistCount();
+			    }
 
-    async loadCategories() {
-        try {
-            const response = await axios.get('/user/products/categories');
-            categories = response.data.categories || [];
-            this.renderCategoryFilters();
-        } catch (error) {
-            console.error('Error loading categories:', error);
-            this.showNotification('Failed to load categories', 'error');
-        }
-    }
+			    async loadCategories() {
+			        try {
+			            const response = await axios.get('/user/products/categories');
+			            categories = response.data.categories || [];
+			            this.renderCategoryFilters();
+			        } catch (error) {
+			            console.error('Error loading categories:', error);
+			            this.showNotification('Failed to load categories', 'error');
+			        }
+			    }
 
-    renderCategoryFilters() {
-        const filtersContainer = document.getElementById('categoryFilters');
+			    renderCategoryFilters() {
+			        const filtersContainer = document.getElementById('categoryFilters');
 
-        if (categories.length === 0) {
-            filtersContainer.innerHTML = '<p class="no-categories">No categories available</p>';
-            return;
-        }
+			        if (categories.length === 0) {
+			            filtersContainer.innerHTML = '<p class="no-categories">No categories available</p>';
+			            return;
+			        }
 
-        const filtersHTML = categories.map((category, index) => `
-            <button class="filter-btn ${index === 0 ? 'active' : ''}" data-category-id="${category._id}">
-                ${category.categoryName}
-            </button>
-        `).join('');
+			        const filtersHTML = categories.map((category, index) => `
+			            <button class="filter-btn ${index === 0 ? 'active' : ''}" data-category-id="${category._id}">
+			                ${category.categoryName}
+			            </button>
+			        `).join('');
 
-        filtersContainer.innerHTML = filtersHTML;
+			        filtersContainer.innerHTML = filtersHTML;
 
-        const filterBtns = document.querySelectorAll('.filter-btn');
-        filterBtns.forEach(btn => {
-            btn.addEventListener('click', (e) => {
-                filterBtns.forEach(b => b.classList.remove('active'));
-                e.target.classList.add('active');
-                this.currentCategoryId = e.target.dataset.categoryId;
-                this.loadProducts(this.currentCategoryId);
-            });
-        });
-    }
+			        const filterBtns = document.querySelectorAll('.filter-btn');
+			        filterBtns.forEach(btn => {
+			            btn.addEventListener('click', (e) => {
+			                filterBtns.forEach(b => b.classList.remove('active'));
+			                e.target.classList.add('active');
+			                this.currentCategoryId = e.target.dataset.categoryId;
+			                this.loadProducts(this.currentCategoryId);
+			            });
+			        });
+			    }
 
-    async loadProducts(categoryId) {
-        const loadingSpinner = document.getElementById('loadingSpinner');
-        const productsGrid = document.getElementById('productsGrid');
-        const errorMessage = document.getElementById('errorMessage');
+			    async loadProducts(categoryId) {
+			        const loadingSpinner = document.getElementById('loadingSpinner');
+			        const productsGrid = document.getElementById('productsGrid');
+			        const errorMessage = document.getElementById('errorMessage');
 
-        loadingSpinner.style.display = 'block';
-        productsGrid.innerHTML = '';
-        errorMessage.style.display = 'none';
+			        loadingSpinner.style.display = 'block';
+			        productsGrid.innerHTML = '';
+			        errorMessage.style.display = 'none';
 
-        try {
-            const response = await axios.get(`/user/products/category/${categoryId}`);
-            const products = response.data.categoryProducts || [];
-            const limitedProducts = products.slice(0, 3);
-            this.renderProducts(limitedProducts);
-            loadingSpinner.style.display = 'none';
-        } catch (error) {
-            console.error('Error loading products:', error);
-            loadingSpinner.style.display = 'none';
-            errorMessage.style.display = 'block';
-        }
-    }
+			        try {
+			            const response = await axios.get(`/user/products/category/${categoryId}`);
+			            const products = response.data.categoryProducts || [];
+			            const limitedProducts = products.slice(0, 3);
+			            this.renderProducts(limitedProducts);
+			            loadingSpinner.style.display = 'none';
+			        } catch (error) {
+			            console.error('Error loading products:', error);
+			            loadingSpinner.style.display = 'none';
+			            errorMessage.style.display = 'block';
+			        }
+			    }
 
-    renderProducts(products) {
-        const productsGrid = document.getElementById('productsGrid');
+			    renderProducts(products) {
+			        const productsGrid = document.getElementById('productsGrid');
 
-        if (products.length === 0) {
-            productsGrid.innerHTML = '<div class="no-products"><i class="fas fa-box-open"></i><p>No products found in this category.</p></div>';
-            return;
-        }
+			        if (products.length === 0) {
+			            productsGrid.innerHTML = '<div class="no-products"><i class="fas fa-box-open"></i><p>No products found in this category.</p></div>';
+			            return;
+			        }
 
-        const productsHTML = products.map(product => `
-            <div class="product-card" data-product-id="${product._id}">
-                <div class="product-image">
-                    <img src="${product.images && product.images[0].url ? product.images[0].url : '/images/placeholder-watch.jpg'}" alt="${product.name}">
-                    <div class="product-overlay">
-                        <button class="quick-view-btn" onclick="productManager.quickView('${product._id}')">
-                            <i class="fas fa-eye"></i> View
-                        </button>
-                    </div>
-                    ${product.salePrice < product.regularPrice ? `
-                        <div class="discount-badge">
-                            ${Math.round(((product.regularPrice - product.salePrice) / product.regularPrice) * 100)}% OFF
-                        </div>
-                    ` : ''}
-                </div>
-                <div class="product-info">
-                    <div class="product-brand">${product.brand || 'Premium Brand'}</div>
-                    <h3 class="product-name">${product.productName}</h3>
-                    <div class="product-description">${product.description ? product.description.substring(0, 60) + '...' : 'Premium timepiece with exceptional craftsmanship'}</div>
-                    <div class="product-rating">
-                        <div class="stars">
-                            <i class="fas fa-star"></i>
-                            <i class="fas fa-star"></i>
-                            <i class="fas fa-star"></i>
-                            <i class="fas fa-star"></i>
-                            <i class="fas fa-star"></i>
-                        </div>
-                        <span class="review-count">(0 reviews)</span>
-                    </div>
-                    <div class="product-price">
-                        <span class="current-price">₹${product.salePrice ? product.salePrice.toLocaleString() : '0'}</span>
-                        ${product.salePrice < product.regularPrice ? `
-                            <span class="original-price">₹${product.regularPrice.toLocaleString()}</span>
-                        ` : ''}
-                    </div>
-                    <div class="product-actions">
-                        <button class="add-to-cart-btn" onclick="productManager.addToCart('${product._id}')">
-                            <i class="fas fa-shopping-cart"></i> Add to Cart
-                        </button>
-                        <button class="wishlist-btn" onclick="productManager.toggleWishlist('${product._id}', this)">
-                             <i class="fa-heart ${product.isInWishlist ? 'fas filled' : 'far'}"></i>
-                        </button>
-                    </div>
-                </div>
-            </div>
-        `).join('');
+			        const productsHTML = products.map(product => `
+			            <div class="product-card" data-product-id="${product._id}">
+			                <div class="product-image">
+			                    <img src="${product.images && product.images[0].url ? product.images[0].url : '/images/placeholder-watch.jpg'}" alt="${product.name}">
+			                    <div class="product-overlay">
+			                        <button class="quick-view-btn" onclick="productManager.quickView('${product._id}')">
+			                            <i class="fas fa-eye"></i> View
+			                        </button>
+			                    </div>
+			                    ${product.salePrice < product.regularPrice ? `
+			                        <div class="discount-badge">
+			                            ${Math.round(((product.regularPrice - product.salePrice) / product.regularPrice) * 100)}% OFF
+			                        </div>
+			                    ` : ''}
+			                </div>
+			                <div class="product-info">
+			                    <div class="product-brand">${product.brand || 'Premium Brand'}</div>
+			                    <h3 class="product-name">${product.productName}</h3>
+			                    <div class="product-description">${product.description ? product.description.substring(0, 60) + '...' : 'Premium timepiece with exceptional craftsmanship'}</div>
+			                    <div class="product-rating">
+			                        <div class="stars">
+			                            <i class="fas fa-star"></i>
+			                            <i class="fas fa-star"></i>
+			                            <i class="fas fa-star"></i>
+			                            <i class="fas fa-star"></i>
+			                            <i class="fas fa-star"></i>
+			                        </div>
+			                        <span class="review-count">(0 reviews)</span>
+			                    </div>
+			                    <div class="product-price">
+			                        <span class="current-price">₹${product.salePrice ? product.salePrice.toLocaleString() : '0'}</span>
+			                        ${product.salePrice < product.regularPrice ? `
+			                            <span class="original-price">₹${product.regularPrice.toLocaleString()}</span>
+			                        ` : ''}
+			                    </div>
+			                    <div class="product-actions">
+			                        <button 
+			                            class="add-to-cart-btn"
+			                            onclick="productManager.addToCart('${product._id}')"
+			                            ${product.stockQuantity === 0 ? 'disabled style="background:#ccc; color:#888; cursor:not-allowed;"' : ''}>
+			                            <i class="fas fa-shopping-cart"></i> Add to Cart
+			                        </button>
+			                        <button class="wishlist-btn" onclick="productManager.toggleWishlist('${product._id}', this)">
+			                             <i class="fa-heart ${product.isInWishlist ? 'fas filled' : 'far'}"></i>
+			                        </button>
+			                    </div>
+			                </div>
+			            </div>
+			        `).join('');
 
-        productsGrid.innerHTML = productsHTML;
-    }
+			        productsGrid.innerHTML = productsHTML;
+			    }
 
-    async toggleWishlist(productId, btn) {
-        try {
-            const icon = btn.querySelector('i') || btn;
-            const response = await axios.post('/user/profile/wishlist/toggle', { productId });
-            if (response.data.success) {
-                const isAdded = response.data.action === 'added';
-                icon.classList.toggle('fas', isAdded);
-                icon.classList.toggle('far', !isAdded);
-                icon.classList.toggle('filled', isAdded);
-                this.showNotification(
-                    response.data.message || (isAdded ? 'Added to wishlist' : 'Removed from wishlist'),
-                    isAdded ? 'success' : 'info'
-                );
-                await this.updateWishlistCount();
-            } else {
-                this.showNotification(response.data.message || 'Failed to update wishlist', 'error');
-            }
-        } catch (error) {
-            console.error('Error updating wishlist:', error);
-            this.showNotification('Failed to update wishlist', 'error');
-        }
-    }
+			    async toggleWishlist(productId, btn) {
+			        try {
+			            const icon = btn.querySelector('i') || btn;
+			            const response = await axios.post('/user/profile/wishlist/toggle', { productId });
+			            if (response.data.success) {
+			                const isAdded = response.data.action === 'added';
+			                icon.classList.toggle('fas', isAdded);
+			                icon.classList.toggle('far', !isAdded);
+			                icon.classList.toggle('filled', isAdded);
+			                this.showNotification(
+			                    response.data.message || (isAdded ? 'Added to wishlist' : 'Removed from wishlist'),
+			                    isAdded ? 'success' : 'info'
+			                );
+			                await this.updateWishlistCount();
+			            } else {
+			                this.showNotification(response.data.message || 'Failed to update wishlist', 'error');
+			            }
+			        } catch (error) {
+			            console.error('Error updating wishlist:', error);
+			            this.showNotification('Failed to update wishlist', 'error');
+			        }
+			    }
 
-async updateWishlistCount() {
-    try {
-        const response = await axios.get('/user/profile/wishlist/count');
-        if (response.data && typeof response.data.wishlistCount !== 'undefined') {
-            const badge = document.querySelector('.nav-actions .badge');
-            if (badge) {
-                badge.textContent = response.data.wishlistCount;
-                badge.style.display = response.data.wishlistCount > 0 ? 'flex' : 'none';
-            }
-        }
-    } catch (error) {
-        console.error('User probably not logged in or error fetching count:', error.message);
-        // Optionally hide count on failure
-        const badge = document.querySelector('.nav-actions .badge');
-        if (badge) badge.style.display = 'none';
-    }
-}
+			async updateWishlistCount() {
+			    try {
+			        const response = await axios.get('/user/profile/wishlist/count');
+			        if (response.data && typeof response.data.wishlistCount !== 'undefined') {
+			            const badge = document.querySelector('.nav-actions .badge');
+			            if (badge) {
+			                badge.textContent = response.data.wishlistCount;
+			                badge.style.display = response.data.wishlistCount > 0 ? 'flex' : 'none';
+			            }
+			        }
+			    } catch (error) {
+			        console.error('User probably not logged in or error fetching count:', error.message);
+			        // Optionally hide count on failure
+			        const badge = document.querySelector('.nav-actions .badge');
+			        if (badge) badge.style.display = 'none';
+			    }
+			}
 
 
 
-    async updateCartCount() {
-        try {
-            const response = await axios.get('/api/cart/count');
-            const badge = document.querySelector('.nav-actions .badge');
-            if (badge && response.data.count !== undefined) {
-                badge.textContent = response.data.count;
-            }
-        } catch (error) {
-            console.error('Error updating cart count:', error);
-        }
-    }
+			    async updateCartCount() {
+			        try {
+			            const response = await axios.get('/api/cart/count');
+			            const badge = document.querySelector('.nav-actions .badge');
+			            if (badge && response.data.count !== undefined) {
+			                badge.textContent = response.data.count;
+			            }
+			        } catch (error) {
+			            console.error('Error updating cart count:', error);
+			        }
+			    }
 
-    addToCart(productId) {
-        // Implement as needed
-    }
+			    addToCart(productId) {
+			        // Implement as needed
+			    }
 
-    quickView(productId) {
-        window.location.href = `/user/product/${productId}`;
-    }
+			    quickView(productId) {
+			        window.location.href = `/user/product/${productId}`;
+			    }
 
-    showNotification(message, type = 'info') {
-        const container = document.getElementById('notificationContainer');
-        const notification = document.createElement('div');
-        notification.className = `notification ${type}`;
-        const icon = type === 'success' ? 'fas fa-check-circle' :
-            type === 'error' ? 'fas fa-exclamation-circle' : 'fas fa-info-circle';
-        notification.innerHTML = `
-            <i class="${icon}"></i>
-            <span>${message}</span>
-            <button class="close-btn" onclick="this.parentElement.remove()">
-                <i class="fas fa-times"></i>
-            </button>
-        `;
-        container.appendChild(notification);
-        setTimeout(() => {
-            notification.classList.add('show');
-        }, 100);
-        setTimeout(() => {
-            notification.classList.remove('show');
-            setTimeout(() => {
-                if (notification.parentElement) {
-                    notification.parentElement.removeChild(notification);
-                }
-            }, 300);
-        }, 5000);
-    }
-}
+			    showNotification(message, type = 'info') {
+			        const container = document.getElementById('notificationContainer');
+			        const notification = document.createElement('div');
+			        notification.className = `notification ${type}`;
+			        const icon = type === 'success' ? 'fas fa-check-circle' :
+			            type === 'error' ? 'fas fa-exclamation-circle' : 'fas fa-info-circle';
+			        notification.innerHTML = `
+			            <i class="${icon}"></i>
+			            <span>${message}</span>
+			            <button class="close-btn" onclick="this.parentElement.remove()">
+			                <i class="fas fa-times"></i>
+			            </button>
+			        `;
+			        container.appendChild(notification);
+			        setTimeout(() => {
+			            notification.classList.add('show');
+			        }, 100);
+			        setTimeout(() => {
+			            notification.classList.remove('show');
+			            setTimeout(() => {
+			                if (notification.parentElement) {
+			                    notification.parentElement.removeChild(notification);
+			                }
+			            }, 300);
+			        }, 5000);
+			    }
+			}
 
-document.addEventListener('DOMContentLoaded', () => {
-    heroSlider = new HeroSlider();
-    productManager = new ProductManager();
-});
-
+			document.addEventListener('DOMContentLoaded', () => {
+			    heroSlider = new HeroSlider();
+			    productManager = new ProductManager();
+			});
 		</script>
 	</body>
 </html>

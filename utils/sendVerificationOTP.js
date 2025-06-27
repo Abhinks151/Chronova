@@ -11,7 +11,7 @@ export const sendVerificationOTP = async (user,newEmail) => {
   user.verificationToken = hashed;
   user.verificationTokenExpireAt = expiry;
   await user.save();
-
+  console.log(newEmail);
   await sendOTPEmail(newEmail, otp, user.firstname);
 };
 

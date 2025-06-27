@@ -1,5 +1,48 @@
-import { countWishlistProductByUserId, wishlistToggleService } from '../../servises/user/wishlistServices.js';
+import { countWishlistProductByUserId, getWishlistProductsByUserId, wishlistToggleService } from '../../servises/user/wishlistServices.js';
 import httpStatusCode from '../../utils/httpStatusCode.js';
+
+
+export const getWishlistController = async (req, res) => {
+  const userId = req.user.id || req.user._id;
+
+  try {
+    const wishlistProducts = await getWishlistProductsByUserId(userId);
+    if (!wishlistProducts || wishlistProducts.length === 0) {
+      return res.status(httpStatusCode.NOT_FOUND.code).json({
+        success: false,
+        message: "No products found in wishlist"
+      });
+    }
+
+    res.status(httpStatusCode.OK.code).render('Layouts/users/wishlist', {
+      wishlistProducts
+    })
+  } catch (error) {
+    console.error('Error fetching wishlist:', error);
+    return res.status(httpStatusCode.INTERNAL_SERVER_ERROR.code).json({
+      success: false,
+      message: "Something went wrong. Please try again later."
+    });
+    
+  }
+}
+
+export const getWishlistData = async (req, res) => {
+  const userId = req.user.id || req.user._id;
+  try {
+    const wishlistProducts = await getWishlistProductsByUserId(userId);
+    res.status(httpStatusCode.OK.code).json({
+      success: true,
+      products: wishlistProducts
+    });
+  } catch (error) {
+    console.error('Error fetching wishlist data API:', error);
+    res.status(httpStatusCode.INTERNAL_SERVER_ERROR.code).json({
+      success: false,
+      message: "Unable to fetch wishlist data."
+    });
+  }
+};
 
 export const toggleWishlistController = async (req, res) => {
   const userId = req.user.id || req.user._id;
@@ -42,3 +85,5 @@ export const getWishlistCount = async (req, res) => {
     wishlistCount
   });
 } 
+
+

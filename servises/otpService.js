@@ -12,7 +12,6 @@ export const sendVerificationOTP = async (user) => {
   await user.save();
 
   await sendOTPEmail(user.email, otp);
-  // return otp; // for testing/logging only — remove in prod
 };
 
 export const verifyOTP = async (email, otp) => {
@@ -24,7 +23,6 @@ export const verifyOTP = async (email, otp) => {
   const hash = hashOTP(otp);
   if (hash !== user.verificationToken) return false;
 
-  // Optionally clear the token after successful verification
   user.verificationToken = undefined;
   user.verificationTokenExpireAt = undefined;
   await user.save();

@@ -3,7 +3,6 @@ import jwt from "jsonwebtoken";
 import { User } from "../models/userModels.js";
 import httpStatusCode from "../utils/httpStatusCode.js";
 
-
 dotenv.config();
 
 const createRenderData = (title, errors = {}, formData = {}, successMessage = null) => ({
@@ -24,9 +23,6 @@ const handleResponse = (req, res, status, viewName, data, jsonData = null) => {
   }
   return res.status(status).render(viewName, data);
 };
-
-
-
 
 export const authenticateUser = async (req, res, next) => {
   try {
@@ -58,14 +54,23 @@ export const authenticateUser = async (req, res, next) => {
       const renderData = createRenderData(
         'Login',
         { email: 'Please verify your email before logging in' },
-        {}, // formData
+        {},
+        null
+      );
+      return handleResponse(req, res, httpStatusCode.UNAUTHORIZED.code, 'Layouts/userLogin', renderData);
+    }
+
+    if (user.isBlocked) {
+      const renderData = createRenderData(
+        'Login',
+        { email: 'Your account has been blocked. Please contact the admin.' },
+        {},
         null
       );
       return handleResponse(req, res, httpStatusCode.UNAUTHORIZED.code, 'Layouts/userLogin', renderData);
     }
 
     req.user = user;
-
     next();
   } catch (error) {
     console.error("JWT Auth Error:", error.message);
@@ -78,6 +83,17 @@ export const authenticateUser = async (req, res, next) => {
     );
     return handleResponse(req, res, httpStatusCode.UNAUTHORIZED.code, 'Layouts/userLogin', renderData);
   }
-}
+};
 
+export const preventLoggedInAccess = (req, res, next) => {
+  const token = req.cookies?.token;
 
+  if (!token) return next();
+
+  try {
+    jwt.verify(token, process.env.JWT_SECRET_KEY);
+    return res.redirect('/user/home');
+  } catch (err) {
+    return next();
+  }
+};
