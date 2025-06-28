@@ -20,6 +20,14 @@ import {
   getWishlistData,
   toggleWishlistController
 } from '../../controllers/user/wishlistManagementController.js';
+import {
+  getCartCount,
+  getCartPage,
+  getCartProducts,
+  postAddToCart,
+  removeFormCart,
+  updateCartCount
+} from '../../controllers/user/cartManagement.js';
 
 
 
@@ -40,5 +48,12 @@ userAccountRoutes.get('/profile/wishlist', authenticateUser, getWishlistControll
 userAccountRoutes.post('/profile/wishlist/toggle', authenticateUser, toggleWishlistController)
 userAccountRoutes.get('/profile/wishlist/count', authenticateUser, getWishlistCount)
 userAccountRoutes.get('/profile/wishlist/data', authenticateUser, getWishlistData);
+
+userAccountRoutes.get('/cart', authenticateUser,getCartPage);
+userAccountRoutes.get('/cart/count', authenticateUser, getCartCount);
+userAccountRoutes.get('/cart/products', authenticateUser, getCartProducts);
+userAccountRoutes.patch('/cart',authenticateUser,updateCartCount);
+userAccountRoutes.post('/cart/add', authenticateUser, postAddToCart);
+userAccountRoutes.delete('/cart/remove',authenticateUser,removeFormCart)
 
 export default userAccountRoutes;

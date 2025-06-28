@@ -64,7 +64,7 @@
                     </div>
                     <h3>Your wishlist is empty</h3>
                     <p>Start adding products you love to keep track of them</p>
-                    <a href="/products" class="btn btn-primary" style="margin-top: 16px;">
+                    <a href="/user/products" class="btn btn-primary" style="margin-top: 16px;">
                         <i class="fas fa-shopping-bag"></i> Browse Products
                     </a>
                 </div>
@@ -117,9 +117,7 @@
                         <p class="product-brand">${product.brand}</p>
                         ${product.salePrice ? `<div class="product-price">₹${product.salePrice.toLocaleString()}</div>` : ''}
                         <div class="product-actions">
-                            <button class="btn btn-primary ${product.stockQuantity === 0 ? 'btn-disabled' : ''}" onclick="buyNow('${product._id}')" ${product.stockQuantity === 0 ? 'disabled' : ''}>
-                                <i class="fas fa-shopping-bag"></i> Buy Now
-                            </button>
+                            
                             <button class="btn btn-secondary ${product.stockQuantity === 0 ? 'btn-disabled' : ''}" onclick="addToCart('${product._id}')" ${product.stockQuantity === 0 ? 'disabled' : ''}>
                                 <i class="fas fa-shopping-cart"></i> Add to Cart
                             </button>
@@ -164,12 +162,13 @@
 
         async function addToCart(productId) {
             try {
-                showLoading('Adding to cart...');
-                const response = await axios.post('/api/cart/add', { productId, quantity: 1 });
-                hideLoading();
+                // showLoading('Adding to cart...');
+                const response = await axios.post('/user/cart/add', { productId, quantity: 1 });
+                // hideLoading();
                 if (response.data.success) {
                     showNotification('Added to cart');
                     updateCartCount(response.data.cartCount);
+                    fetchWishlistProducts();
                 } else {
                     showNotification(response.data.message || 'Failed', 'error');
                 }

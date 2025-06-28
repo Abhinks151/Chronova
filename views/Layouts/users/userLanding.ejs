@@ -41,15 +41,13 @@
 					<% } %>
 					<div class="nav-item">
 						<i class="far fa-heart"></i>
-						<!-- <span class="nav-text">Wishlist</span> -->
 						<a href="/user/profile/wishlist" class="nav-text">Wishlist</a>
-						<span class="badge">0</span>
+						<span class="badge wishlist-badge">0</span>
 					</div>
 					<div class="nav-item">
 						<i class="fas fa-shopping-cart"></i>
-						<!-- <span class="nav-text">Cart</span> -->
-						<a href="/user/profile/cart" class="nav-text">Cart</a>
-						<span class="badge">0</span>
+						<a href="/user/cart" class="nav-text">Cart</a>
+						<span class="badge cart-badge">0</span>
 					</div>
 					<div class="nav-item profile-item">
 						<i class="fas fa-user-circle"></i>
@@ -498,6 +496,7 @@
 			            const response = await axios.get('/user/products/categories');
 			            categories = response.data.categories || [];
 			            this.renderCategoryFilters();
+									this.updateCartCount()
 			        } catch (error) {
 			            console.error('Error loading categories:', error);
 			            this.showNotification('Failed to load categories', 'error');
@@ -641,7 +640,7 @@
 			    try {
 			        const response = await axios.get('/user/profile/wishlist/count');
 			        if (response.data && typeof response.data.wishlistCount !== 'undefined') {
-			            const badge = document.querySelector('.nav-actions .badge');
+			            const badge = document.querySelector('.wishlist-badge');
 			            if (badge) {
 			                badge.textContent = response.data.wishlistCount;
 			                badge.style.display = response.data.wishlistCount > 0 ? 'flex' : 'none';
@@ -650,7 +649,7 @@
 			    } catch (error) {
 			        console.error('User probably not logged in or error fetching count:', error.message);
 			        // Optionally hide count on failure
-			        const badge = document.querySelector('.nav-actions .badge');
+			        const badge = document.querySelector('.wishlist-badge');
 			        if (badge) badge.style.display = 'none';
 			    }
 			}
@@ -659,19 +658,36 @@
 
 			    async updateCartCount() {
 			        try {
-			            const response = await axios.get('/api/cart/count');
-			            const badge = document.querySelector('.nav-actions .badge');
+			            const response = await axios.get('/user/cart/count');
+			            const badge = document.querySelector('.cart-badge');
 			            if (badge && response.data.count !== undefined) {
 			                badge.textContent = response.data.count;
+			                badge.style.display = response.data.count > 0 ? 'flex' : 'none';
 			            }
 			        } catch (error) {
 			            console.error('Error updating cart count:', error);
+			            const badge = document.querySelector('.cart-badge');
+			            if (badge) badge.style.display = 'none';
 			        }
 			    }
 
-			    addToCart(productId) {
-			        // Implement as needed
-			    }
+			    async addToCart(productId) {
+							try {
+									const response = await axios.post('/user/cart/add', {
+											productId: productId,
+											quantity: 1
+									});
+									if (response.data && response.data.success) {
+											this.showNotification('Product added to cart!', 'success');
+											await this.updateCartCount();
+									} else {
+											this.showNotification(response.data.message || 'Failed to add to cart', 'error');
+									}
+							} catch (error) {
+									const errorMsg = error.response?.data?.message || 'An error occurred while adding to cart';
+									this.showNotification(errorMsg, 'error');
+							}
+					}
 
 			    quickView(productId) {
 			        window.location.href = `/user/product/${productId}`;
