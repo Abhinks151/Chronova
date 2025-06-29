@@ -92,8 +92,6 @@ export const postChangeEmail = async (req, res) => {
   }
 };
 
-
-
 export const updateUserData = async (req, res) => {
   try {
 
@@ -120,6 +118,9 @@ export const updateUserData = async (req, res) => {
     })
   }
 }
+
+
+
 
 export const getAddressMangemnt = async (req, res) => {
   try {

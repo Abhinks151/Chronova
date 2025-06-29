@@ -555,6 +555,15 @@ body {
     background: #f3f4f6;
     border-color: #9ca3af;
 }
+.btn-disabled {
+    background-color: #ccc;
+    color: #666;
+    cursor: not-allowed;
+    border: 1px solid #999;
+    pointer-events: none;
+    opacity: 0.7;
+}
+
 
 /* Pagination */
 .pagination-wrapper {

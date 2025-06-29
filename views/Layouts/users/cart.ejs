@@ -1,0 +1,413 @@
+<!DOCTYPE html>
+<html lang="en">
+	<head>
+		<meta charset="UTF-8" />
+		<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+		<title>Shopping Cart - ChronoVa</title>
+		<link rel="stylesheet" href="/styles/user/cart.css" />
+		<link rel="stylesheet" href="/styles/user/user-profile-sidebar.css" />
+		<link
+			rel="stylesheet"
+			href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css"
+		/>
+		<script src="https://cdnjs.cloudflare.com/ajax/libs/axios/1.6.0/axios.min.js"></script>
+	</head>
+	<body>
+		<!-- Toast Notification -->
+		<div id="toast" class="toast">
+			<span id="toast-message"></span>
+		</div>
+
+		<!-- Remove Confirmation Modal -->
+		<div id="removeModal" class="modal">
+			<div class="modal-content">
+				<div class="modal-header">
+					<div class="modal-icon">
+						<svg
+							width="24"
+							height="24"
+							fill="none"
+							stroke="currentColor"
+							viewBox="0 0 24 24"
+							style="color: #ef4444;"
+						>
+							<path
+								stroke-linecap="round"
+								stroke-linejoin="round"
+								stroke-width="2"
+								d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"
+							></path>
+						</svg>
+					</div>
+					<h3 class="modal-title">Remove Item</h3>
+				</div>
+				<div class="modal-body">
+					<p>
+						Are you sure you want to remove "<span
+							id="removeProductName"
+						></span
+						>" from your cart?
+					</p>
+				</div>
+				<div class="modal-actions">
+					<button
+						class="modal-btn modal-btn-cancel"
+						onclick="closeRemoveModal()"
+					>
+						Cancel
+					</button>
+					<button
+						class="modal-btn modal-btn-confirm"
+						onclick="confirmRemove()"
+					>
+						Remove
+					</button>
+				</div>
+			</div>
+		</div>
+
+		<div class="wrapper">
+			<!-- Sidebar -->
+			<div class="sidebar">
+				<%- include('../../partials/user-profile-sidebar') %>
+			</div>
+
+			<!-- Main Content -->
+			<div class="main-content">
+				<div class="cart-header">
+					<h1>Shopping Cart</h1>
+					<p class="cart-subtitle">
+						Review your items before checkout
+					</p>
+				</div>
+
+				<div class="cart-container">
+					<!-- Cart Items -->
+					<div class="cart-items">
+						<div class="cart-items-header">
+							<h2>Your Items (<span id="itemCount">0</span>)</h2>
+						</div>
+
+						<!-- Loading State -->
+						<div id="loadingState" class="loading">
+							<div class="spinner"></div>
+							<span>Loading your cart...</span>
+						</div>
+
+						<!-- Cart Items List -->
+						<div
+							id="cartItemsList"
+							class="cart-items-list"
+							style="display: none;"
+						>
+							<!-- Items will be dynamically loaded here -->
+						</div>
+
+						<!-- Empty Cart State -->
+						<div
+							id="emptyCart"
+							class="empty-cart"
+							style="display: none;"
+						>
+							<div class="empty-cart-icon">🛒</div>
+							<h3>Your cart is empty</h3>
+							<p>Add some items to get started!</p>
+						</div>
+					</div>
+
+					<!-- Cart Summary -->
+					<div class="cart-summary">
+						<h3 class="summary-title">Order Summary</h3>
+						<div class="summary-row">
+							<span>Subtotal:</span>
+							<span id="subtotal">₹0.00</span>
+						</div>
+						<div class="summary-row">
+							<span>Shipping:</span>
+							<span id="shipping">₹0.00</span>
+						</div>
+						<div class="summary-row">
+							<span>Tax:</span>
+							<span id="tax">₹0.00</span>
+						</div>
+						<div class="summary-total">
+							<span>Total:</span>
+							<span id="total">₹0.00</span>
+						</div>
+						<button
+							id="checkoutBtn"
+							class="checkout-btn"
+							disabled
+							onclick="proceedToCheckout()"
+						>
+							Proceed to Checkout
+						</button>
+					</div>
+				</div>
+			</div>
+		</div>
+
+		<script>
+    // Global variables
+let cartData = null;
+let itemToRemove = null;
+
+// Toast notification functions
+function showNotification(message, type = 'success') {
+    const toast = document.getElementById('toast');
+    const toastMessage = document.getElementById('toast-message');
+
+    if (!toast || !toastMessage) return;
+
+    toastMessage.textContent = message;
+    toast.className = `toast toast-${type} show`;
+
+    setTimeout(() => {
+        hideToast();
+    }, 4000);
+}
+
+function hideToast() {
+    const toast = document.getElementById('toast');
+    if (toast) {
+        toast.classList.remove('show');
+    }
+}
+
+// API functions
+async function fetchCart() {
+    try {
+        const response = await axios.get('/user/cart/products');
+        console.log('Cart fetched successfully:', response.data);
+        return response.data.cart; 
+    } catch (error) {
+        console.error('Error fetching cart:', error);
+        throw error;
+    }
+}
+
+async function updateQuantity(productId, quantity) {
+    try {
+        const response = await axios.patch('/user/cart', {
+            productId,
+            quantity
+        });
+        return response.data;
+    } catch (error) {
+        console.error('Error updating quantity:', error);
+        throw error;
+    }
+}
+
+
+// Cart rendering functions
+function renderCartItems(cart) {
+    const cartItemsList = document.getElementById('cartItemsList');
+    const emptyCart = document.getElementById('emptyCart');
+    const itemCount = document.getElementById('itemCount');
+    const checkoutBtn = document.getElementById('checkoutBtn');
+
+    if (!cart || !cart.items || cart.items.length === 0) {
+        cartItemsList.style.display = 'none';
+        emptyCart.style.display = 'block';
+        itemCount.textContent = '0';
+        checkoutBtn.disabled = true;
+        updateSummary([]);
+        return;
+    }
+
+    emptyCart.style.display = 'none';
+    cartItemsList.style.display = 'block';
+    itemCount.textContent = cart.items.length;
+    checkoutBtn.disabled = false;
+
+    cartItemsList.innerHTML = cart.items.map(item => {
+        const product = item.productId;
+        const imageUrl = product.images?.[0]?.url || '/images/placeholder-product.jpg';
+
+        return `
+            <div class="cart-item" data-product-id="${product._id}">
+                <img src="${imageUrl}" alt="${product.productName}" class="product-image"
+                     onerror="this.src='/images/placeholder-product.jpg'">
+
+                <div class="product-details">
+                    <h3 class="product-name">${product.productName}</h3>
+                    <p class="product-brand">${product.brand || 'ChronoVa'}</p>
+                    <p class="product-price">₹${product.price.toLocaleString()}</p>
+                </div>
+
+                <div class="quantity-controls">
+                    <button class="quantity-btn" onclick="changeQuantity('${product._id}', ${item.quantity - 1})"
+                            ${item.quantity <= 1 ? 'disabled' : ''}>-</button>
+                    <span class="quantity-display">${item.quantity}</span>
+                    <button class="quantity-btn" onclick="changeQuantity('${product._id}', ${item.quantity + 1})"
+                            ${item.quantity >= 5 ? 'disabled' : ''}>+</button>
+                </div>
+
+                <button class="remove-btn" onclick="showRemoveModal('${product._id}', '${product.productName}')">
+                    Remove
+                </button>
+            </div>
+        `;
+    }).join('');
+
+    updateSummary(cart.items);
+}
+
+function updateSummary(items) {
+    const subtotalEl = document.getElementById('subtotal');
+    const shippingEl = document.getElementById('shipping');
+    const taxEl = document.getElementById('tax');
+    const totalEl = document.getElementById('total');
+
+    let subtotal = 0;
+    items.forEach(item => {
+        subtotal += item.productId.price * item.quantity;
+    });
+
+    const shipping = subtotal > 1000 ? 0 : 50;
+    const tax = Math.round(subtotal * 0.18);
+    const total = subtotal + shipping + tax;
+
+    subtotalEl.textContent = `₹${subtotal.toLocaleString()}`;
+    shippingEl.textContent = `₹${shipping.toLocaleString()}`;
+    taxEl.textContent = `₹${tax.toLocaleString()}`;
+    totalEl.textContent = `₹${total.toLocaleString()}`;
+}
+
+// Quantity management
+async function changeQuantity(productId, newQuantity) {
+    if (newQuantity < 1) {
+        showNotification('Quantity cannot be less than 1', 'error');
+        return;
+    }
+    if (newQuantity > 5) {
+        showNotification('Maximum 5 items allowed per product', 'error');
+        return;
+    }
+
+    try {
+        const cartItem = document.querySelector(`[data-product-id="${productId}"]`);
+        const quantityDisplay = cartItem.querySelector('.quantity-display');
+        const minusBtn = cartItem.querySelector('.quantity-btn:first-child');
+        const plusBtn = cartItem.querySelector('.quantity-btn:last-child');
+
+        quantityDisplay.textContent = newQuantity;
+        minusBtn.disabled = newQuantity <= 1;
+        plusBtn.disabled = newQuantity >= 5;
+
+        await updateQuantity(productId, newQuantity);
+
+        cartData = await fetchCart();
+        renderCartItems(cartData);
+        showNotification('Quantity updated successfully', 'success');
+    } catch (error) {
+        loadCart();
+
+        const message = error.response?.data?.message || 'Failed to update quantity.';
+        showNotification(message, 'error');
+    }
+}
+
+// Remove item functions
+function showRemoveModal(productId, productName) {
+    const modal = document.getElementById('removeModal');
+    const productNameSpan = document.getElementById('removeProductName');
+
+    itemToRemove = productId;
+    productNameSpan.textContent = productName;
+    modal.style.display = 'block';
+}
+
+function closeRemoveModal() {
+    const modal = document.getElementById('removeModal');
+    modal.style.display = 'none';
+    itemToRemove = null;
+}
+async function confirmRemove() {
+    if (!itemToRemove) return;
+    try {
+        const response = await axios.delete('/user/cart/remove', {
+            data: { productId: itemToRemove }
+        });
+        const data = response.data;
+        if (data.success) {
+            showNotification('Item removed from cart', 'success');
+            await loadCart();
+        } else {
+            showNotification(data.message || 'Failed to remove item', 'error');
+        }
+    } catch (error) {
+        console.error(error);
+        showNotification('Failed to remove item', 'error');
+    } finally {
+        closeRemoveModal();
+    }
+}
+
+// Checkout
+function proceedToCheckout() {
+    if (!cartData || !cartData.items || cartData.items.length === 0) {
+        showNotification('Your cart is empty', 'error');
+        return;
+    }
+
+    window.location.href = '/checkout';
+}
+
+// Main cart loader
+async function loadCart() {
+    const loadingState = document.getElementById('loadingState');
+    const cartItemsList = document.getElementById('cartItemsList');
+    const emptyCart = document.getElementById('emptyCart');
+
+    try {
+        loadingState.style.display = 'flex';
+        cartItemsList.style.display = 'none';
+        emptyCart.style.display = 'none';
+
+        cartData = await fetchCart();
+        renderCartItems(cartData);
+    } catch (error) {
+        console.error('Error loading cart:', error);
+        showNotification('Failed to load cart', 'error');
+        emptyCart.style.display = 'block';
+        document.getElementById('itemCount').textContent = '0';
+        document.getElementById('checkoutBtn').disabled = true;
+    } finally {
+        loadingState.style.display = 'none';
+    }
+}
+
+// DOM Ready
+document.addEventListener('DOMContentLoaded', function () {
+    loadCart();
+
+    window.onclick = function (event) {
+        const modal = document.getElementById('removeModal');
+        if (event.target === modal) {
+            closeRemoveModal();
+        }
+    };
+
+    document.addEventListener('keydown', function (event) {
+        if (event.key === 'Escape') {
+            closeRemoveModal();
+        }
+    });
+});
+
+// Global axios error handler
+axios.interceptors.response.use(
+    response => response,
+    error => {
+        if (error.response?.status === 401) {
+            window.location.href = '/login';
+        }
+        return Promise.reject(error);
+    }
+);
+
+</script>
+	</body>
+</html>

@@ -144,10 +144,20 @@ function renderProducts() {
                 </div>
                 
                 <div class="product-actions">
-                    <button class="btn btn-primary" onclick="event.stopPropagation(); addToCart('${product._id}')">
-                        <i class="fas fa-shopping-cart"></i>
-                        Add to Cart
-                    </button>
+                    ${product.stockQuantity === 0
+                        ? `
+                        <button class="btn btn-disabled" disabled>
+                            <i class="fas fa-shopping-cart"></i>
+                            Add to Cart
+                        </button>
+                        `
+                        : `
+                        <button class="btn btn-primary" onclick="event.stopPropagation(); addToCart('${product._id}')">
+                            <i class="fas fa-shopping-cart"></i>
+                            Add to Cart
+                        </button>
+                        `}
+                    
                     <button class="btn btn-secondary" onclick="event.stopPropagation(); viewProduct('${product._id}')">
                         <i class="fas fa-eye"></i>
                         View

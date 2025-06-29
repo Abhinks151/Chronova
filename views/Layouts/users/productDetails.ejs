@@ -8,6 +8,7 @@
     <!-- Drift CSS - MUST be in head -->
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/drift-zoom@1.4.0/dist/drift-basic.min.css">
     <link rel="stylesheet" href="/styles/user/user-product-details.css">
+    <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
 </head>
 <body>
     <!-- Navbar -->
@@ -29,7 +30,7 @@
                     <span class="nav-text">Wishlist</span>
                     <span class="badge" id="wishlist-count">0</span>
                 </a>
-                <a href="/user/profile/cart" class="nav-btn">
+                <a href="/user/cart" class="nav-btn">
                     <i class="fas fa-shopping-cart"></i>
                     <span class="nav-text">Cart</span>
                     <span class="badge" id="cart-count">0</span>
@@ -221,6 +222,7 @@
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
     <!-- Drift.js SECOND -->
     <script src="https://cdn.jsdelivr.net/npm/drift-zoom@1.4.0/dist/Drift.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
 
     <script>
     // Global variables
@@ -459,13 +461,13 @@
 
     async function loadUserCounts() {
         try {
-            const cartResponse = await fetch('/api/user/cart/count');
+            const cartResponse = await fetch('/user/cart/count');
             if (cartResponse.ok) {
                 const cartData = await cartResponse.json();
                 updateCartCount(cartData.count || 0);
             }
             
-            const wishlistResponse = await fetch('/api/user/wishlist/count');
+            const wishlistResponse = await fetch('/user/profile/wishlist/count');
             if (wishlistResponse.ok) {
                 const wishlistData = await wishlistResponse.json();
                 updateWishlistCount(wishlistData.count || 0);
@@ -497,29 +499,28 @@
         try {
             const pathParts = window.location.pathname.split('/');
             const productId = pathParts[pathParts.length - 1];
-            
-            const response = await fetch('/api/user/cart/add', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                },
-                body: JSON.stringify({
-                    productId: productId,
-                    quantity: currentQuantity
-                })
+            if (typeof axios === 'undefined') {
+                showNotification('Axios library not loaded!', 'error');
+                return;
+            }
+
+            const response = await axios.post('/user/cart/add', {
+                productId: productId,
+                quantity: currentQuantity
             });
-            
-            if (response.ok) {
-                const result = await response.json();
+
+            if (response.status) {
+                const result = response.data;
                 showNotification('Product added to cart successfully!', 'success');
                 updateCartCount(result.cartCount || cartCount + currentQuantity);
             } else {
-                const error = await response.json();
+                const error = response.data;
                 showNotification(error.message || 'Failed to add product to cart', 'error');
             }
         } catch (error) {
+            const errorMsg = error.response?.data?.message || 'An error occurred while adding to cart';
             console.error('Error adding to cart:', error);
-            showNotification('An error occurred while adding to cart', 'error');
+            showNotification(errorMsg, 'error');
         }
     }
 
@@ -528,7 +529,7 @@
             const pathParts = window.location.pathname.split('/');
             const productId = pathParts[pathParts.length - 1];
             
-            const addToCartResponse = await fetch('/api/user/cart/add', {
+            const addToCartResponse = await fetch('/user/cart/add', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
@@ -657,31 +658,25 @@
     function goToProduct(productId) {
         window.location.href = `/user/product/${productId}`;
     }
-
     async function addFeaturedToCart(productId) {
         try {
-            const response = await fetch('/api/user/cart/add', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                },
-                body: JSON.stringify({
-                    productId: productId,
-                    quantity: 1
-                })
+            const response = await axios.post('/user/cart/add', {
+                productId: productId,
+                quantity: 1
             });
-            
-            if (response.ok) {
-                const result = await response.json();
+
+            if (response.status === 200) {
+                const result = response.data;
                 showNotification('Product added to cart!', 'success');
                 updateCartCount(result.cartCount || cartCount + 1);
             } else {
-                const error = await response.json();
+                const error = response.data;
                 showNotification(error.message || 'Failed to add to cart', 'error');
             }
         } catch (error) {
+            const errorMsg = error.response?.data?.message || 'An error occurred while adding to cart';
             console.error('Error adding featured product to cart:', error);
-            showNotification('An error occurred while adding to cart', 'error');
+            showNotification(errorMsg, 'error');
         }
     }
 
