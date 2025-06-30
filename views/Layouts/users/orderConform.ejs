@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Order Confirmation</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background-color: #f4f4f4;
+      text-align: center;
+      padding: 50px;
+    }
+
+    .confirmation-box {
+      background-color: #fff;
+      padding: 40px;
+      border-radius: 12px;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+      display: inline-block;
+      max-width: 500px;
+      width: 100%;
+    }
+
+    .confirmation-box h1 {
+      color: #28a745;
+      margin-bottom: 20px;
+    }
+
+    .confirmation-box p {
+      font-size: 16px;
+      color: #555;
+    }
+
+    .order-id {
+      font-weight: bold;
+      color: #333;
+      margin: 15px 0;
+    }
+
+    .back-btn {
+      margin-top: 30px;
+      display: inline-block;
+      background-color: #007bff;
+      color: white;
+      padding: 10px 20px;
+      text-decoration: none;
+      border-radius: 6px;
+      transition: background-color 0.3s ease;
+    }
+
+    .back-btn:hover {
+      background-color: #0056b3;
+    }
+  </style>
+</head>
+<body>
+  <div class="confirmation-box">
+    <h1>Thank You for Your Order!</h1>
+    <p>Your order has been successfully placed.</p>
+    <div class="order-id">Order ID: <%= orderId %></div>
+    <p>We will send a confirmation email shortly to <strong><%= userEmail %></strong>.</p>
+    <a href="/products" class="back-btn">Continue Shopping</a>
+  </div>
+</body>
+</html>

@@ -136,8 +136,6 @@
 								placeholder="Enter nearby landmark (optional)"
 							/>
 						</div>
-
-						
 					</form>
 				</div>
 				<div class="modal-footer">
@@ -356,10 +354,11 @@
 		</div>
 
 		<script>
-			// Global variables
+						// Global variables
 			let checkoutData = null;
 			let userAddresses = [];
 			let selectedAddressId = null;
+			let editingAddressId = null; // Track which address is being edited
 
 			// Toast notification functions
 			function showNotification(message, type = 'success') {
@@ -383,41 +382,40 @@
 				}
 			}
 
-function debounce(func, delay) {
-	let timeout;
-	return function (...args) {
-		clearTimeout(timeout);
-		timeout = setTimeout(() => func.apply(this, args), delay);
-	};
-}
-
-
-const fetchPincodeDetails = debounce(async function () {
-	const pincode = document.getElementById("pincode").value.trim();
-	
-	if (pincode.length === 6 && /^\d{6}$/.test(pincode)) {
-		try {
-			const res = await fetch(`https://api.postalpincode.in/pincode/${pincode}`);
-			const data = await res.json();
-			
-			if (data[0].Status === "Success") {
-				const info = data[0].PostOffice[0];
-				document.getElementById("city").value = info.District;
-				document.getElementById("state").value = info.State;
-				document.getElementById("country").value = "India";
-			} else {
-				console.warn("Invalid pincode");
+			function debounce(func, delay) {
+				let timeout;
+				return function (...args) {
+					clearTimeout(timeout);
+					timeout = setTimeout(() => func.apply(this, args), delay);
+				};
 			}
-		} catch (error) {
-			console.error("Error fetching pincode info:", error);
-		}
-	}
-}, 600);
 
-// Handle pincode input
-function handlePincodeInput() {
-	fetchPincodeDetails();
-}
+			const fetchPincodeDetails = debounce(async function () {
+				const pincode = document.getElementById("pincode").value.trim();
+
+				if (pincode.length === 6 && /^\d{6}$/.test(pincode)) {
+					try {
+						const res = await fetch(`https://api.postalpincode.in/pincode/${pincode}`);
+						const data = await res.json();
+
+						if (data[0].Status === "Success") {
+							const info = data[0].PostOffice[0];
+							document.getElementById("city").value = info.District;
+							document.getElementById("state").value = info.State;
+							document.getElementById("country").value = "India";
+						} else {
+							console.warn("Invalid pincode");
+						}
+					} catch (error) {
+						console.error("Error fetching pincode info:", error);
+					}
+				}
+			}, 600);
+
+			// Handle pincode input
+			function handlePincodeInput() {
+				fetchPincodeDetails();
+			}
 
 			// API functions
 			async function fetchCheckoutData() {
@@ -442,8 +440,6 @@ function handlePincodeInput() {
 				}
 			}
 
-			
-
 			async function saveNewAddress(addressData) {
 				try {
 					const response = await axios.post('/user/profile/address/add', addressData);
@@ -451,6 +447,17 @@ function handlePincodeInput() {
 					return response.data;
 				} catch (error) {
 					console.error('Error saving address:', error);
+					throw error;
+				}
+			}
+
+			async function updateExistingAddress(addressId, addressData) {
+				try {
+					const response = await axios.put(`/user/profile/address/edit/${addressId}`, addressData);
+					console.log('Address updated successfully:', response.data);
+					return response.data;
+				} catch (error) {
+					console.error('Error updating address:', error);
 					throw error;
 				}
 			}
@@ -583,8 +590,69 @@ function handlePincodeInput() {
 			}
 
 			function editAddress(addressId) {
-				// Redirect to profile page for address editing
-				window.location.href = `/user/profile/address?edit=${addressId}`;
+				// Find the address to edit
+				const addressToEdit = userAddresses.find(addr => addr._id === addressId);
+				if (!addressToEdit) {
+					showNotification('Address not found', 'error');
+					return;
+				}
+
+				// Set editing mode
+				editingAddressId = addressId;
+
+				// Populate the form with existing data
+				populateAddressForm(addressToEdit);
+
+				// Update modal title and button text
+				updateModalForEditing(true);
+
+				// Open the modal
+				openAddressModal();
+			}
+
+			function populateAddressForm(address) {
+				const form = document.getElementById('addressForm');
+				if (!form) return;
+
+				// Populate form fields
+				const fields = {
+					'addressName': address.addressName,
+					'fullName': address.fullName,
+					'phone': address.phone,
+					'pincode': address.pincode,
+					'addressLine': address.addressLine,
+					'city': address.city,
+					'state': address.state,
+					'country': address.country,
+					'landmark': address.landmark || ''
+				};
+
+				Object.keys(fields).forEach(fieldName => {
+					const field = form.querySelector(`[name="${fieldName}"]`);
+					if (field) {
+						field.value = fields[fieldName];
+					}
+				});
+
+				// Handle checkbox for default address
+				const isDefaultCheckbox = form.querySelector('[name="isDefault"]');
+				if (isDefaultCheckbox) {
+					isDefaultCheckbox.checked = address.isDefault || false;
+				}
+			}
+
+			function updateModalForEditing(isEditing) {
+				const modalTitle = document.querySelector('#addressModal .modal-title');
+				const saveBtn = document.getElementById('saveAddressBtn');
+				const btnText = saveBtn.querySelector('.btn-text');
+
+				if (isEditing) {
+					if (modalTitle) modalTitle.textContent = 'Edit Address';
+					if (btnText) btnText.textContent = 'Update Address';
+				} else {
+					if (modalTitle) modalTitle.textContent = 'Add New Address';
+					if (btnText) btnText.textContent = 'Save Address';
+				}
 			}
 
 			// Address Modal Functions
@@ -602,9 +670,12 @@ function handlePincodeInput() {
 					modal.classList.remove('show');
 					document.body.style.overflow = 'auto';
 
-					// Reset form
+					// Reset form and editing state
 					const form = document.getElementById('addressForm');
 					if (form) form.reset();
+
+					editingAddressId = null;
+					updateModalForEditing(false);
 				}
 			}
 
@@ -633,21 +704,35 @@ function handlePincodeInput() {
 						isDefault: formData.get('isDefault') === 'on'
 					};
 
-					const response = await saveNewAddress(addressData);
-					showNotification('Address saved successfully', 'success');
+					let response;
+					let successMessage;
 
+					if (editingAddressId) {
+						// Update existing address
+						response = await updateExistingAddress(editingAddressId, addressData);
+						successMessage = 'Address updated successfully';
+					} else {
+						// Create new address
+						response = await saveNewAddress(addressData);
+						successMessage = 'Address saved successfully';
+					}
+
+					showNotification(successMessage, 'success');
 					closeModal();
 
 					// Reload addresses
 					await loadAddresses();
 
-					// Auto-select the new address if it was set as default
+					// Auto-select the updated/new address
 					if (response.address && response.address._id) {
 						selectAddress(response.address._id);
+					} else if (editingAddressId) {
+						selectAddress(editingAddressId);
 					}
 
 				} catch (error) {
-					showNotification('Failed to save address', 'error');
+					const errorMessage = editingAddressId ? 'Failed to update address' : 'Failed to save address';
+					showNotification(errorMessage, 'error');
 				} finally {
 					saveBtn.disabled = false;
 					btnText.style.display = 'inline';
@@ -775,13 +860,14 @@ function handlePincodeInput() {
 					console.log(orderData);
 
 					// Make API call to place order
-					const response = await axios.post('/user/orders/place', orderData);
+					const response = await axios.post('/user/order/place', orderData);
 
 					showNotification('Order placed successfully!', 'success');
 
 					// Redirect to order confirmation or orders page
 					setTimeout(() => {
-						window.location.href = `/user/orders/${response.data.orderId}`;
+						// window.location.href = `/user/orders/${response.data.orderId}`;
+						window.location.href = `/user/order/conform`;
 					}, 2000);
 
 				} catch (error) {

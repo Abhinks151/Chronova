@@ -1,4 +1,5 @@
 import { getCartedProducts } from "../../servises/user/cartServices.js";
+import { placeOrderService } from "../../servises/user/orderService.js";
 
 
 export const getCheckoutPage = (req, res) => {
@@ -33,4 +34,30 @@ export const getCheckoutPageData = async (req, res) => {
   }
 
 
+}
+
+export const placeOrder  = async (req, res) => {
+  try {
+    const userId = req.user._id || req.user.id;
+    const data = await placeOrderService(userId, req.body);
+    return res.status(200).json({
+      success: true,
+      message: 'Order placed successfully.',
+      data
+    });
+  } catch (error) {
+    console.log('Error placing order:', error);
+    return res.status(500).json({
+      success: false,
+      message: 'Something went wrong while placing the order.',
+      error: error.message || 'Internal Server Error'
+    });
+  }
+}
+
+export const getConformPage = (req, res) => {
+  res.render('Layouts/users/orderConform', {
+  orderId: 'ORD-18372872',
+  userEmail: 'abhin@gmail.com'
+});
 }
