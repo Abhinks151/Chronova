@@ -3,7 +3,7 @@
 	<head>
 		<meta charset="UTF-8" />
 		<meta name="viewport" content="width=device-width, initial-scale=1.0" />
-		<title>Shopping Cart - ChronoVa</title>
+		<title>Shopping Cart</title>
 		<link rel="stylesheet" href="/styles/user/cart.css" />
 		<link rel="stylesheet" href="/styles/user/user-profile-sidebar.css" />
 		<link
@@ -265,8 +265,11 @@ function updateSummary(items) {
         subtotal += item.productId.price * item.quantity;
     });
 
-    const shipping = subtotal > 1000 ? 0 : 50;
-    const tax = Math.round(subtotal * 0.18);
+    // const shipping = subtotal > 1000 ? 0 : 50;
+    // const tax =   Math.round(subtotal * 0.18);
+    
+    const shipping = 0;
+    const tax = 0 ;
     const total = subtotal + shipping + tax;
 
     subtotalEl.textContent = `₹${subtotal.toLocaleString()}`;
@@ -352,7 +355,7 @@ function proceedToCheckout() {
         return;
     }
 
-    window.location.href = '/checkout';
+    window.location.href = '/user/checkout';
 }
 
 // Main cart loader

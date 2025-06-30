@@ -9,6 +9,7 @@ import categoryRouter from "./adminDashboardRoutes/adminCategoryRoutes.js";
 import userProductPageRoutes from "./user/userProductPageRoutes.js";
 import userAccountRoutes from "./user/userAccountRoutes.js";
 import userLandingRoutes from "./user/userLandingRoutes.js";
+import userOrderRoutes from "./user/userOrderRoutes.js";
 
 const indexRoutes = express.Router();
 
@@ -27,6 +28,7 @@ indexRoutes.use('/user',userLandingRoutes)
 
 indexRoutes.use('/user',userAccountRoutes)
 
+indexRoutes.use('/user',userOrderRoutes) 
 
 export default indexRoutes;
 
