@@ -1,4 +1,7 @@
 import mongoose from 'mongoose';
+import { customAlphabet } from 'nanoid';
+
+const nanoid = customAlphabet('ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789', 10);
 
 const orderSchema = new mongoose.Schema({
   userId: {
@@ -7,8 +10,17 @@ const orderSchema = new mongoose.Schema({
     required: true,
   },
 
+  orderId: {
+    type: String,
+    required: true,
+    trim: true,
+    default: function () {
+      return `CHRONO-${nanoid()}`;
+    },
+  },
+
   shippingAddress: {
-    addressName: { 
+    addressName: {
       type: String,
       enum: ['Home', 'Work', 'Other'],
       required: true,
@@ -87,6 +99,17 @@ const orderSchema = new mongoose.Schema({
           required: true,
         },
       },
+      status: {
+        type: String,
+        enum: ['Placed', 'Cancelled', 'Shipped', 'Delivered', 'Returned'],
+        default: 'Placed',
+      },
+      cancelReason: {
+        type: String,
+      },
+      returnReason: {
+        type: String,
+      },
     },
   ],
 
@@ -149,8 +172,36 @@ const orderSchema = new mongoose.Schema({
     enum: ['Pending', 'Placed', 'Cancelled', 'Shipped', 'Delivered', 'Returned'],
     default: 'Placed',
   },
+
+  cancellation: {
+    cancelledAt: Date,
+    cancelledBy: {
+      type: String,
+      enum: ['User', 'Admin'],
+    },
+    reason: String,
+  },
+
+  returnInfo: {
+    returnedAt: Date,
+    reason: {
+      type: String,
+    },
+    approved: {
+      type: Boolean,
+      default: false,
+    },
+  },
+
+  invoiceGenerated: {
+    type: Boolean,
+    default: false,
+  },
+
 }, {
   timestamps: true,
 });
+
+orderSchema.index({ orderId: 1 }, { unique: true });
 
 export const Order = mongoose.models.Order || mongoose.model('Order', orderSchema);
