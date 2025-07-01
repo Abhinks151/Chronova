@@ -856,15 +856,18 @@
 						total: calculateTotal()
 					};
 
-					console.log(orderData);
+					// console.log(orderData);
 
 					const response = await axios.post('/user/order/place', orderData);
 
 					showNotification(response.data.message || 'Order placed successfully!', 'success');
 
-					setTimeout(() => {
-						window.location.href = `/user/order/conform`;
-					}, 2000);
+					const orderId = response.data?.data?.orderId;
+					console.log(orderId);
+						setTimeout(() => {
+							window.location.href = `/user/order/conform?orderId=${orderId}`;
+						}, 2000);
+
 
 				} catch (error) {
 					console.error('Error placing order:', error);

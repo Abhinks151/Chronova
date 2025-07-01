@@ -1,5 +1,7 @@
 
+import { User } from "../../models/userModels.js";
 import { addAddressService, changeEmail, deleteAddressService, editAddressService, editDefaultByIdService, finduserById, getAllAddress, validateAndUpdateUser } from "../../servises/user/userProfileServices.js"
+import cloudinary from "../../utils/cloudinary.js";
 import httpStatusCode from "../../utils/httpStatusCode.js"
 import { sendResetPasswordToken } from "../../utils/sendVerificationOTP.js";
 
@@ -21,10 +23,10 @@ export const getProfile = async (req, res) => {
     });
   } catch (err) {
     console.error('Error loading user profile:', err);
-    res.status(httpStatusCode.INTERNAL_SERVER_ERROR.code).render('Layouts/users/userAccountPage', { 
+    res.status(httpStatusCode.INTERNAL_SERVER_ERROR.code).render('Layouts/users/userAccountPage', {
       message: 'Internal Server Error',
-      user : null
-     });
+      user: null
+    });
   }
 }
 
@@ -55,25 +57,25 @@ export const postChangeEmail = async (req, res) => {
   try {
     const userId = req.user.id || req.user._id;
     const { newEmail } = req.body;
-    if(!newEmail){
+    if (!newEmail) {
       return res.status(httpStatusCode.BAD_REQUEST.code).render('Layouts/users/changeEmail', {
         success: null,
         error: "Email is required"
       })
     }
-    if(newEmail === req.user.email){
+    if (newEmail === req.user.email) {
       return res.status(httpStatusCode.BAD_REQUEST.code).render('Layouts/users/changeEmail', {
         success: null,
         error: "This email is already in use."
       })
     }
-    if(!/^[a-zA-Z0-9._-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,4}$/.test(newEmail)){
+    if (!/^[a-zA-Z0-9._-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,4}$/.test(newEmail)) {
       return res.status(httpStatusCode.BAD_REQUEST.code).render('Layouts/users/changeEmail', {
         success: null,
         error: "Invalid email address"
       })
     }
-    const result = await changeEmail(req,userId, newEmail);
+    const result = await changeEmail(req, userId, newEmail);
 
     if (!result.success) {
       return res.status(httpStatusCode.NOT_FOUND.code).render('Layouts/users/changeEmail', {
@@ -626,3 +628,46 @@ export const deleteAddress = async (req, res) => {
     });
   }
 }
+
+export const updateAvatarImage = async (req, res) => {
+  try {
+    const userId = req.user.id || req.user._id;
+
+    if (!req.file) {
+      return res.status(httpStatusCode.BAD_REQUEST.code).json({
+        success: false,
+        message: 'No avatar file uploaded'
+      });
+    }
+
+    const image = {
+      url: req.file.path,
+      public_id: req.file.filename
+    };
+
+    const existingUser = await User.findById(userId);
+    if (existingUser?.avatar?.public_id) {
+      await cloudinary.uploader.destroy(existingUser.avatar.public_id);
+    }
+
+
+    const updatedUser = await User.findByIdAndUpdate(
+      userId,
+      { avatar: image },
+      { new: true }
+    );
+
+    return res.status(httpStatusCode.OK.code).json({
+      success: true,
+      message: 'Avatar updated successfully',
+      data: updatedUser
+    });
+
+  } catch (error) {
+    console.error('Error in updateAvatarImage:', error);
+    return res.status(httpStatusCode.INTERNAL_SERVER_ERROR.code).json({
+      success: false,
+      message: 'Something went wrong. Please try again later.'
+    });
+  }
+};

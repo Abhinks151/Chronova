@@ -1,0 +1,682 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>My Orders</title>
+    <link rel="stylesheet" href="/styles/user/user-profile-sidebar.css" />
+    <link rel="stylesheet" href="/styles/user/orders.css" />
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet" />
+</head>
+<body>
+    <div class="wrapper">
+        <!-- Sidebar placeholder -->
+        <div class="sidebar-container">
+            <%- include('../../partials/user-profile-Sidebar') %>
+        </div>
+        
+        <div class="container">
+            <!-- Page Header -->
+            <div class="page-header">
+                <h1><i class="fas fa-shopping-bag"></i> My Orders</h1>
+                <p class="subtitle">Track and manage your order history</p>
+            </div>
+
+            <!-- Search and Filters -->
+            <div class="filters-card">
+                <div class="search-section">
+                    <div class="search-box">
+                        <i class="fas fa-search"></i>
+                        <input type="text" id="search-input" placeholder="Search orders, products, brands..." />
+                    </div>
+                    <div class="filter-controls">
+                        <select id="status-filter" class="filter-select">
+                            <option value="all">All Orders</option>
+                            <option value="placed">Placed</option>
+                            <option value="shipped">Shipped</option>
+                            <option value="delivered">Delivered</option>
+                            <option value="cancelled">Cancelled</option>
+                            <option value="returned">Returned</option>
+                        </select>
+                        <button id="clear-filters" class="clear-btn">
+                            <i class="fas fa-times"></i> Clear
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Loading State -->
+            <div id="loading-spinner" class="loading-container">
+                <div class="spinner"></div>
+                <p>Loading your orders...</p>
+            </div>
+
+            <!-- Error State -->
+            <div id="error-message" class="error-container" style="display: none;">
+                <div class="error-card">
+                    <i class="fas fa-exclamation-triangle"></i>
+                    <h3>Unable to Load Orders</h3>
+                    <p id="error-text">Something went wrong while fetching your orders.</p>
+                    <button onclick="loadOrders()" class="retry-btn">
+                        <i class="fas fa-redo"></i> Try Again
+                    </button>
+                </div>
+            </div>
+
+            <!-- Empty State -->
+            <div id="empty-state" class="empty-container" style="display: none;">
+                <div class="empty-card">
+                    <i class="fas fa-shopping-cart"></i>
+                    <h3>No Orders Found</h3>
+                    <p id="empty-message">You haven't placed any orders yet. Start shopping to see your orders here!</p>
+                    <a href="/products" class="shop-now-btn">
+                        <i class="fas fa-store"></i> Start Shopping
+                    </a>
+                </div>
+            </div>
+
+            <!-- Orders Container -->
+            <div id="orders-container" class="orders-list" style="display: none;">
+                <!-- Orders will be dynamically populated here -->
+            </div>
+        </div>
+    </div>
+
+    <!-- Order Details Modal -->
+    <div id="order-details-modal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2><i class="fas fa-receipt"></i> Order Details</h2>
+                <button class="modal-close" onclick="closeOrderModal()">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            <div class="modal-body" id="order-details-content">
+                <!-- Order details will be populated here -->
+            </div>
+        </div>
+    </div>
+
+    <!-- Return Item Modal -->
+    <div id="return-modal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2><i class="fas fa-undo"></i> Return Item</h2>
+                <button class="modal-close" onclick="closeReturnModal()">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            <div class="modal-body">
+                <div class="return-item-info" id="return-item-details">
+                    <!-- Item details will be populated here -->
+                </div>
+                <form id="return-form">
+                    <div class="form-group">
+                        <label for="return-reason">
+                            <i class="fas fa-comment-alt"></i> Return Reason *
+                        </label>
+                        <textarea
+                            id="return-reason"
+                            name="returnReason"
+                            placeholder="Please provide a detailed reason for returning this item..."
+                            required
+                            minlength="10"
+                            maxlength="500"
+                        ></textarea>
+                        <div class="char-counter">
+                            <span id="char-count">0</span>/500 characters
+                        </div>
+                    </div>
+                    <div class="form-actions">
+                        <button type="button" onclick="closeReturnModal()" class="btn-cancel">
+                            <i class="fas fa-times"></i> Cancel
+                        </button>
+                        <button type="submit" class="btn-return" id="submit-return-btn">
+                            <i class="fas fa-undo"></i> Submit Return Request
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- Success/Error Toast Notifications -->
+    <div id="toast-container"></div>
+
+    <!-- Scripts -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/axios/1.6.0/axios.min.js"></script>
+    <script>
+        // Order Management Frontend Logic
+        let orders = [];
+        let filteredOrders = [];
+        let currentReturnOrder = null;
+        let currentReturnProduct = null;
+
+        // Status configuration for badges
+        const statusConfig = {
+            placed: { bg: "#e3f2fd", text: "#1976d2", icon: "fas fa-clock" },
+            shipped: { bg: "#fff3e0", text: "#f57c00", icon: "fas fa-truck" },
+            delivered: { bg: "#e8f5e8", text: "#388e3c", icon: "fas fa-check-circle" },
+            cancelled: { bg: "#ffebee", text: "#d32f2f", icon: "fas fa-times-circle" },
+            returned: { bg: "#f3e5f5", text: "#7b1fa2", icon: "fas fa-undo" }
+        };
+
+        // Initialize page when DOM is loaded
+        document.addEventListener('DOMContentLoaded', function() {
+            loadOrders();
+            setupEventListeners();
+        });
+
+        // Setup event listeners
+        function setupEventListeners() {
+            // Search functionality
+            document.getElementById('search-input').addEventListener('input', filterOrders);
+            document.getElementById('status-filter').addEventListener('change', filterOrders);
+            document.getElementById('clear-filters').addEventListener('click', clearFilters);
+
+            // Return form submission
+            document.getElementById('return-form').addEventListener('submit', handleReturnSubmission);
+
+            // Character counter for return reason
+            const returnReasonTextarea = document.getElementById('return-reason');
+            returnReasonTextarea.addEventListener('input', updateCharacterCount);
+
+            // Modal click outside to close
+            window.addEventListener('click', function(event) {
+                const orderModal = document.getElementById('order-details-modal');
+                const returnModal = document.getElementById('return-modal');
+                if (event.target === orderModal) {
+                    closeOrderModal();
+                }
+                if (event.target === returnModal) {
+                    closeReturnModal();
+                }
+            });
+        }
+
+        // Load orders from server
+        async function loadOrders() {
+            try {
+                showLoading();
+                const response = await axios.get('/user/orders/data', {
+                    headers: {
+                        'Content-Type': 'application/json'
+                    }
+                });
+                orders = response.data.orders || [];
+                filteredOrders = [...orders];
+                
+                if (orders.length === 0) {
+                    showEmptyState();
+                } else {
+                    displayOrders();
+                }
+            } catch (error) {
+                console.error('Error loading orders:', error);
+                showError(error.response?.data?.message || 'Failed to load orders. Please try again.');
+            }
+        }
+
+        // Filter orders based on search and status
+        function filterOrders() {
+            const searchTerm = document.getElementById('search-input').value.toLowerCase();
+            const statusFilter = document.getElementById('status-filter').value;
+
+            filteredOrders = orders.filter(order => {
+                // Search filter
+                const matchesSearch = !searchTerm || 
+                    order.orderId.toLowerCase().includes(searchTerm) ||
+                    order.items.some(item => 
+                        item.productName.toLowerCase().includes(searchTerm) ||
+                        item.brand.toLowerCase().includes(searchTerm)
+                    );
+
+                // Status filter
+                const matchesStatus = statusFilter === 'all' || 
+                    order.items.some(item => item.status === statusFilter);
+
+                return matchesSearch && matchesStatus;
+            });
+
+            if (filteredOrders.length === 0 && (searchTerm || statusFilter !== 'all')) {
+                showEmptyState('No orders match your current filters.');
+            } else if (filteredOrders.length === 0) {
+                showEmptyState();
+            } else {
+                displayOrders();
+            }
+        }
+
+        // Clear all filters
+        function clearFilters() {
+            document.getElementById('search-input').value = '';
+            document.getElementById('status-filter').value = 'all';
+            filterOrders();
+        }
+
+        // Display orders in the UI
+        function displayOrders() {
+            const container = document.getElementById('orders-container');
+            container.innerHTML = '';
+
+            filteredOrders.forEach(order => {
+                const orderElement = createOrderElement(order);
+                container.appendChild(orderElement);
+            });
+
+            hideLoading();
+            container.style.display = 'block';
+        }
+
+        // Create order element with accordion functionality
+        function createOrderElement(order) {
+            const orderDiv = document.createElement('div');
+            orderDiv.className = 'order-card';
+            
+            const orderStatus = getOrderStatus(order);
+            const statusInfo = statusConfig[orderStatus];
+            const orderTotal = getOrderTotal(order);
+
+            orderDiv.innerHTML = `
+                <div class="order-header" onclick="toggleOrder('${order._id}')">
+                    <div class="order-main-info">
+                        <div class="order-details">
+                            <h3 class="order-id">Order #${order.orderId}</h3>
+                            <p class="order-meta">
+                                <i class="fas fa-calendar"></i>
+                                ${formatDate(order.orderDate)} • ${order.items.length} item${order.items.length > 1 ? 's' : ''}
+                            </p>
+                        </div>
+                        <div class="order-status">
+                            <span class="status-badge" style="background-color: ${statusInfo.bg}; color: ${statusInfo.text};">
+                                <i class="${statusInfo.icon}"></i>
+                                ${orderStatus.charAt(0).toUpperCase() + orderStatus.slice(1)}
+                            </span>
+                        </div>
+                        <div class="order-total">
+                            <span class="total-amount">₹${orderTotal.toLocaleString()}</span>
+                        </div>
+                        <div class="order-actions">
+                            <button class="action-btn view-btn" onclick="event.stopPropagation(); viewOrderDetails('${order.orderId}')">
+                                <i class="fas fa-eye"></i> View Details
+                            </button>
+                            ${orderStatus === 'placed' ? `
+                                <button class="action-btn cancel-btn" onclick="event.stopPropagation(); handleCancelOrder('${order._id}')">
+                                    <i class="fas fa-times"></i> Cancel Order
+                                </button>
+                            ` : ''}
+                        </div>
+                        <div class="expand-icon">
+                            <i class="fas fa-chevron-down"></i>
+                        </div>
+                    </div>
+                </div>
+                <div class="order-content" id="order-content-${order._id}">
+                    <div class="products-list">
+                        ${order.items.map(item => createProductCard(order, item)).join('')}
+                    </div>
+                </div>
+            `;
+
+            return orderDiv;
+        }
+
+        // Create individual product card
+        function createProductCard(order, item) {
+            const statusInfo = statusConfig[item.status?.toLowerCase()] || statusConfig.placed;
+            const canReturn = ['delivered'].includes(item.status?.toLowerCase()) && !item.returnReason;
+
+            return `
+                <div class="product-item">
+                    <div class="product-info">
+                        <h4 class="product-name">${item.productName}</h4>
+                        <div class="product-details">
+                            <span class="product-brand"><i class="fas fa-tag"></i> ${item.brand || 'N/A'}</span>
+                            <span class="product-quantity"><i class="fas fa-cubes"></i> Qty: ${item.quantity}</span>
+                            <span class="product-price"><i class="fas fa-rupee-sign"></i> ₹${item.price?.toLocaleString()} each</span>
+                        </div>
+                        ${item.returnReason ? `
+                            <div class="return-info">
+                                <i class="fas fa-info-circle"></i>
+                                Return requested: ${item.returnReason.substring(0, 50)}...
+                            </div>
+                        ` : ''}
+                    </div>
+                    <div class="product-actions">
+                        <div class="product-status">
+                            <span class="status-badge" style="background-color: ${statusInfo.bg}; color: ${statusInfo.text};">
+                                <i class="${statusInfo.icon}"></i>
+                                ${item.status || 'Placed'}
+                            </span>
+                        </div>
+                        <div class="product-total">
+                            ₹${(item.price * item.quantity).toLocaleString()}
+                        </div>
+                        ${canReturn ? `
+                            <button class="return-btn" onclick="initiateReturn('${order._id}', '${item.productId}')">
+                                <i class="fas fa-undo"></i> Return
+                            </button>
+                        ` : ''}
+                    </div>
+                </div>
+            `;
+        }
+
+        // Toggle order accordion
+        function toggleOrder(orderId) {
+            const content = document.getElementById(`order-content-${orderId}`);
+            const icon = content.parentElement.querySelector('.expand-icon i');
+            
+            if (content.classList.contains('expanded')) {
+                content.classList.remove('expanded');
+                icon.classList.remove('fa-chevron-up');
+                icon.classList.add('fa-chevron-down');
+            } else {
+                content.classList.add('expanded');
+                icon.classList.remove('fa-chevron-down');
+                icon.classList.add('fa-chevron-up');
+            }
+        }
+
+        // Get order status based on items
+        function getOrderStatus(order) {
+            const statuses = order.items.map(item => item.status);
+            if (statuses.every(status => status === 'delivered')) return 'delivered';
+            if (statuses.some(status => status === 'cancelled')) return 'cancelled';
+            if (statuses.some(status => status === 'returned')) return 'returned';
+            if (statuses.some(status => status === 'shipped')) return 'shipped';
+            return 'placed';
+        }
+
+        // Calculate order total
+        function getOrderTotal(order) {
+            const subtotal = order.items.reduce((sum, item) => sum + (item.price * item.quantity), 0);
+            return subtotal - (order.discount || 0);
+        }
+
+        // Handle order cancellation
+        async function handleCancelOrder(orderId) {
+            if (!confirm('Are you sure you want to cancel this order?')) return;
+
+            try {
+                await axios.post(`/api/orders/${orderId}/cancel`);
+                showToast('Order cancelled successfully!', 'success');
+                await loadOrders();
+            } catch (error) {
+                console.error('Error cancelling order:', error);
+                showToast(error.response?.data?.message || 'Failed to cancel order', 'error');
+            }
+        }
+
+        // View order details in modal
+        async function viewOrderDetails(orderId) {
+            try {
+                showOrderModal();
+                const response = await axios.get(`/user/orders/${orderId}`);
+                const order = response.data.order;
+                const modalContent = document.getElementById('order-details-content');
+                modalContent.innerHTML = createOrderDetailsContent(order);
+            } catch (error) {
+                console.error('Error loading order details:', error);
+                showToast('Failed to load order details', 'error');
+                closeOrderModal();
+            }
+        }
+
+        // Create order details content for modal
+        function createOrderDetailsContent(order) {
+            const totalAmount = order.items.reduce((sum, item) => sum + (item.price * item.quantity), 0);
+            const discount = order.discount || 0;
+            const finalAmount = totalAmount - discount;
+
+            return `
+                <div class="order-details-grid">
+                    <div class="details-section">
+                        <h3><i class="fas fa-info-circle"></i> Order Information</h3>
+                        <div class="detail-item">
+                            <span class="label">Order ID:</span>
+                            <span class="value">${order.orderId}</span>
+                        </div>
+                        <div class="detail-item">
+                            <span class="label">Order Date:</span>
+                            <span class="value">${formatDate(order.orderDate)}</span>
+                        </div>
+                        <div class="detail-item">
+                            <span class="label">Payment Method:</span>
+                            <span class="value">${order.paymentMethod || 'N/A'}</span>
+                        </div>
+                        ${order.couponCode ? `
+                            <div class="detail-item">
+                                <span class="label">Coupon Applied:</span>
+                                <span class="value coupon-code">${order.couponCode}</span>
+                            </div>
+                        ` : ''}
+                    </div>
+                    <div class="details-section">
+                        <h3><i class="fas fa-map-marker-alt"></i> Shipping Address</h3>
+                        <div class="address-block">
+                            ${formatAddress(order.shippingAddress)}
+                        </div>
+                    </div>
+                    <div class="details-section full-width">
+                        <h3><i class="fas fa-shopping-bag"></i> Items Ordered (${order.items.length})</h3>
+                        <div class="items-table">
+                            <div class="table-header">
+                                <span>Product</span>
+                                <span>Brand</span>
+                                <span>Qty</span>
+                                <span>Price</span>
+                                <span>Status</span>
+                                <span>Total</span>
+                            </div>
+                            ${order.items.map(item => `
+                                <div class="table-row">
+                                    <span class="product-name">${item.productName}</span>
+                                    <span>${item.brand || 'N/A'}</span>
+                                    <span>${item.quantity}</span>
+                                    <span>₹${item.price?.toLocaleString()}</span>
+                                    <span>
+                                        <div class="status-badge" style="background-color: ${statusConfig[item.status?.toLowerCase()]?.bg}; color: ${statusConfig[item.status?.toLowerCase()]?.text};">
+                                            ${item.status || 'Placed'}
+                                        </div>
+                                    </span>
+                                    <span class="item-total">₹${(item.price * item.quantity).toLocaleString()}</span>
+                                </div>
+                            `).join('')}
+                        </div>
+                    </div>
+                    <div class="details-section full-width">
+                        <h3><i class="fas fa-calculator"></i> Order Summary</h3>
+                        <div class="summary-table">
+                            <div class="summary-row">
+                                <span>Subtotal:</span>
+                                <span>₹${totalAmount.toLocaleString()}</span>
+                            </div>
+                            ${discount > 0 ? `
+                                <div class="summary-row discount">
+                                    <span>Discount:</span>
+                                    <span>-₹${discount.toLocaleString()}</span>
+                                </div>
+                            ` : ''}
+                            <div class="summary-row total">
+                                <span>Total Amount:</span>
+                                <span>₹${finalAmount.toLocaleString()}</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            `;
+        }
+
+        // Initiate return process
+        function initiateReturn(orderId, productId) {
+            const order = orders.find(o => o._id === orderId);
+            const product = order?.items.find(item => item.productId === productId);
+
+            if (!order || !product) {
+                showToast('Item not found', 'error');
+                return;
+            }
+
+            currentReturnOrder = orderId;
+            currentReturnProduct = productId;
+
+            // Populate return modal with product details
+            const returnDetails = document.getElementById('return-item-details');
+            returnDetails.innerHTML = `
+                <div class="return-product-info">
+                    <h4>${product.productName}</h4>
+                    <p><strong>Brand:</strong> ${product.brand || 'N/A'}</p>
+                    <p><strong>Quantity:</strong> ${product.quantity}</p>
+                    <p><strong>Price:</strong> ₹${product.price?.toLocaleString()}</p>
+                    <p><strong>Order ID:</strong> ${order.orderId}</p>
+                </div>
+            `;
+
+            // Reset form
+            document.getElementById('return-form').reset();
+            updateCharacterCount();
+            showReturnModal();
+        }
+
+        // Handle return form submission
+        async function handleReturnSubmission(event) {
+            event.preventDefault();
+            const returnReason = document.getElementById('return-reason').value.trim();
+
+            if (!returnReason || returnReason.length < 10) {
+                showToast('Please provide a detailed return reason (minimum 10 characters)', 'error');
+                return;
+            }
+
+            const submitBtn = document.getElementById('submit-return-btn');
+            submitBtn.disabled = true;
+            submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Processing...';
+
+            try {
+                await axios.post('/api/orders/return', {
+                    orderId: currentReturnOrder,
+                    productId: currentReturnProduct,
+                    returnReason: returnReason
+                });
+
+                showToast('Return request submitted successfully!', 'success');
+                closeReturnModal();
+                await loadOrders();
+            } catch (error) {
+                console.error('Error submitting return:', error);
+                showToast(error.response?.data?.message || 'Failed to submit return request', 'error');
+            } finally {
+                submitBtn.disabled = false;
+                submitBtn.innerHTML = '<i class="fas fa-undo"></i> Submit Return Request';
+            }
+        }
+
+        // Utility Functions
+        function formatDate(dateString) {
+            return new Date(dateString).toLocaleDateString('en-IN', {
+                year: 'numeric',
+                month: 'long',
+                day: 'numeric'
+            });
+        }
+
+        function formatAddress(address) {
+            if (!address) return 'Address not available';
+            return `
+                <p><strong>${address.fullName || 'N/A'}</strong></p>
+                <p>${address.addressLine1 || ''}</p>
+                ${address.addressLine2 ? `<p>${address.addressLine2}</p>` : ''}
+                <p>${address.city || ''}, ${address.state || ''} ${address.pincode || ''}</p>
+                ${address.phone ? `<p><i class="fas fa-phone"></i> ${address.phone}</p>` : ''}
+            `;
+        }
+
+        function updateCharacterCount() {
+            const textarea = document.getElementById('return-reason');
+            const counter = document.getElementById('char-count');
+            counter.textContent = textarea.value.length;
+        }
+
+        // Modal Controls
+        function showOrderModal() {
+            document.getElementById('order-details-modal').style.display = 'flex';
+            document.body.style.overflow = 'hidden';
+        }
+
+        function closeOrderModal() {
+            document.getElementById('order-details-modal').style.display = 'none';
+            document.body.style.overflow = 'auto';
+        }
+
+        function showReturnModal() {
+            document.getElementById('return-modal').style.display = 'flex';
+            document.body.style.overflow = 'hidden';
+        }
+
+        function closeReturnModal() {
+            document.getElementById('return-modal').style.display = 'none';
+            document.body.style.overflow = 'auto';
+            currentReturnOrder = null;
+            currentReturnProduct = null;
+        }
+
+        // UI State Management
+        function showLoading() {
+            document.getElementById('loading-spinner').style.display = 'flex';
+            document.getElementById('error-message').style.display = 'none';
+            document.getElementById('empty-state').style.display = 'none';
+            document.getElementById('orders-container').style.display = 'none';
+        }
+
+        function hideLoading() {
+            document.getElementById('loading-spinner').style.display = 'none';
+        }
+
+        function showError(message) {
+            hideLoading();
+            document.getElementById('error-text').textContent = message;
+            document.getElementById('error-message').style.display = 'flex';
+            document.getElementById('empty-state').style.display = 'none';
+            document.getElementById('orders-container').style.display = 'none';
+        }
+
+        function showEmptyState(customMessage = null) {
+            hideLoading();
+            const emptyMessage = document.getElementById('empty-message');
+            if (customMessage) {
+                emptyMessage.textContent = customMessage;
+            } else {
+                emptyMessage.textContent = "You haven't placed any orders yet. Start shopping to see your orders here!";
+            }
+            document.getElementById('empty-state').style.display = 'flex';
+            document.getElementById('error-message').style.display = 'none';
+            document.getElementById('orders-container').style.display = 'none';
+        }
+
+        // Toast Notifications
+        function showToast(message, type = 'info') {
+            const toast = document.createElement('div');
+            toast.className = `toast toast-${type}`;
+            const icon = type === 'success' ? 'check-circle' :
+                         type === 'error' ? 'exclamation-circle' :
+                         'info-circle';
+
+            toast.innerHTML = `
+                <i class="fas fa-${icon}"></i>
+                <span>${message}</span>
+                <button onclick="this.parentElement.remove()">×</button>
+            `;
+
+            document.getElementById('toast-container').appendChild(toast);
+
+            // Auto remove after 5 seconds
+            setTimeout(() => {
+                if (toast.parentElement) {
+                    toast.remove();
+                }
+            }, 5000);
+        }
+    </script>
+</body>
+</html>

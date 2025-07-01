@@ -99,7 +99,7 @@ export const placeOrderService = async (userId, orderData) => {
   );
 
   return {
-    orderId: newOrder._id,
+    orderId: newOrder.orderId,
     message: "Order placed successfully",
     orderDetails: {
       shippingAddress: fullAddress,
@@ -109,4 +109,36 @@ export const placeOrderService = async (userId, orderData) => {
       paymentMethod: newOrder.paymentMethod,
     }
   };
+};
+
+
+export const orderListByUserId = async (userId) => {
+  try {
+    const orders = await Order.find({ userId })
+      .populate('items.productId', 'productName brand images finalPrice salePrice price')
+      .populate('shippingAddress')
+      .sort({ createdAt: -1 })
+      .lean();
+
+    return orders.map(order => ({
+      ...order,
+      items: order.items.map(item => ({
+        ...item,
+        productId: item.productId?._id || item.productId
+      }))
+    }));
+  } catch (error) {
+    console.error('Error fetching orders:', error);
+    throw new Error('Failed to fetch orders');
+  }
+}
+
+export const getSingleOrderService = async (userId, orderId) => {
+  const order = await Order.findOne({ userId, orderId }).lean();
+
+  if (!order) {
+    throw new Error("Order not found or access denied.");
+  }
+
+  return order;
 };
