@@ -262,7 +262,7 @@ function updateSummary(items) {
 
     let subtotal = 0;
     items.forEach(item => {
-        subtotal += item.productId.price * item.quantity;
+        subtotal += item.productId.finalPrice * item.quantity;
     });
 
     // const shipping = subtotal > 1000 ? 0 : 50;

@@ -1,132 +1,362 @@
-import { getCartedProducts } from "../../servises/user/cartServices.js";
-import { getSingleOrderService, orderListByUserId, placeOrderService } from "../../servises/user/orderService.js";
-import httpStatusCode from "../../utils/httpStatusCode.js";
+import { Order } from "../../models/order.js"
+import { Products } from "../../models/products.js"
+import { getCartedProducts } from "../../servises/user/cartServices.js"
+import {
+  getSingleOrderService,
+  orderListByUserId,
+  placeOrderService,
+  cancelOrderItemService,
+  returnOrderItemService,
+  returnEntireOrderService,
+  generateInvoiceService,
+} from "../../servises/user/orderService.js"
+import httpStatusCode from "../../utils/httpStatusCode.js"
+import { returnReason } from "../../utils/returnReason.js"
+
+
 
 export const getCheckoutPage = (req, res) => {
   try {
-    res.render('Layouts/users/checkout');
+    res.render("Layouts/users/checkout")
   } catch (error) {
-    console.error('Error rendering checkout page:', error);
+    console.error("Error rendering checkout page:", error)
     res.status(httpStatusCode.INTERNAL_SERVER_ERROR.code).json({
       success: false,
-      message: 'Something went wrong while rendering the checkout page.'
-    });
+      message: "Something went wrong while rendering the checkout page.",
+    })
   }
-
 }
-
-
 
 export const getCheckoutPageData = async (req, res) => {
   try {
-    const userId = req.user._id || req.user.id;
-    const checkoutData = await getCartedProducts(userId);
+    const userId = req.user._id || req.user.id
+    const checkoutData = await getCartedProducts(userId)
 
     if (!checkoutData || checkoutData.items.length === 0) {
       return res.status(httpStatusCode.OK.code).json({
         success: true,
-        message: 'Your cart is empty.',
-        checkoutData: { items: [] }
-      });
+        message: "Your cart is empty.",
+        checkoutData: { items: [] },
+      })
     }
+
     res.status(httpStatusCode.OK.code).json({
       success: true,
-      message: 'Checkout page data fetched successfully.',
-      checkoutData
-    });
+      message: "Checkout page data fetched successfully.",
+      checkoutData,
+    })
   } catch (error) {
-    console.error('Error fetching checkout page data:', error);
+    console.error("Error fetching checkout page data:", error)
     res.status(httpStatusCode.INTERNAL_SERVER_ERROR.code).json({
       success: false,
-      message: 'Something went wrong while fetching checkout page data.'
-    });
-
+      message: "Something went wrong while fetching checkout page data.",
+    })
   }
-
-
 }
 
 export const placeOrder = async (req, res) => {
   try {
-    const userId = req.user._id || req.user.id;
-    const data = await placeOrderService(userId, req.body);
-    // console.log(data);
+    const userId = req.user._id || req.user.id
+    const data = await placeOrderService(userId, req.body)
+
     return res.status(httpStatusCode.OK.code).json({
       success: true,
-      message: 'Order placed successfully.',
-      data
-    });
+      message: "Order placed successfully.",
+      data,
+    })
   } catch (error) {
-    console.log('Error placing order:', error);
+    console.log("Error placing order:", error)
     return res.status(httpStatusCode.INTERNAL_SERVER_ERROR.code).json({
       success: false,
-      message: 'Something went wrong while placing the order.',
-      error: error.message || 'Internal Server Error'
-    });
+      message: "Something went wrong while placing the order.",
+      error: error.message || "Internal Server Error",
+    })
   }
 }
 
 export const getConformPage = (req, res) => {
   try {
-    const { orderId } = req.query;
-    // console.log(orderId);
-
-    res.status(httpStatusCode.OK.code).render('Layouts/users/orderConform', {
+    const { orderId } = req.query
+    res.status(httpStatusCode.OK.code).render("Layouts/users/orderConform", {
       orderId,
-    });
+    })
   } catch (error) {
-    console.error('Error rendering order confirmation page:', error);
+    console.error("Error rendering order confirmation page:", error)
     res.status(httpStatusCode.INTERNAL_SERVER_ERROR.code).json({
       success: false,
-      message: 'Something went wrong while rendering the order confirmation page.',
-    });
+      message: "Something went wrong while rendering the order confirmation page.",
+    })
   }
-};
-
+}
 
 export const getOrderMangementPage = (req, res) => {
   try {
-    res.render('Layouts/users/orders');
+    res.render("Layouts/users/orders")
   } catch (error) {
-    console.error('Error rendering order management page:', error);
+    console.error("Error rendering order management page:", error)
     res.status(httpStatusCode.INTERNAL_SERVER_ERROR.code).json({
       success: false,
-      message: 'Something went wrong while rendering the order management page.'
-    });
+      message: "Something went wrong while rendering the order management page.",
+    })
   }
 }
 
 export const getOrderMangementPageData = async (req, res) => {
-  const userId = req.user._id || req.user.id;
-  if (!userId) {
-    return res.status(httpStatusCode.UNAUTHORIZED.code).json({
-      success: false,
-      message: 'User not authenticated.'
-    });
-  }
-  const orders = await orderListByUserId(userId)
-  res.json({
-    success: true,
-    orders
-  })
-}
+  try {
+    const userId = req.user._id || req.user.id
 
+    if (!userId) {
+      return res.status(httpStatusCode.UNAUTHORIZED.code).json({
+        success: false,
+        message: "User not authenticated.",
+      })
+    }
+
+    const orders = await orderListByUserId(userId)
+
+    res.json({
+      success: true,
+      orders,
+      returnReason,
+    })
+  } catch (error) {
+    console.error("Error fetching orders:", error)
+    res.status(httpStatusCode.INTERNAL_SERVER_ERROR.code).json({
+      success: false,
+      message: "Something went wrong while fetching orders.",
+    })
+  }
+}
 
 export const getSingleOrderController = async (req, res) => {
   try {
-    const userId = req.user._id || req.user.id;
-    const orderId = req.params.orderId;
+    const userId = req.user._id || req.user.id
+    const orderId = req.params.orderId
+
     if (!userId || !orderId) {
+      return res.status(httpStatusCode.BAD_REQUEST.code).json({
+        success: false,
+        message: "User ID and Order ID are required.",
+      })
+    }
+
+    const order = await getSingleOrderService(userId, orderId)
+
+    res.status(httpStatusCode.OK.code).json({
+      success: true,
+      order,
+    })
+  } catch (error) {
+    console.error("Error fetching single order:", error)
+    res.status(httpStatusCode.INTERNAL_SERVER_ERROR.code).json({
+      success: false,
+      message: error.message,
+    })
+  }
+}
+
+export const cancelEntireOrderController = async (req, res) => {
+  try {
+    const userId = req.user._id || req.user.id;
+    const { orderId } = req.params;
+
+    const order = await Order.findOne({ userId, orderId });
+    if (!order) {
+      return res.status(404).json({ success: false, message: "Order not found." });
+    }
+
+    if (order.orderStatus === "Cancelled") {
+      return res.status(400).json({ success: false, message: "Order already cancelled." });
+    }
+
+    const allItemsPlaced = order.items.every((item) => item.status === "Placed");
+    if (!allItemsPlaced) {
       return res.status(400).json({
         success: false,
-        message: 'User ID and Order ID are required.'
+        message: "Only orders with all items in 'Placed' status can be cancelled.",
       });
     }
-    const order = await getSingleOrderService(userId, orderId);
 
-    res.status(200).json({ success: true, order });
+    for (const item of order.items) {
+      await Products.findByIdAndUpdate(item.productId, {
+        $inc: { stockQuantity: item.quantity },
+      });
+
+      item.status = "Cancelled";
+      item.cancelReason = "Cancelled by user";
+    }
+
+    order.orderStatus = "Cancelled";
+    order.cancellation = {
+      cancelledAt: new Date(),
+      cancelledBy: "User",
+      reason: "Cancelled by user",
+    };
+
+    await order.save();
+
+    return res.status(200).json({
+      success: true,
+      message: "Order cancelled successfully.",
+      order,
+    });
   } catch (error) {
-    console.error('Error fetching single order:', error);
-    res.status(500).json({ success: false, message: error.message });
+    console.error("Error cancelling entire order:", error);
+    return res.status(500).json({
+      success: false,
+      message: error.message || "Server error while cancelling entire order.",
+    });
   }
 };
+
+export const cancelSingleItemController = async (req, res) => {
+  try {
+    const userId = req.user._id || req.user.id;
+    const { orderId, itemId } = req.params;
+
+    const order = await Order.findOne({ userId, orderId });
+    if (!order) {
+      return res.status(404).json({ success: false, message: "Order not found." });
+    }
+
+    const item = order.items.id(itemId);
+    if (!item) {
+      return res.status(404).json({ success: false, message: "Item not found in order." });
+    }
+
+    if (item.status !== "Placed") {
+      return res.status(400).json({ success: false, message: "Item cannot be cancelled." });
+    }
+
+    await Products.findByIdAndUpdate(item.productId, {
+      $inc: { stockQuantity: item.quantity },
+    });
+
+    item.status = "Cancelled";
+    item.cancelReason = "Cancelled by user";
+
+    const allItemsCancelled = order.items.every((item) => item.status === "Cancelled");
+    if (allItemsCancelled) {
+      order.orderStatus = "Cancelled";
+      order.cancellation = {
+        cancelledAt: new Date(),
+        cancelledBy: "User",
+        reason: "All items cancelled",
+      };
+    }
+
+    await order.save();
+
+    return res.status(200).json({
+      success: true,
+      message: "Item cancelled successfully.",
+      order,
+    });
+  } catch (error) {
+    console.error("Error cancelling item:", error);
+    return res.status(500).json({
+      success: false,
+      message: error.message || "Server error while cancelling item.",
+    });
+  }
+};
+
+export const returnOrderItemController = async (req, res) => {
+  try {
+    const userId = req.user._id || req.user.id
+    const { orderId, itemId } = req.params
+    const { returnReason } = req.body
+
+    if (!userId || !orderId || !itemId) {
+      return res.status(httpStatusCode.BAD_REQUEST.code).json({
+        success: false,
+        message: "User ID, Order ID and Item ID are required.",
+      })
+    }
+
+    if (!returnReason || returnReason.trim().length === 0) {
+      return res.status(httpStatusCode.BAD_REQUEST.code).json({
+        success: false,
+        message: "Return reason is required.",
+      })
+    }
+
+    const result = await returnOrderItemService(userId, orderId, itemId, returnReason.trim())
+
+    return res.status(httpStatusCode.OK.code).json({
+      success: true,
+      message: "Return request submitted successfully.",
+      order: result,
+    })
+  } catch (error) {
+    console.error("Error returning order item:", error)
+    return res.status(httpStatusCode.INTERNAL_SERVER_ERROR.code).json({
+      success: false,
+      message: error.message || "Something went wrong while processing the return request.",
+    })
+  }
+}
+
+export const returnEntireOrderController = async (req, res) => {
+  try {
+    const userId = req.user._id || req.user.id
+    const { orderId } = req.params
+    const { returnReason } = req.body
+
+    if (!userId || !orderId) {
+      return res.status(httpStatusCode.BAD_REQUEST.code).json({
+        success: false,
+        message: "User ID and Order ID are required.",
+      })
+    }
+
+    if (!returnReason || returnReason.trim().length === 0) {
+      return res.status(httpStatusCode.BAD_REQUEST.code).json({
+        success: false,
+        message: "Return reason is required.",
+      })
+    }
+
+    const result = await returnEntireOrderService(userId, orderId, returnReason.trim())
+
+    return res.status(httpStatusCode.OK.code).json({
+      success: true,
+      message: "Return request submitted successfully.",
+      order: result,
+    })
+  } catch (error) {
+    console.error("Error returning entire order:", error)
+    return res.status(httpStatusCode.INTERNAL_SERVER_ERROR.code).json({
+      success: false,
+      message: error.message || "Something went wrong while processing the return request.",
+    })
+  }
+}
+
+export const downloadInvoiceController = async (req, res) => {
+  try {
+    const userId = req.user._id || req.user.id
+    const { orderId } = req.params
+
+    if (!userId || !orderId) {
+      return res.status(httpStatusCode.BAD_REQUEST.code).json({
+        success: false,
+        message: "User ID and Order ID are required.",
+      })
+    }
+
+    const pdfBuffer = await generateInvoiceService(userId, orderId)
+
+    res.setHeader("Content-Type", "application/pdf")
+    res.setHeader("Content-Disposition", `attachment; filename=invoice-${orderId}.pdf`)
+    res.setHeader("Content-Length", pdfBuffer.length)
+
+    res.send(pdfBuffer)
+  } catch (error) {
+    console.error("Error generating invoice:", error)
+    return res.status(httpStatusCode.INTERNAL_SERVER_ERROR.code).json({
+      success: false,
+      message: error.message || "Something went wrong while generating the invoice.",
+    })
+  }
+}

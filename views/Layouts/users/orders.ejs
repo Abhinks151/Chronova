@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>My Orders</title>
+    <title>Orders</title>
     <link rel="stylesheet" href="/styles/user/user-profile-sidebar.css" />
     <link rel="stylesheet" href="/styles/user/orders.css" />
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet" />
@@ -16,13 +16,11 @@
         </div>
         
         <div class="container">
-            <!-- Page Header -->
             <div class="page-header">
-                <h1><i class="fas fa-shopping-bag"></i> My Orders</h1>
+                <h1>My Orders</h1>
                 <p class="subtitle">Track and manage your order history</p>
             </div>
 
-            <!-- Search and Filters -->
             <div class="filters-card">
                 <div class="search-section">
                     <div class="search-box">
@@ -32,11 +30,11 @@
                     <div class="filter-controls">
                         <select id="status-filter" class="filter-select">
                             <option value="all">All Orders</option>
-                            <option value="placed">Placed</option>
-                            <option value="shipped">Shipped</option>
-                            <option value="delivered">Delivered</option>
-                            <option value="cancelled">Cancelled</option>
-                            <option value="returned">Returned</option>
+                            <option value="Placed">Placed</option>
+                            <option value="Shipped">Shipped</option>
+                            <option value="Delivered">Delivered</option>
+                            <option value="Cancelled">Cancelled</option>
+                            <option value="Returned">Returned</option>
                         </select>
                         <button id="clear-filters" class="clear-btn">
                             <i class="fas fa-times"></i> Clear
@@ -69,9 +67,7 @@
                     <i class="fas fa-shopping-cart"></i>
                     <h3>No Orders Found</h3>
                     <p id="empty-message">You haven't placed any orders yet. Start shopping to see your orders here!</p>
-                    <a href="/products" class="shop-now-btn">
-                        <i class="fas fa-store"></i> Start Shopping
-                    </a>
+                    <a href="/user/products" class="shop-now-btn">Start Shopping</a>
                 </div>
             </div>
 
@@ -97,7 +93,7 @@
         </div>
     </div>
 
-    <!-- Return Item Modal -->
+    <!-- Return Reason Modal -->
     <div id="return-modal" class="modal">
         <div class="modal-content">
             <div class="modal-header">
@@ -112,17 +108,22 @@
                 </div>
                 <form id="return-form">
                     <div class="form-group">
-                        <label for="return-reason">
+                        <label for="return-reason-select">
                             <i class="fas fa-comment-alt"></i> Return Reason *
                         </label>
-                        <textarea
-                            id="return-reason"
-                            name="returnReason"
-                            placeholder="Please provide a detailed reason for returning this item..."
-                            required
-                            minlength="10"
-                            maxlength="500"
-                        ></textarea>
+                        <select id="return-reason-select" name="returnReason" required>
+                            <option value="">Select a reason</option>
+                            <option value="Damaged">Damaged</option>
+                            <option value="Wrong Item">Wrong Item</option>
+                            <option value="Quality Issue">Quality Issue</option>
+                            <option value="Other">Other</option>
+                        </select>
+                    </div>
+                    <div class="form-group" id="custom-reason-group" style="display: none;">
+                        <label for="custom-return-reason">
+                            <i class="fas fa-edit"></i> Please specify *
+                        </label>
+                        <textarea id="custom-return-reason" placeholder="Please provide a detailed reason..." maxlength="500"></textarea>
                         <div class="char-counter">
                             <span id="char-count">0</span>/500 characters
                         </div>
@@ -150,15 +151,16 @@
         let orders = [];
         let filteredOrders = [];
         let currentReturnOrder = null;
-        let currentReturnProduct = null;
+        let currentReturnItem = null;
+        let isEntireOrderReturn = false;
 
         // Status configuration for badges
         const statusConfig = {
-            placed: { bg: "#e3f2fd", text: "#1976d2", icon: "fas fa-clock" },
-            shipped: { bg: "#fff3e0", text: "#f57c00", icon: "fas fa-truck" },
-            delivered: { bg: "#e8f5e8", text: "#388e3c", icon: "fas fa-check-circle" },
-            cancelled: { bg: "#ffebee", text: "#d32f2f", icon: "fas fa-times-circle" },
-            returned: { bg: "#f3e5f5", text: "#7b1fa2", icon: "fas fa-undo" }
+            'Placed': { bg: "#e3f2fd", text: "#1976d2", icon: "fas fa-clock" },
+            'Shipped': { bg: "#fff3e0", text: "#f57c00", icon: "fas fa-truck" },
+            'Delivered': { bg: "#e8f5e8", text: "#388e3c", icon: "fas fa-check-circle" },
+            'Cancelled': { bg: "#ffebee", text: "#d32f2f", icon: "fas fa-times-circle" },
+            'Returned': { bg: "#f3e5f5", text: "#7b1fa2", icon: "fas fa-undo" }
         };
 
         // Initialize page when DOM is loaded
@@ -169,28 +171,32 @@
 
         // Setup event listeners
         function setupEventListeners() {
-            // Search functionality
             document.getElementById('search-input').addEventListener('input', filterOrders);
             document.getElementById('status-filter').addEventListener('change', filterOrders);
             document.getElementById('clear-filters').addEventListener('click', clearFilters);
-
-            // Return form submission
             document.getElementById('return-form').addEventListener('submit', handleReturnSubmission);
+            
+            // Return reason select change
+            document.getElementById('return-reason-select').addEventListener('change', function() {
+                const customGroup = document.getElementById('custom-reason-group');
+                if (this.value === 'Other') {
+                    customGroup.style.display = 'block';
+                    document.getElementById('custom-return-reason').required = true;
+                } else {
+                    customGroup.style.display = 'none';
+                    document.getElementById('custom-return-reason').required = false;
+                }
+            });
 
-            // Character counter for return reason
-            const returnReasonTextarea = document.getElementById('return-reason');
-            returnReasonTextarea.addEventListener('input', updateCharacterCount);
+            // Character counter for custom reason
+            document.getElementById('custom-return-reason').addEventListener('input', updateCharacterCount);
 
             // Modal click outside to close
             window.addEventListener('click', function(event) {
                 const orderModal = document.getElementById('order-details-modal');
                 const returnModal = document.getElementById('return-modal');
-                if (event.target === orderModal) {
-                    closeOrderModal();
-                }
-                if (event.target === returnModal) {
-                    closeReturnModal();
-                }
+                if (event.target === orderModal) closeOrderModal();
+                if (event.target === returnModal) closeReturnModal();
             });
         }
 
@@ -198,11 +204,7 @@
         async function loadOrders() {
             try {
                 showLoading();
-                const response = await axios.get('/user/orders/data', {
-                    headers: {
-                        'Content-Type': 'application/json'
-                    }
-                });
+                const response = await axios.get('/user/orders/data');
                 orders = response.data.orders || [];
                 filteredOrders = [...orders];
                 
@@ -223,16 +225,15 @@
             const statusFilter = document.getElementById('status-filter').value;
 
             filteredOrders = orders.filter(order => {
-                // Search filter
-                const matchesSearch = !searchTerm || 
+                const matchesSearch = !searchTerm ||
                     order.orderId.toLowerCase().includes(searchTerm) ||
-                    order.items.some(item => 
+                    order.items.some(item =>
                         item.productName.toLowerCase().includes(searchTerm) ||
                         item.brand.toLowerCase().includes(searchTerm)
                     );
 
-                // Status filter
-                const matchesStatus = statusFilter === 'all' || 
+                const matchesStatus = statusFilter === 'all' ||
+                    order.orderStatus === statusFilter ||
                     order.items.some(item => item.status === statusFilter);
 
                 return matchesSearch && matchesStatus;
@@ -272,10 +273,8 @@
         function createOrderElement(order) {
             const orderDiv = document.createElement('div');
             orderDiv.className = 'order-card';
-            
             const orderStatus = getOrderStatus(order);
             const statusInfo = statusConfig[orderStatus];
-            const orderTotal = getOrderTotal(order);
 
             orderDiv.innerHTML = `
                 <div class="order-header" onclick="toggleOrder('${order._id}')">
@@ -284,25 +283,33 @@
                             <h3 class="order-id">Order #${order.orderId}</h3>
                             <p class="order-meta">
                                 <i class="fas fa-calendar"></i>
-                                ${formatDate(order.orderDate)} • ${order.items.length} item${order.items.length > 1 ? 's' : ''}
+                                ${formatDate(order.createdAt)} • ${order.items.length} item${order.items.length > 1 ? 's' : ''}
                             </p>
                         </div>
                         <div class="order-status">
                             <span class="status-badge" style="background-color: ${statusInfo.bg}; color: ${statusInfo.text};">
                                 <i class="${statusInfo.icon}"></i>
-                                ${orderStatus.charAt(0).toUpperCase() + orderStatus.slice(1)}
+                                ${orderStatus}
                             </span>
                         </div>
                         <div class="order-total">
-                            <span class="total-amount">₹${orderTotal.toLocaleString()}</span>
+                            <span class="total-amount">₹${order.totalAmount.toLocaleString()}</span>
                         </div>
                         <div class="order-actions">
                             <button class="action-btn view-btn" onclick="event.stopPropagation(); viewOrderDetails('${order.orderId}')">
                                 <i class="fas fa-eye"></i> View Details
                             </button>
-                            ${orderStatus === 'placed' ? `
-                                <button class="action-btn cancel-btn" onclick="event.stopPropagation(); handleCancelOrder('${order._id}')">
+                            <button class="action-btn download-btn" onclick="event.stopPropagation(); downloadInvoice('${order.orderId}')">
+                                <i class="fas fa-download"></i> Invoice
+                            </button>
+                            ${canCancelEntireOrder(order) ? `
+                                <button class="action-btn cancel-btn" onclick="event.stopPropagation(); cancelEntireOrder('${order.orderId}')">
                                     <i class="fas fa-times"></i> Cancel Order
+                                </button>
+                            ` : ''}
+                            ${canReturnEntireOrder(order) ? `
+                                <button class="action-btn return-btn" onclick="event.stopPropagation(); returnEntireOrder('${order.orderId}')">
+                                    <i class="fas fa-undo"></i> Return Order
                                 </button>
                             ` : ''}
                         </div>
@@ -323,40 +330,61 @@
 
         // Create individual product card
         function createProductCard(order, item) {
-            const statusInfo = statusConfig[item.status?.toLowerCase()] || statusConfig.placed;
-            const canReturn = ['delivered'].includes(item.status?.toLowerCase()) && !item.returnReason;
+            const statusInfo = statusConfig[item.status] || statusConfig['Placed'];
+            const canCancel = item.status === 'Placed';
+            const canReturn = item.status === 'Delivered' && !item.returnReason;
 
             return `
                 <div class="product-item">
                     <div class="product-info">
-                        <h4 class="product-name">${item.productName}</h4>
-                        <div class="product-details">
-                            <span class="product-brand"><i class="fas fa-tag"></i> ${item.brand || 'N/A'}</span>
-                            <span class="product-quantity"><i class="fas fa-cubes"></i> Qty: ${item.quantity}</span>
-                            <span class="product-price"><i class="fas fa-rupee-sign"></i> ₹${item.price?.toLocaleString()} each</span>
+                        <div class="product-image">
+                            <img src="${item.image?.url || '/placeholder.svg?height=80&width=80'}" 
+                                 alt="${item.productName}" 
+                                 onerror="this.src='/placeholder.svg?height=80&width=80'" />
                         </div>
-                        ${item.returnReason ? `
-                            <div class="return-info">
-                                <i class="fas fa-info-circle"></i>
-                                Return requested: ${item.returnReason.substring(0, 50)}...
+                        <div class="product-details-text">
+                            <h4 class="product-name">${item.productName}</h4>
+                            <div class="product-details">
+                                <span class="product-brand"><i class="fas fa-tag"></i> ${item.brand}</span>
+                                <span class="product-quantity"><i class="fas fa-cubes"></i> Qty: ${item.quantity}</span>
+                                <span class="product-price"><i class="fas fa-rupee-sign"></i> ₹${item.price?.toLocaleString()} each</span>
                             </div>
-                        ` : ''}
+                            ${item.returnReason ? `
+                                <div class="return-info">
+                                    <i class="fas fa-info-circle"></i>
+                                    Return requested: ${item.returnReason.substring(0, 50)}...
+                                </div>
+                            ` : ''}
+                            ${item.cancelReason ? `
+                                <div class="cancel-info">
+                                    <i class="fas fa-info-circle"></i>
+                                    Cancelled: ${item.cancelReason.substring(0, 50)}...
+                                </div>
+                            ` : ''}
+                        </div>
                     </div>
                     <div class="product-actions">
                         <div class="product-status">
                             <span class="status-badge" style="background-color: ${statusInfo.bg}; color: ${statusInfo.text};">
                                 <i class="${statusInfo.icon}"></i>
-                                ${item.status || 'Placed'}
+                                ${item.status}
                             </span>
                         </div>
                         <div class="product-total">
                             ₹${(item.price * item.quantity).toLocaleString()}
                         </div>
-                        ${canReturn ? `
-                            <button class="return-btn" onclick="initiateReturn('${order._id}', '${item.productId}')">
-                                <i class="fas fa-undo"></i> Return
-                            </button>
-                        ` : ''}
+                        <div class="item-actions">
+                            ${canCancel ? `
+                                <button class="item-action-btn cancel-item-btn" onclick="cancelItem('${order.orderId}', '${item._id}')">
+                                    <i class="fas fa-times"></i> Cancel
+                                </button>
+                            ` : ''}
+                            ${canReturn ? `
+                                <button class="item-action-btn return-item-btn" onclick="returnItem('${order.orderId}', '${item._id}', '${item.productName}')">
+                                    <i class="fas fa-undo"></i> Return
+                                </button>
+                            ` : ''}
+                        </div>
                     </div>
                 </div>
             `;
@@ -366,7 +394,7 @@
         function toggleOrder(orderId) {
             const content = document.getElementById(`order-content-${orderId}`);
             const icon = content.parentElement.querySelector('.expand-icon i');
-            
+
             if (content.classList.contains('expanded')) {
                 content.classList.remove('expanded');
                 icon.classList.remove('fa-chevron-up');
@@ -378,33 +406,160 @@
             }
         }
 
-        // Get order status based on items
+        // Get order status based on order and items
         function getOrderStatus(order) {
+            if (order.orderStatus && order.orderStatus !== 'Placed') {
+                return order.orderStatus;
+            }
+
             const statuses = order.items.map(item => item.status);
-            if (statuses.every(status => status === 'delivered')) return 'delivered';
-            if (statuses.some(status => status === 'cancelled')) return 'cancelled';
-            if (statuses.some(status => status === 'returned')) return 'returned';
-            if (statuses.some(status => status === 'shipped')) return 'shipped';
-            return 'placed';
+            if (statuses.every(status => status === 'Delivered')) return 'Delivered';
+            if (statuses.some(status => status === 'Cancelled')) return 'Cancelled';
+            if (statuses.some(status => status === 'Returned')) return 'Returned';
+            if (statuses.some(status => status === 'Shipped')) return 'Shipped';
+            return 'Placed';
         }
 
-        // Calculate order total
-        function getOrderTotal(order) {
-            const subtotal = order.items.reduce((sum, item) => sum + (item.price * item.quantity), 0);
-            return subtotal - (order.discount || 0);
+        // Check if entire order can be cancelled
+        function canCancelEntireOrder(order) {
+            return order.orderStatus === 'Placed' && 
+                   order.items.some(item => item.status === 'Placed');
         }
 
-        // Handle order cancellation
-        async function handleCancelOrder(orderId) {
-            if (!confirm('Are you sure you want to cancel this order?')) return;
+        // Check if entire order can be returned
+        function canReturnEntireOrder(order) {
+            return order.items.some(item => item.status === 'Delivered' && !item.returnReason);
+        }
+
+        // Cancel individual item
+        async function cancelItem(orderId, itemId) {
+            if (!confirm('Are you sure you want to cancel this item?')) return;
 
             try {
-                await axios.post(`/api/orders/${orderId}/cancel`);
+                await axios.post(`/user/orders/${orderId}/cancel/${itemId}`);
+                showToast('Item cancelled successfully!', 'success');
+                await loadOrders();
+            } catch (error) {
+                console.error('Error cancelling item:', error);
+                showToast(error.response?.data?.message || 'Failed to cancel item', 'error');
+            }
+        }
+
+        // Cancel entire order
+        async function cancelEntireOrder(orderId) {
+            if (!confirm('Are you sure you want to cancel this entire order?')) return;
+
+            try {
+                await axios.post(`/user/orders/${orderId}/cancel`);
                 showToast('Order cancelled successfully!', 'success');
                 await loadOrders();
             } catch (error) {
                 console.error('Error cancelling order:', error);
                 showToast(error.response?.data?.message || 'Failed to cancel order', 'error');
+            }
+        }
+
+        // Return individual item
+        function returnItem(orderId, itemId, productName) {
+            currentReturnOrder = orderId;
+            currentReturnItem = itemId;
+            isEntireOrderReturn = false;
+
+            const returnDetails = document.getElementById('return-item-details');
+            returnDetails.innerHTML = `
+                <div class="return-product-info">
+                    <h4>Return Item: ${productName}</h4>
+                    <p><strong>Order ID:</strong> ${orderId}</p>
+                </div>
+            `;
+
+            resetReturnForm();
+            showReturnModal();
+        }
+
+        // Return entire order
+        function returnEntireOrder(orderId) {
+            currentReturnOrder = orderId;
+            currentReturnItem = null;
+            isEntireOrderReturn = true;
+
+            const returnDetails = document.getElementById('return-item-details');
+            returnDetails.innerHTML = `
+                <div class="return-product-info">
+                    <h4>Return Entire Order</h4>
+                    <p><strong>Order ID:</strong> ${orderId}</p>
+                </div>
+            `;
+
+            resetReturnForm();
+            showReturnModal();
+        }
+
+        // Handle return form submission
+        async function handleReturnSubmission(event) {
+            event.preventDefault();
+
+            const reasonSelect = document.getElementById('return-reason-select');
+            const customReason = document.getElementById('custom-return-reason');
+            
+            let returnReason = reasonSelect.value;
+            if (returnReason === 'Other') {
+                returnReason = customReason.value.trim();
+                if (!returnReason) {
+                    showToast('Please provide a custom reason', 'error');
+                    return;
+                }
+            }
+
+            if (!returnReason) {
+                showToast('Please select a return reason', 'error');
+                return;
+            }
+
+            const submitBtn = document.getElementById('submit-return-btn');
+            submitBtn.disabled = true;
+            submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Processing...';
+
+            try {
+                const url = isEntireOrderReturn 
+                    ? `/user/orders/${currentReturnOrder}/return`
+                    : `/user/orders/${currentReturnOrder}/return/${currentReturnItem}`;
+
+                await axios.post(url, { returnReason });
+                
+                showToast('Return request submitted successfully!', 'success');
+                closeReturnModal();
+                await loadOrders();
+            } catch (error) {
+                console.error('Error submitting return:', error);
+                showToast(error.response?.data?.message || 'Failed to submit return request', 'error');
+            } finally {
+                submitBtn.disabled = false;
+                submitBtn.innerHTML = '<i class="fas fa-undo"></i> Submit Return Request';
+            }
+        }
+
+        // Download invoice
+        async function downloadInvoice(orderId) {
+            try {
+                const response = await axios.get(`/user/orders/invoice/${orderId}`, {
+                    responseType: 'blob'
+                });
+
+                const blob = new Blob([response.data], { type: 'application/pdf' });
+                const url = window.URL.createObjectURL(blob);
+                const link = document.createElement('a');
+                link.href = url;
+                link.download = `invoice-${orderId}.pdf`;
+                document.body.appendChild(link);
+                link.click();
+                document.body.removeChild(link);
+                window.URL.revokeObjectURL(url);
+
+                showToast('Invoice downloaded successfully!', 'success');
+            } catch (error) {
+                console.error('Error downloading invoice:', error);
+                showToast(error.response?.data?.message || 'Failed to download invoice', 'error');
             }
         }
 
@@ -425,10 +580,6 @@
 
         // Create order details content for modal
         function createOrderDetailsContent(order) {
-            const totalAmount = order.items.reduce((sum, item) => sum + (item.price * item.quantity), 0);
-            const discount = order.discount || 0;
-            const finalAmount = totalAmount - discount;
-
             return `
                 <div class="order-details-grid">
                     <div class="details-section">
@@ -439,18 +590,16 @@
                         </div>
                         <div class="detail-item">
                             <span class="label">Order Date:</span>
-                            <span class="value">${formatDate(order.orderDate)}</span>
+                            <span class="value">${formatDate(order.createdAt)}</span>
                         </div>
                         <div class="detail-item">
                             <span class="label">Payment Method:</span>
-                            <span class="value">${order.paymentMethod || 'N/A'}</span>
+                            <span class="value">${order.paymentMethod}</span>
                         </div>
-                        ${order.couponCode ? `
-                            <div class="detail-item">
-                                <span class="label">Coupon Applied:</span>
-                                <span class="value coupon-code">${order.couponCode}</span>
-                            </div>
-                        ` : ''}
+                        <div class="detail-item">
+                            <span class="label">Payment Status:</span>
+                            <span class="value">${order.paymentStatus}</span>
+                        </div>
                     </div>
                     <div class="details-section">
                         <h3><i class="fas fa-map-marker-alt"></i> Shipping Address</h3>
@@ -471,13 +620,15 @@
                             </div>
                             ${order.items.map(item => `
                                 <div class="table-row">
-                                    <span class="product-name">${item.productName}</span>
-                                    <span>${item.brand || 'N/A'}</span>
+                                    <div class="product-cell">
+                                        <span class="product-name">${item.productName}</span>
+                                    </div>
+                                    <span>${item.brand}</span>
                                     <span>${item.quantity}</span>
                                     <span>₹${item.price?.toLocaleString()}</span>
                                     <span>
-                                        <div class="status-badge" style="background-color: ${statusConfig[item.status?.toLowerCase()]?.bg}; color: ${statusConfig[item.status?.toLowerCase()]?.text};">
-                                            ${item.status || 'Placed'}
+                                        <div class="status-badge" style="background-color: ${statusConfig[item.status]?.bg}; color: ${statusConfig[item.status]?.text};">
+                                            ${item.status}
                                         </div>
                                     </span>
                                     <span class="item-total">₹${(item.price * item.quantity).toLocaleString()}</span>
@@ -490,86 +641,22 @@
                         <div class="summary-table">
                             <div class="summary-row">
                                 <span>Subtotal:</span>
-                                <span>₹${totalAmount.toLocaleString()}</span>
+                                <span>₹${order.subtotal.toLocaleString()}</span>
                             </div>
-                            ${discount > 0 ? `
+                            ${order.discount > 0 ? `
                                 <div class="summary-row discount">
                                     <span>Discount:</span>
-                                    <span>-₹${discount.toLocaleString()}</span>
+                                    <span>-₹${order.discount.toLocaleString()}</span>
                                 </div>
                             ` : ''}
                             <div class="summary-row total">
                                 <span>Total Amount:</span>
-                                <span>₹${finalAmount.toLocaleString()}</span>
+                                <span>₹${order.totalAmount.toLocaleString()}</span>
                             </div>
                         </div>
                     </div>
                 </div>
             `;
-        }
-
-        // Initiate return process
-        function initiateReturn(orderId, productId) {
-            const order = orders.find(o => o._id === orderId);
-            const product = order?.items.find(item => item.productId === productId);
-
-            if (!order || !product) {
-                showToast('Item not found', 'error');
-                return;
-            }
-
-            currentReturnOrder = orderId;
-            currentReturnProduct = productId;
-
-            // Populate return modal with product details
-            const returnDetails = document.getElementById('return-item-details');
-            returnDetails.innerHTML = `
-                <div class="return-product-info">
-                    <h4>${product.productName}</h4>
-                    <p><strong>Brand:</strong> ${product.brand || 'N/A'}</p>
-                    <p><strong>Quantity:</strong> ${product.quantity}</p>
-                    <p><strong>Price:</strong> ₹${product.price?.toLocaleString()}</p>
-                    <p><strong>Order ID:</strong> ${order.orderId}</p>
-                </div>
-            `;
-
-            // Reset form
-            document.getElementById('return-form').reset();
-            updateCharacterCount();
-            showReturnModal();
-        }
-
-        // Handle return form submission
-        async function handleReturnSubmission(event) {
-            event.preventDefault();
-            const returnReason = document.getElementById('return-reason').value.trim();
-
-            if (!returnReason || returnReason.length < 10) {
-                showToast('Please provide a detailed return reason (minimum 10 characters)', 'error');
-                return;
-            }
-
-            const submitBtn = document.getElementById('submit-return-btn');
-            submitBtn.disabled = true;
-            submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Processing...';
-
-            try {
-                await axios.post('/api/orders/return', {
-                    orderId: currentReturnOrder,
-                    productId: currentReturnProduct,
-                    returnReason: returnReason
-                });
-
-                showToast('Return request submitted successfully!', 'success');
-                closeReturnModal();
-                await loadOrders();
-            } catch (error) {
-                console.error('Error submitting return:', error);
-                showToast(error.response?.data?.message || 'Failed to submit return request', 'error');
-            } finally {
-                submitBtn.disabled = false;
-                submitBtn.innerHTML = '<i class="fas fa-undo"></i> Submit Return Request';
-            }
         }
 
         // Utility Functions
@@ -584,18 +671,26 @@
         function formatAddress(address) {
             if (!address) return 'Address not available';
             return `
-                <p><strong>${address.fullName || 'N/A'}</strong></p>
-                <p>${address.addressLine1 || ''}</p>
-                ${address.addressLine2 ? `<p>${address.addressLine2}</p>` : ''}
-                <p>${address.city || ''}, ${address.state || ''} ${address.pincode || ''}</p>
-                ${address.phone ? `<p><i class="fas fa-phone"></i> ${address.phone}</p>` : ''}
+                <p><strong>${address.fullName}</strong></p>
+                <p>${address.addressLine}</p>
+                ${address.landmark ? `<p>${address.landmark}</p>` : ''}
+                <p>${address.city}, ${address.state} ${address.pincode}</p>
+                <p>${address.country}</p>
+                <p><i class="fas fa-phone"></i> ${address.phone}</p>
             `;
         }
 
         function updateCharacterCount() {
-            const textarea = document.getElementById('return-reason');
+            const textarea = document.getElementById('custom-return-reason');
             const counter = document.getElementById('char-count');
             counter.textContent = textarea.value.length;
+        }
+
+        function resetReturnForm() {
+            document.getElementById('return-form').reset();
+            document.getElementById('custom-reason-group').style.display = 'none';
+            document.getElementById('custom-return-reason').required = false;
+            updateCharacterCount();
         }
 
         // Modal Controls
@@ -618,7 +713,8 @@
             document.getElementById('return-modal').style.display = 'none';
             document.body.style.overflow = 'auto';
             currentReturnOrder = null;
-            currentReturnProduct = null;
+            currentReturnItem = null;
+            isEntireOrderReturn = false;
         }
 
         // UI State Management
@@ -670,7 +766,6 @@
 
             document.getElementById('toast-container').appendChild(toast);
 
-            // Auto remove after 5 seconds
             setTimeout(() => {
                 if (toast.parentElement) {
                     toast.remove();

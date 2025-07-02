@@ -799,7 +799,7 @@
 
 							let subtotal = 0;
 							items.forEach(item => {
-								subtotal += item.productId.price * item.quantity;
+								subtotal += item.productId.finalPrice * item.quantity;
 							});
 
 							// const shipping = subtotal > 500 ? 0 : 50; // Free shipping over ₹500
@@ -893,11 +893,13 @@
 
 							let subtotal = 0;
 							checkoutData.items.forEach(item => {
-								subtotal += item.productId.price * item.quantity;
+								subtotal += item.productId.finalPrice * item.quantity;
 							});
 
-							const shipping = subtotal > 500 ? 0 : 50;
-							const tax = Math.round(subtotal * 0.18);
+							// const shipping = subtotal > 500 ? 0 : 50;
+							// const tax = Math.round(subtotal * 0.18);
+							const shipping = 0;
+							const tax = 0;
 							return subtotal + shipping + tax;
 						}
 

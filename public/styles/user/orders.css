@@ -9,7 +9,6 @@ body {
   font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
   background-color: #f8fafc;
   color: #334155;
-  line-height: 1.6;
 }
 
 .wrapper {
@@ -40,7 +39,6 @@ body {
   padding: 2rem;
   border-radius: 12px;
   box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
-  border-left: 4px solid #3b82f6;
 }
 
 .page-header h1 {
@@ -377,6 +375,7 @@ body {
   display: flex;
   gap: 0.5rem;
   flex-shrink: 0;
+  flex-wrap: wrap;
 }
 
 .action-btn {
@@ -390,6 +389,7 @@ body {
   gap: 0.5rem;
   transition: all 0.2s;
   font-weight: 500;
+  white-space: nowrap;
 }
 
 .view-btn {
@@ -401,6 +401,15 @@ body {
   background: #2563eb;
 }
 
+.download-btn {
+  background: #10b981;
+  color: white;
+}
+
+.download-btn:hover {
+  background: #059669;
+}
+
 .cancel-btn {
   background: #ef4444;
   color: white;
@@ -408,6 +417,15 @@ body {
 
 .cancel-btn:hover {
   background: #dc2626;
+}
+
+.return-btn {
+  background: #f59e0b;
+  color: white;
+}
+
+.return-btn:hover {
+  background: #d97706;
 }
 
 .expand-icon {
@@ -451,6 +469,31 @@ body {
 
 .product-info {
   flex: 1;
+  display: flex;
+  gap: 1rem;
+  align-items: center;
+}
+
+.product-image {
+  flex-shrink: 0;
+  width: 80px;
+  height: 80px;
+  border-radius: 8px;
+  overflow: hidden;
+  background: #f1f5f9;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.product-image img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.product-details-text {
+  flex: 1;
 }
 
 .product-name {
@@ -464,6 +507,7 @@ body {
   display: flex;
   gap: 1rem;
   flex-wrap: wrap;
+  margin-bottom: 0.5rem;
 }
 
 .product-details span {
@@ -484,7 +528,8 @@ body {
   font-weight: 600;
 }
 
-.return-info {
+.return-info,
+.cancel-info {
   margin-top: 0.5rem;
   padding: 0.5rem;
   background: #fef3c7;
@@ -494,6 +539,11 @@ body {
   display: flex;
   align-items: center;
   gap: 0.5rem;
+}
+
+.cancel-info {
+  background: #fee2e2;
+  color: #991b1b;
 }
 
 .product-actions {
@@ -509,22 +559,41 @@ body {
   color: #059669;
 }
 
-.return-btn {
-  background: #f59e0b;
-  color: white;
+.item-actions {
+  display: flex;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+}
+
+.item-action-btn {
+  padding: 0.375rem 0.75rem;
   border: none;
-  padding: 0.5rem 1rem;
-  border-radius: 6px;
+  border-radius: 4px;
   font-size: 0.75rem;
   cursor: pointer;
   display: flex;
   align-items: center;
-  gap: 0.5rem;
-  transition: background-color 0.2s;
+  gap: 0.375rem;
+  transition: all 0.2s;
+  font-weight: 500;
   white-space: nowrap;
 }
 
-.return-btn:hover {
+.cancel-item-btn {
+  background: #ef4444;
+  color: white;
+}
+
+.cancel-item-btn:hover {
+  background: #dc2626;
+}
+
+.return-item-btn {
+  background: #f59e0b;
+  color: white;
+}
+
+.return-item-btn:hover {
   background: #d97706;
 }
 
@@ -637,14 +706,6 @@ body {
 .detail-item .value {
   color: #1e293b;
   font-weight: 600;
-}
-
-.coupon-code {
-  background: #dcfce7;
-  color: #16a34a;
-  padding: 0.25rem 0.5rem;
-  border-radius: 4px;
-  font-size: 0.875rem;
 }
 
 .address-block {
@@ -768,6 +829,7 @@ body {
   color: #3b82f6;
 }
 
+.form-group select,
 .form-group textarea {
   width: 100%;
   padding: 0.75rem;
@@ -775,16 +837,20 @@ body {
   border-radius: 6px;
   font-family: inherit;
   font-size: 1rem;
-  line-height: 1.5;
-  resize: vertical;
-  min-height: 120px;
   transition: border-color 0.2s;
 }
 
+.form-group select:focus,
 .form-group textarea:focus {
   outline: none;
   border-color: #3b82f6;
   box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+}
+
+.form-group textarea {
+  line-height: 1.5;
+  resize: vertical;
+  min-height: 120px;
 }
 
 .char-counter {
@@ -993,10 +1059,23 @@ body {
     gap: 1rem;
   }
 
+  .product-info {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .product-image {
+    align-self: center;
+  }
+
   .product-actions {
     flex-direction: row;
     justify-content: space-between;
     align-items: center;
+  }
+
+  .item-actions {
+    justify-content: flex-end;
   }
 
   .table-header,
@@ -1068,5 +1147,10 @@ body {
   .action-btn {
     padding: 0.5rem 0.75rem;
     font-size: 0.75rem;
+  }
+
+  .item-action-btn {
+    padding: 0.25rem 0.5rem;
+    font-size: 0.625rem;
   }
 }
