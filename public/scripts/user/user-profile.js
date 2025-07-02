@@ -1,5 +1,3 @@
-
-
 const Profile = {
     // Initialize the profile page
     init() {
@@ -7,6 +5,25 @@ const Profile = {
         this.loadCartCount();
         this.loadWishlistCount();
         this.showWelcomeToast();
+        this.initializeAvatarUpload();
+    },
+
+    // Initialize avatar upload functionality
+    initializeAvatarUpload() {
+        const avatarInput = document.getElementById('avatarInput');
+        if (avatarInput) {
+            avatarInput.addEventListener('change', this.handleAvatarSelect.bind(this));
+        }
+
+        // Close modal on outside click
+        const modal = document.getElementById('avatarModal');
+        if (modal) {
+            modal.addEventListener('click', (e) => {
+                if (e.target === modal) {
+                    this.closeAvatarModal();
+                }
+            });
+        }
     },
 
     // Bind event listeners
@@ -65,6 +82,213 @@ const Profile = {
         }
     },
 
+    // Avatar Modal Functions
+    openAvatarModal() {
+        const modal = document.getElementById('avatarModal');
+        if (modal) {
+            modal.classList.add('show');
+            document.body.style.overflow = 'hidden';
+        }
+    },
+
+    closeAvatarModal() {
+        const modal = document.getElementById('avatarModal');
+        const cropSection = document.getElementById('cropSection');
+        const avatarInput = document.getElementById('avatarInput');
+        const saveBtn = document.getElementById('saveAvatarBtn');
+
+        if (modal) {
+            modal.classList.remove('show');
+            document.body.style.overflow = 'auto';
+        }
+
+        // Reset modal state
+        if (cropSection) {
+            cropSection.style.display = 'none';
+        }
+        if (avatarInput) {
+            avatarInput.value = '';
+        }
+        if (saveBtn) {
+            saveBtn.disabled = true;
+        }
+
+        // Destroy cropper if exists
+        if (this.cropper) {
+            this.cropper.destroy();
+            this.cropper = null;
+        }
+    },
+
+    // Handle avatar file selection
+    handleAvatarSelect(event) {
+        const file = event.target.files[0];
+        
+        if (!file) return;
+
+        // Validate file type
+        if (!file.type.match(/^image\/(jpeg|jpg|png|gif)$/)) {
+            this.showToast('Please select a valid image file (JPG, PNG, or GIF)', 'error');
+            return;
+        }
+
+        // Validate file size (5MB limit)
+        if (file.size > 5 * 1024 * 1024) {
+            this.showToast('Image size must be less than 5MB', 'error');
+            return;
+        }
+
+        // Read and display file for cropping
+        const reader = new FileReader();
+        reader.onload = (e) => {
+            this.initializeCropper(e.target.result);
+        };
+        reader.readAsDataURL(file);
+    },
+
+    // Initialize cropper
+    initializeCropper(imageSrc) {
+        const cropImage = document.getElementById('cropImage');
+        const cropSection = document.getElementById('cropSection');
+        const saveBtn = document.getElementById('saveAvatarBtn');
+
+        if (!cropImage || !cropSection) return;
+
+        // Show crop section
+        cropSection.style.display = 'block';
+        saveBtn.disabled = false;
+
+        // Set image source
+        cropImage.src = imageSrc;
+
+        // Destroy existing cropper
+        if (this.cropper) {
+            this.cropper.destroy();
+        }
+
+        // Initialize new cropper
+        this.cropper = new Cropper(cropImage, {
+            aspectRatio: 1,
+            viewMode: 2,
+            dragMode: 'move',
+            autoCropArea: 0.8,
+            restore: false,
+            guides: true,
+            center: true,
+            highlight: false,
+            cropBoxMovable: true,
+            cropBoxResizable: true,
+            toggleDragModeOnDblclick: false,
+            ready: () => {
+                // Cropper is ready
+                this.showToast('Drag to position and resize the crop area', 'info');
+            }
+        });
+    },
+
+    // Rotate crop
+    rotateCrop(degrees) {
+        if (this.cropper) {
+            this.cropper.rotate(degrees);
+        }
+    },
+
+    // Reset crop
+    resetCrop() {
+        if (this.cropper) {
+            this.cropper.reset();
+        }
+    },
+
+    // Save avatar
+    async saveAvatar() {
+        if (!this.cropper) {
+            this.showToast('No image selected', 'error');
+            return;
+        }
+
+        const saveBtn = document.getElementById('saveAvatarBtn');
+        const originalText = saveBtn.innerHTML;
+
+        try {
+            // Show loading state
+            saveBtn.innerHTML = '<div class="loading"></div> Saving...';
+            saveBtn.disabled = true;
+
+            // Get cropped canvas
+            const canvas = this.cropper.getCroppedCanvas({
+                width: 400,
+                height: 400,
+                imageSmoothingEnabled: true,
+                imageSmoothingQuality: 'high'
+            });
+
+            // Convert to blob
+            const blob = await new Promise(resolve => {
+                canvas.toBlob(resolve, 'image/jpeg', 0.8);
+            });
+
+            // Create form data
+            const formData = new FormData();
+            formData.append('avatar', blob, 'avatar.jpg');
+
+            // Upload avatar
+            const response = await axios.post('/user/profile/change/avatar', formData, {
+                headers: {
+                    'Content-Type': 'multipart/form-data'
+                },
+                timeout: 30000
+            });
+
+            if (response.data && response.data.success) {
+                // Update avatar in UI
+                this.updateAvatarDisplay(response.data.avatarUrl);
+                this.showToast('Avatar updated successfully!', 'success');
+                this.closeAvatarModal();
+                window.location.reload();
+            } else {
+                throw new Error(response.data?.message || 'Failed to update avatar');
+            }
+
+        } catch (error) {
+            console.error('Error updating avatar:', error);
+            
+            let errorMessage = 'Failed to update avatar. Please try again.';
+            if (error.response) {
+                errorMessage = error.response.data?.message || errorMessage;
+            } else if (error.code === 'ECONNABORTED') {
+                errorMessage = 'Upload timeout. Please check your connection and try again.';
+            }
+
+            this.showToast(errorMessage, 'error');
+        } finally {
+            // Reset button state
+            saveBtn.innerHTML = originalText;
+            saveBtn.disabled = false;
+        }
+    },
+
+    // Update avatar display in UI
+    updateAvatarDisplay(avatarUrl) {
+        const profileAvatar = document.getElementById('profileAvatarImg');
+        
+        if (profileAvatar) {
+            if (profileAvatar.tagName === 'IMG') {
+                // Update existing image
+                profileAvatar.src = avatarUrl;
+            } else {
+                // Replace default avatar div with image
+                const newImg = document.createElement('img');
+                newImg.src = avatarUrl;
+                newImg.alt = 'Profile Avatar';
+                newImg.className = 'profile-avatar';
+                newImg.id = 'profileAvatarImg';
+                
+                profileAvatar.parentNode.replaceChild(newImg, profileAvatar);
+            }
+        }
+    },
+
     // Toggle edit mode for forms
     async toggleEdit(section) {
         const form = document.getElementById(section + 'Form');
@@ -109,7 +333,7 @@ const Profile = {
                 data[input.id] = input.value.trim();
             }
         });
-        // data.userId = user._id;
+
         // Validate data before sending
         const validation = this.validateBasicInfo(data);
         if (!validation.isValid) {
@@ -268,11 +492,12 @@ const Profile = {
             inputElement.classList.remove('error');
         }
     },
+
     async sentEmailChangeLink(){
         try {
             const response = await axios.get('/user/send-reset-link')
             if(response.data && response.data.success){
-                this.showToast('Resent link sent to registered email', 'success');
+                this.showToast('Reset link sent to registered email', 'success');
             }else{
                 this.showToast('Something went wrong', 'error');
             }
@@ -281,133 +506,58 @@ const Profile = {
             this.showToast('Failed to reset password', 'error');
         }
     },
-    // // Change password function
-    // changePassword() {
-    //     this.showToast('Redirecting to change password...', 'info');
-    //     setTimeout(() => {
-    //         window.location.href = '/user/change-password';
-    //     }, 1000);
-    // },
-
-    // // Resend verification email
-    // async resendVerification() {
-    //     try {
-    //         this.showToast('Sending verification email...', 'info');
-
-    //         const response = await axios.post('/user/resend-verification', {}, {
-    //             timeout: 10000
-    //         });
-
-    //         if (response.data.success) {
-    //             this.showToast('Verification email sent successfully!', 'success');
-    //         } else {
-    //             throw new Error(response.data.message || 'Failed to send verification email');
-    //         }
-    //     } catch (error) {
-    //         console.error('Error resending verification:', error);
-    //         const errorMessage = error.response?.data?.message || 'Failed to send verification email';
-    //         this.showToast(errorMessage, 'error');
-    //     }
-    // },
-
-    // // Delete account (with confirmation)
-    // async deleteAccount() {
-    //     const confirmed = confirm(
-    //         'Are you sure you want to delete your account? This action cannot be undone and will permanently remove all your data.'
-    //     );
-
-    //     if (!confirmed) return;
-
-    //     const doubleConfirm = confirm(
-    //         'This is your final warning. Are you absolutely sure you want to delete your account? Type "DELETE" to confirm.'
-    //     );
-
-    //     if (!doubleConfirm) return;
-
-    //     try {
-    //         this.showToast('Processing account deletion...', 'warning');
-
-    //         const response = await axios.delete('/user/account', {
-    //             timeout: 15000
-    //         });
-
-    //         if (response.data.success) {
-    //             this.showToast('Account deleted successfully. Redirecting...', 'success');
-    //             setTimeout(() => {
-    //                 window.location.href = '/';
-    //             }, 2000);
-    //         } else {
-    //             throw new Error(response.data.message || 'Failed to delete account');
-    //         }
-    //     } catch (error) {
-    //         console.error('Error deleting account:', error);
-    //         const errorMessage = error.response?.data?.message || 'Failed to delete account';
-    //         this.showToast(errorMessage, 'error');
-    //     }
-    // },
 
     // Search functionality
+    // Search functionality (completing the cut-off part)
     performSearch() {
         const searchInput = document.getElementById('searchInput');
         const query = searchInput.value.trim();
-
+        
         if (query) {
+            // Redirect to search page or perform search
             window.location.href = `/search?q=${encodeURIComponent(query)}`;
-        } else {
-            this.showToast('Please enter a search term', 'warning');
         }
     },
 
     // Load cart count
-    async loadCartCount() {
-        try {
-            const response = await axios.get('/user/cart/count');
-            const cartCount = document.getElementById('cart-count');
-            if (cartCount && response.data.count !== undefined) {
-                cartCount.textContent = response.data.count;
-                cartCount.style.display = response.data.count > 0 ? 'flex' : 'none';
-            }
-        } catch (error) {
-            console.error('Error loading cart count:', error);
+    loadCartCount() {
+        // This would typically fetch from an API
+        // For now, just a placeholder
+        const cartCountElement = document.getElementById('cartCount');
+        if (cartCountElement) {
+            // You can implement actual cart count fetching here
+            cartCountElement.textContent = '0';
         }
     },
 
     // Load wishlist count
-    async loadWishlistCount() {
+    loadWishlistCount() {
+        // This would typically fetch from an API
+        // For now, just a placeholder
+        const wishlistCountElement = document.getElementById('wishlistCount');
+        if (wishlistCountElement) {
+            // You can implement actual wishlist count fetching here
+            wishlistCountElement.textContent = '0';
+        }
+    },
+
+    // Resend verification email
+    async resendVerification() {
         try {
-            const response = await axios.get('/user/wishlist/count');
-            const wishlistCount = document.getElementById('wishlist-count');
-            if (wishlistCount && response.data.count !== undefined) {
-                wishlistCount.textContent = response.data.count;
-                wishlistCount.style.display = response.data.count > 0 ? 'flex' : 'none';
+            const response = await axios.post('/user/resend-verification');
+            if (response.data && response.data.success) {
+                this.showToast('Verification email sent successfully!', 'success');
+            } else {
+                this.showToast('Failed to send verification email', 'error');
             }
         } catch (error) {
-            console.error('Error loading wishlist count:', error);
+            console.error('Error resending verification:', error);
+            this.showToast('Failed to send verification email', 'error');
         }
     }
 };
 
-// Global functions for onclick handlers
-function performSearch() {
-    Profile.performSearch();
-}
-
-function hideToast() {
-    Profile.hideToast();
-}
-
 // Initialize when DOM is loaded
-document.addEventListener('DOMContentLoaded', function () {
+document.addEventListener('DOMContentLoaded', () => {
     Profile.init();
 });
-
-// Handle page visibility change
-document.addEventListener('visibilitychange', function () {
-    if (!document.hidden) {
-        // Refresh counts when page becomes visible
-        Profile.loadCartCount();
-        Profile.loadWishlistCount();
-    }
-});
-
-

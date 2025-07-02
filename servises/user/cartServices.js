@@ -49,7 +49,7 @@ export const getCartedProducts = async (userId) => {
   return cart;
 };
 
-
+  
 export const postAddToCartService = async (userId, productId, quantity) => {
   const product = await Products.findById(productId).populate('category');
   if (!product || product.isDeleted || product.isBlocked) {

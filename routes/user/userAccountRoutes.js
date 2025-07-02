@@ -12,6 +12,7 @@ import {
   getProfile,
   postChangeEmail,
   sentPasswordReset,
+  updateAvatarImage,
   updateUserData
 } from '../../controllers/user/userProfileController.js';
 import {
@@ -28,12 +29,13 @@ import {
   removeFormCart,
   updateCartCount
 } from '../../controllers/user/cartManagement.js';
-
+import { avatarUpload } from '../../middlewares/multer.js';
 
 
 userAccountRoutes.get('/profile', authenticateUser, getProfile);
 userAccountRoutes.get('/send-reset-link', authenticateUser, sentPasswordReset)
 userAccountRoutes.patch('/profile/update', authenticateUser, updateUserData)
+userAccountRoutes.post('/profile/change/avatar', authenticateUser, avatarUpload.single('avatar'), updateAvatarImage)
 userAccountRoutes.get('/profile/change-email', authenticateUser, getChangeEmail)
 userAccountRoutes.post('/profile/changeEmialVerificationCode', authenticateUser, postChangeEmail)
 
@@ -49,11 +51,11 @@ userAccountRoutes.post('/profile/wishlist/toggle', authenticateUser, toggleWishl
 userAccountRoutes.get('/profile/wishlist/count', authenticateUser, getWishlistCount)
 userAccountRoutes.get('/profile/wishlist/data', authenticateUser, getWishlistData);
 
-userAccountRoutes.get('/cart', authenticateUser,getCartPage);
+userAccountRoutes.get('/cart', authenticateUser, getCartPage);
 userAccountRoutes.get('/cart/count', authenticateUser, getCartCount);
 userAccountRoutes.get('/cart/products', authenticateUser, getCartProducts);
-userAccountRoutes.patch('/cart',authenticateUser,updateCartCount);
+userAccountRoutes.patch('/cart', authenticateUser, updateCartCount);
 userAccountRoutes.post('/cart/add', authenticateUser, postAddToCart);
-userAccountRoutes.delete('/cart/remove',authenticateUser,removeFormCart)
+userAccountRoutes.delete('/cart/remove', authenticateUser, removeFormCart)
 
 export default userAccountRoutes;

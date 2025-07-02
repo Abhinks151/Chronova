@@ -8,6 +8,10 @@
 			rel="stylesheet"
 			href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css"
 		/>
+		<link
+			rel="stylesheet"
+			href="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.5.12/cropper.min.css"
+		/>
 		<link rel="stylesheet" href="/styles/user/user-profile.css" />
 		<link rel="stylesheet" href="/styles/user/user-profile-sidebar.css" />
 	</head>
@@ -16,6 +20,59 @@
 			<i id="toast-icon" class="fas fa-check-circle"></i>
 			<span id="toast-message">This is a toast</span>
 		</div>
+
+		<!-- Avatar Change Modal -->
+		<div id="avatarModal" class="avatar-modal">
+			<div class="avatar-modal-content">
+				<div class="avatar-modal-header">
+					<h3>Change Profile Picture</h3>
+					<button class="avatar-modal-close" onclick="Profile.closeAvatarModal()">
+						<i class="fas fa-times"></i>
+					</button>
+				</div>
+				<div class="avatar-modal-body">
+					<div class="avatar-upload-section">
+						<input type="file" id="avatarInput" accept="image/*" style="display: none;" />
+						<button class="avatar-upload-btn" onclick="document.getElementById('avatarInput').click()">
+							<i class="fas fa-upload"></i>
+							Choose Image
+						</button>
+						<p class="avatar-upload-help">
+							Upload JPG, PNG or GIF. Max size: 5MB. Recommended: 400x400px
+						</p>
+					</div>
+					<div class="avatar-crop-section" id="cropSection" style="display: none;">
+						<div class="crop-container">
+							<img id="cropImage" />
+						</div>
+						<div class="crop-controls">
+							<button class="crop-btn" onclick="Profile.rotateCrop(-90)">
+								<i class="fas fa-undo"></i>
+								Rotate Left
+							</button>
+							<button class="crop-btn" onclick="Profile.rotateCrop(90)">
+								<i class="fas fa-redo"></i>
+								Rotate Right
+							</button>
+							<button class="crop-btn" onclick="Profile.resetCrop()">
+								<i class="fas fa-refresh"></i>
+								Reset
+							</button>
+						</div>
+					</div>
+				</div>
+				<div class="avatar-modal-footer">
+					<button class="avatar-btn-cancel" onclick="Profile.closeAvatarModal()">
+						Cancel
+					</button>
+					<button class="avatar-btn-save" id="saveAvatarBtn" onclick="Profile.saveAvatar()" disabled>
+						<i class="fas fa-save"></i>
+						Save Avatar
+					</button>
+				</div>
+			</div>
+		</div>
+
 		<div class="main-container">
 			<%- include('../../partials/user-profile-sidebar') %>
 
@@ -30,20 +87,26 @@
 						<div class="avatar-container">
 							<% if (user && user.avatar) { %>
 							<img
-								src="<%= user.avatar %>"
+								src="<%= user.avatar.url %>"
 								alt="Profile Avatar"
 								class="profile-avatar"
+								id="profileAvatarImg"
 							/>
 							<% } else if (user) { %>
-							<div class="default-avatar">
+							<div class="default-avatar" id="profileAvatarImg">
 								<%= user.firstname ?
 								user.firstname.charAt(0).toUpperCase() :
 								(user.firstname ?
 								user.firstname.charAt(0).toUpperCase() : 'U') %>
 							</div>
 							<% } else { %>
-							<div class="default-avatar">U</div>
+							<div class="default-avatar" id="profileAvatarImg">U</div>
 							<% } %>
+							
+							<!-- Avatar change button -->
+							<button class="avatar-change-btn" onclick="Profile.openAvatarModal()" title="Change Avatar">
+								<i class="fas fa-camera"></i>
+							</button>
 						</div>
 						<div class="avatar-info">
 							<h2>
@@ -318,6 +381,7 @@
 			</main>
 		</div>
 		<script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
+		<script src="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.5.12/cropper.min.js"></script>
 		<script src="/scripts/user/user-profile.js"></script>
 	</body>
 </html>

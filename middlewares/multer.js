@@ -13,6 +13,20 @@ const storage = new CloudinaryStorage({
   },
 });
 
+
+export const avatarUpload = multer({
+  storage: new CloudinaryStorage({
+    cloudinary,
+    params: async (req, file) => {
+      return {
+        folder: 'chronova/avatars',
+        allowed_formats: ['jpeg', 'png', 'jpg'],
+        public_id: `avatar-${Date.now()}-${file.originalname.split('.')[0]}`
+      };
+    }
+  })
+});
+
 const upload = multer({ storage });
 
 export default upload;

@@ -1,0 +1,993 @@
+<!DOCTYPE html>
+<html lang="en">
+	<head>
+		<meta charset="UTF-8" />
+		<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+		<title>Checkout</title>
+		<link rel="stylesheet" href="/styles/user/checkout.css" />
+		<link rel="stylesheet" href="/styles/user/user-profile-sidebar.css" />
+		<link
+			rel="stylesheet"
+			href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css"
+		/>
+		<script src="https://cdnjs.cloudflare.com/ajax/libs/axios/1.6.0/axios.min.js"></script>
+	</head>
+	<body>
+		<div id="toast" class="toast">
+			<span id="toast-message"></span>
+		</div>
+
+		<!-- Address Modal -->
+		<div class="modal-overlay" id="addressModal">
+			<div class="modal">
+				<div class="modal-header">
+					<h2 id="modalTitle">Add New Address</h2>
+					<button class="modal-close" onclick="closeModal()">
+						&times;
+					</button>
+				</div>
+				<div class="modal-body">
+					<form id="addressForm">
+						<!-- Hidden field for address ID (only used during edit) -->
+						<input type="hidden" id="addressId" name="addressId" />
+
+						<div class="form-row">
+							<div class="form-group">
+								<label for="addressName">Address Type *</label>
+								<select
+									id="addressName"
+									name="addressName"
+									required
+								>
+									<option value="">
+										Select Address Type
+									</option>
+									<option value="Home">Home</option>
+									<option value="Work">Work</option>
+									<option value="Other">Other</option>
+								</select>
+							</div>
+							<div class="form-group">
+								<label for="fullName">Full Name *</label>
+								<input
+									type="text"
+									id="fullName"
+									name="fullName"
+									placeholder="Enter full name"
+									required
+								/>
+							</div>
+						</div>
+
+						<div class="form-row">
+							<div class="form-group">
+								<label for="phone">Phone Number *</label>
+								<input
+									type="tel"
+									id="phone"
+									name="phone"
+									placeholder="Enter phone number"
+									required
+								/>
+							</div>
+							<div class="form-group">
+								<label for="pincode">Pincode *</label>
+								<input
+									type="text"
+									id="pincode"
+									name="pincode"
+									placeholder="Enter pincode"
+									required
+									oninput="handlePincodeInput()"
+								/>
+							</div>
+						</div>
+
+						<div class="form-group">
+							<label for="addressLine">Address Line *</label>
+							<textarea
+								id="addressLine"
+								name="addressLine"
+								placeholder="House no, Building name, Street, Area"
+								required
+							></textarea>
+						</div>
+
+						<div class="form-row">
+							<div class="form-group">
+								<label for="city">City *</label>
+								<input
+									type="text"
+									id="city"
+									name="city"
+									placeholder="Enter city"
+									required
+								/>
+							</div>
+							<div class="form-group">
+								<label for="state">State *</label>
+								<input
+									type="text"
+									id="state"
+									name="state"
+									placeholder="Enter state"
+									required
+								/>
+							</div>
+						</div>
+
+						<div class="form-group">
+							<label for="country">Country *</label>
+							<input
+								type="text"
+								id="country"
+								name="country"
+								placeholder="Enter country"
+								required
+							/>
+						</div>
+
+						<div class="form-group">
+							<label for="landmark">Landmark</label>
+							<input
+								type="text"
+								id="landmark"
+								name="landmark"
+								placeholder="Enter nearby landmark (optional)"
+							/>
+						</div>
+					</form>
+				</div>
+				<div class="modal-footer">
+					<button
+						type="button"
+						class="btn btn-secondary"
+						onclick="closeModal()"
+					>
+						Cancel
+					</button>
+					<button
+						type="button"
+						class="btn btn-primary"
+						id="saveAddressBtn"
+						onclick="saveAddress()"
+					>
+						<span class="btn-text">Save Address</span>
+						<span class="btn-spinner" style="display: none;">
+							<div class="loading"></div>
+						</span>
+					</button>
+				</div>
+			</div>
+		</div>
+
+		<div class="wrapper">
+			<!-- Sidebar -->
+			<div class="sidebar">
+				<%- include('../../partials/user-profile-sidebar') %>
+			</div>
+
+			<!-- Main Content -->
+			<div class="main-content">
+				<div class="checkout-header">
+					<h1>Checkout</h1>
+					<p class="checkout-subtitle">
+						Review your order and complete your purchase
+					</p>
+				</div>
+
+				<div class="checkout-container">
+					<!-- Order Items -->
+					<div class="order-items">
+						<div class="order-items-header">
+							<h2>Order Items (<span id="itemCount">0</span>)</h2>
+						</div>
+
+						<!-- Loading State -->
+						<div id="loadingState" class="loading">
+							<div class="spinner"></div>
+							<span>Loading your order...</span>
+						</div>
+
+						<!-- Order Items List -->
+						<div
+							id="orderItemsList"
+							class="order-items-list"
+							style="display: none;"
+						>
+							<!-- Items will be dynamically loaded here -->
+						</div>
+
+						<!-- Empty Cart State -->
+						<div
+							id="emptyCart"
+							class="empty-cart"
+							style="display: none;"
+						>
+							<div class="empty-cart-icon">🛒</div>
+							<h3>Your cart is empty</h3>
+							<p>Add some items to get started!</p>
+							<a
+								href="/user/products"
+								class="continue-shopping-btn"
+								>Continue Shopping</a
+							>
+						</div>
+					</div>
+
+					<!-- Checkout Summary -->
+					<div class="checkout-summary">
+						<!-- Address Selection -->
+						<div class="address-section">
+							<div class="address-section-header">
+								<h3 class="section-title">Shipping Address</h3>
+								<button
+									class="add-address-btn-header"
+									onclick="openAddressModal()"
+								>
+									<i class="fas fa-plus"></i>
+									Add New Address
+								</button>
+							</div>
+
+							<!-- Address Loading -->
+							<div id="addressLoading" class="address-loading">
+								<div class="spinner"></div>
+								<span>Loading addresses...</span>
+							</div>
+
+							<!-- Address Grid -->
+							<div
+								id="addressGrid"
+								class="address-grid"
+								style="display: none;"
+							>
+								<!-- Addresses will be loaded here -->
+							</div>
+
+							<!-- Empty Address State -->
+							<div
+								id="emptyAddress"
+								class="address-empty"
+								style="display: none;"
+							>
+								<div class="address-empty-icon">
+									<i class="fas fa-map-marker-alt"></i>
+								</div>
+								<h4>No addresses found</h4>
+								<p>Add your first address to continue</p>
+								<button
+									class="add-address-btn"
+									onclick="openAddressModal()"
+								>
+									<i class="fas fa-plus"></i>
+									Add Address
+								</button>
+							</div>
+						</div>
+
+						<!-- Payment Method -->
+						<div class="payment-section">
+							<h3 class="section-title">Payment Method</h3>
+							<div class="payment-options">
+								<div class="payment-option">
+									<input
+										type="radio"
+										id="cod"
+										name="paymentMethod"
+										value="cod"
+										checked
+									/>
+									<label for="cod" class="payment-label">
+										<div class="payment-icon">
+											<i
+												class="fas fa-money-bill-wave"
+											></i>
+										</div>
+										<div class="payment-details">
+											<span class="payment-title"
+												>Cash on Delivery</span
+											>
+											<span class="payment-description"
+												>Pay when you receive your
+												order</span
+											>
+										</div>
+									</label>
+								</div>
+								<div class="payment-option">
+									<input
+										type="radio"
+										id="online"
+										name="paymentMethod"
+										value="online"
+									/>
+									<label for="online" class="payment-label">
+										<div class="payment-icon">
+											<i class="fas fa-credit-card"></i>
+										</div>
+										<div class="payment-details">
+											<span class="payment-title"
+												>Online Payment</span
+											>
+											<span class="payment-description"
+												>Pay securely with
+												card/UPI</span
+											>
+										</div>
+									</label>
+								</div>
+							</div>
+						</div>
+
+						<!-- Order Summary -->
+						<div class="order-summary">
+							<h3 class="section-title">Order Summary</h3>
+							<div class="summary-row">
+								<span>Subtotal:</span>
+								<span id="subtotal">₹0.00</span>
+							</div>
+							<div class="summary-row">
+								<span>Shipping:</span>
+								<span id="shipping">₹0.00</span>
+							</div>
+							<div class="summary-row">
+								<span>Tax:</span>
+								<span id="tax">₹0.00</span>
+							</div>
+							<div class="summary-total">
+								<span>Total:</span>
+								<span id="total">₹0.00</span>
+							</div>
+							<button
+								id="placeOrderBtn"
+								class="place-order-btn"
+								disabled
+								onclick="placeOrder()"
+							>
+								Place Order
+							</button>
+						</div>
+					</div>
+				</div>
+			</div>
+		</div>
+
+		<script>
+									// Global variables
+						let checkoutData = null;
+						let userAddresses = [];
+						let selectedAddressId = null;
+						let editingAddressId = null; // Track which address is being edited
+
+						// Toast notification functions
+						function showNotification(message, type = 'success') {
+							const toast = document.getElementById('toast');
+							const toastMessage = document.getElementById('toast-message');
+
+							if (!toast || !toastMessage) return;
+
+							toastMessage.textContent = message;
+							toast.className = `toast toast-${type} show`;
+
+							setTimeout(() => {
+								hideToast();
+							}, 4000);
+						}
+
+						function hideToast() {
+							const toast = document.getElementById('toast');
+							if (toast) {
+								toast.classList.remove('show');
+							}
+						}
+
+						function debounce(func, delay) {
+							let timeout;
+							return function (...args) {
+								clearTimeout(timeout);
+								timeout = setTimeout(() => func.apply(this, args), delay);
+							};
+						}
+
+						const fetchPincodeDetails = debounce(async function () {
+							const pincode = document.getElementById("pincode").value.trim();
+
+							if (pincode.length === 6 && /^\d{6}$/.test(pincode)) {
+								try {
+									const res = await fetch(`https://api.postalpincode.in/pincode/${pincode}`);
+									const data = await res.json();
+
+									if (data[0].Status === "Success") {
+										const info = data[0].PostOffice[0];
+										document.getElementById("city").value = info.District;
+										document.getElementById("state").value = info.State;
+										document.getElementById("country").value = "India";
+									} else {
+										console.warn("Invalid pincode");
+									}
+								} catch (error) {
+									console.error("Error fetching pincode info:", error);
+								}
+							}
+						}, 600);
+
+						// Handle pincode input
+						function handlePincodeInput() {
+							fetchPincodeDetails();
+						}
+
+						// API functions
+						async function fetchCheckoutData() {
+							try {
+								const response = await axios.get('/user/checkout/data');
+								console.log('Checkout data fetched successfully:', response.data);
+								return response.data.checkoutData;
+							} catch (error) {
+								console.error('Error fetching checkout data:', error);
+								throw error;
+							}
+						}
+
+						async function fetchUserAddresses() {
+							try {
+								const response = await axios.get('/user/profile/get-address');
+								console.log('Addresses fetched successfully:', response.data);
+								return response.data.addresses || [];
+							} catch (error) {
+								console.error('Error fetching addresses:', error);
+								throw error;
+							}
+						}
+
+						async function saveNewAddress(addressData) {
+							try {
+								const response = await axios.post('/user/profile/address/add', addressData);
+								console.log('Address saved successfully:', response.data);
+								return response.data;
+							} catch (error) {
+								console.error('Error saving address:', error);
+								throw error;
+							}
+						}
+
+						async function updateExistingAddress(addressId, addressData) {
+							try {
+								const response = await axios.put(`/user/profile/address/edit/${addressId}`, addressData);
+								console.log('Address updated successfully:', response.data);
+								return response.data;
+							} catch (error) {
+								console.error('Error updating address:', error);
+								throw error;
+							}
+						}
+
+						// Address Management Functions
+						async function loadAddresses() {
+							const addressLoading = document.getElementById('addressLoading');
+							const addressGrid = document.getElementById('addressGrid');
+							const emptyAddress = document.getElementById('emptyAddress');
+
+							try {
+								addressLoading.style.display = 'flex';
+								addressGrid.style.display = 'none';
+								emptyAddress.style.display = 'none';
+
+								userAddresses = await fetchUserAddresses();
+
+								if (userAddresses.length === 0) {
+									emptyAddress.style.display = 'block';
+									updatePlaceOrderButton();
+									return;
+								}
+
+								renderAddresses();
+								addressGrid.style.display = 'block';
+
+								// Auto-select default address or first address
+								const defaultAddress = userAddresses.find(addr => addr.isDefault);
+								if (defaultAddress) {
+									selectAddress(defaultAddress._id);
+								} else if (userAddresses.length > 0) {
+									selectAddress(userAddresses[0]._id);
+								}
+
+							} catch (error) {
+								console.error('Error loading addresses:', error);
+								showNotification('Failed to load addresses', 'error');
+								emptyAddress.style.display = 'block';
+							} finally {
+								addressLoading.style.display = 'none';
+							}
+						}
+
+						function renderAddresses() {
+							const addressGrid = document.getElementById('addressGrid');
+
+							const iconMap = {
+								'Home': 'fas fa-home',
+								'Work': 'fas fa-briefcase',
+								'Other': 'fas fa-map-marker-alt'
+							};
+
+							const addressCards = userAddresses.map(address => {
+								const isDefault = address.isDefault;
+
+								return `
+									<div class="address-card ${selectedAddressId === address._id ? 'selected' : ''}" data-address-id="${address._id}" onclick="selectAddress('${address._id}')">
+										<div class="address-card-header">
+											<div class="address-type">
+												<i class="${iconMap[address.addressName] || 'fas fa-map-marker-alt'}"></i>
+												<span>${address.addressName}</span>
+											</div>
+											<div class="address-card-actions">
+												<button class="address-action-btn edit-btn" onclick="event.stopPropagation(); editAddress('${address._id}')">
+													Edit
+												</button>
+											</div>
+										</div>
+
+										<div class="address-info">
+											<div class="address-name">${address.fullName}</div>
+											<div class="address-details">
+												${address.addressLine}<br>
+												${address.city}, ${address.state} - ${address.pincode}<br>
+												${address.country}
+												${address.landmark ? `<br><span class="landmark">Near: ${address.landmark}</span>` : ''}
+											</div>
+											<div class="address-phone">
+												<i class="fas fa-phone"></i>
+												${address.phone}
+											</div>
+										</div>
+
+										<div class="address-radio">
+											<input type="radio" name="selectedAddress" value="${address._id}" ${selectedAddressId === address._id ? 'checked' : ''}>
+										</div>
+									</div>
+								`;
+							}).join('');
+
+							addressGrid.innerHTML = addressCards;
+						}
+
+						function selectAddress(addressId) {
+							selectedAddressId = addressId;
+
+							// Update visual selection
+							document.querySelectorAll('.address-card').forEach(card => {
+								card.classList.remove('selected');
+							});
+
+							const selectedCard = document.querySelector(`[data-address-id="${addressId}"]`);
+							if (selectedCard) {
+								selectedCard.classList.add('selected');
+								const radio = selectedCard.querySelector('input[type="radio"]');
+								if (radio) radio.checked = true;
+							}
+
+							updatePlaceOrderButton();
+							console.log('Address selected:', addressId);
+						}
+
+						async function makeDefaultAddress(addressId) {
+							try {
+								await setDefaultAddress(addressId);
+								showNotification('Default address updated successfully', 'success');
+
+								// Update local data
+								userAddresses = userAddresses.map(addr => ({
+									...addr,
+									isDefault: addr._id === addressId
+								}));
+
+								renderAddresses();
+								selectAddress(addressId);
+
+							} catch (error) {
+								showNotification('Failed to update default address', 'error');
+							}
+						}
+
+						function editAddress(addressId) {
+							// Find the address to edit
+							const addressToEdit = userAddresses.find(addr => addr._id === addressId);
+							if (!addressToEdit) {
+								showNotification('Address not found', 'error');
+								return;
+							}
+
+							// Set editing mode
+							editingAddressId = addressId;
+
+							// Populate the form with existing data
+							populateAddressForm(addressToEdit);
+
+							// Update modal title and button text
+							updateModalForEditing(true);
+
+							// Open the modal
+							openAddressModal();
+						}
+
+						function populateAddressForm(address) {
+							const form = document.getElementById('addressForm');
+							if (!form) return;
+
+							// Populate form fields
+							const fields = {
+								'addressName': address.addressName,
+								'fullName': address.fullName,
+								'phone': address.phone,
+								'pincode': address.pincode,
+								'addressLine': address.addressLine,
+								'city': address.city,
+								'state': address.state,
+								'country': address.country,
+								'landmark': address.landmark || ''
+							};
+
+							Object.keys(fields).forEach(fieldName => {
+								const field = form.querySelector(`[name="${fieldName}"]`);
+								if (field) {
+									field.value = fields[fieldName];
+								}
+							});
+
+							// Handle checkbox for default address
+							const isDefaultCheckbox = form.querySelector('[name="isDefault"]');
+							if (isDefaultCheckbox) {
+								isDefaultCheckbox.checked = address.isDefault || false;
+							}
+						}
+
+						function updateModalForEditing(isEditing) {
+							const modalTitle = document.querySelector('#addressModal .modal-title');
+							const saveBtn = document.getElementById('saveAddressBtn');
+							const btnText = saveBtn.querySelector('.btn-text');
+
+							if (isEditing) {
+								if (modalTitle) modalTitle.textContent = 'Edit Address';
+								if (btnText) btnText.textContent = 'Update Address';
+							} else {
+								if (modalTitle) modalTitle.textContent = 'Add New Address';
+								if (btnText) btnText.textContent = 'Save Address';
+							}
+						}
+
+						// Address Modal Functions
+						function openAddressModal() {
+							const modal = document.getElementById('addressModal');
+							if (modal) {
+								modal.classList.add('show');
+								document.body.style.overflow = 'hidden';
+							}
+						}
+
+						function closeModal() {
+							const modal = document.getElementById('addressModal');
+							if (modal) {
+								modal.classList.remove('show');
+								document.body.style.overflow = 'auto';
+
+								// Reset form and editing state
+								const form = document.getElementById('addressForm');
+								if (form) form.reset();
+
+								editingAddressId = null;
+								updateModalForEditing(false);
+							}
+						}
+
+						async function saveAddress() {
+							const form = document.getElementById('addressForm');
+							const saveBtn = document.getElementById('saveAddressBtn');
+							const btnText = saveBtn.querySelector('.btn-text');
+							const btnSpinner = saveBtn.querySelector('.btn-spinner');
+
+							try {
+								saveBtn.disabled = true;
+								btnText.style.display = 'none';
+								btnSpinner.style.display = 'inline-block';
+
+								const formData = new FormData(form);
+								const addressData = {
+									addressName: formData.get('addressName'),
+									fullName: formData.get('fullName'),
+									phone: formData.get('phone'),
+									pincode: formData.get('pincode'),
+									addressLine: formData.get('addressLine'),
+									city: formData.get('city'),
+									state: formData.get('state'),
+									country: formData.get('country'),
+									landmark: formData.get('landmark'),
+									isDefault: formData.get('isDefault') === 'on'
+								};
+
+								let response;
+								let successMessage;
+
+								if (editingAddressId) {
+									// Update existing address
+									response = await updateExistingAddress(editingAddressId, addressData);
+									successMessage = 'Address updated successfully';
+								} else {
+									// Create new address
+									response = await saveNewAddress(addressData);
+									successMessage = 'Address saved successfully';
+								}
+
+								showNotification(successMessage, 'success');
+								closeModal();
+
+								// Reload addresses
+								await loadAddresses();
+
+								// Auto-select the updated/new address
+								if (response.address && response.address._id) {
+									selectAddress(response.address._id);
+								} else if (editingAddressId) {
+									selectAddress(editingAddressId);
+								}
+
+							} catch (error) {
+								const errorMessage = editingAddressId ? 'Failed to update address' : 'Failed to save address';
+								showNotification(errorMessage, 'error');
+							} finally {
+								saveBtn.disabled = false;
+								btnText.style.display = 'inline';
+								btnSpinner.style.display = 'none';
+							}
+						}
+
+						// Checkout rendering functions
+						function renderOrderItems(cart) {
+							const orderItemsList = document.getElementById('orderItemsList');
+							const emptyCart = document.getElementById('emptyCart');
+							const itemCount = document.getElementById('itemCount');
+
+							if (!cart || !cart.items || cart.items.length === 0) {
+								orderItemsList.style.display = 'none';
+								emptyCart.style.display = 'block';
+								itemCount.textContent = '0';
+								updateSummary([]);
+								updatePlaceOrderButton();
+								return;
+							}
+
+							emptyCart.style.display = 'none';
+							orderItemsList.style.display = 'block';
+							itemCount.textContent = cart.items.length;
+
+							orderItemsList.innerHTML = cart.items.map(item => {
+								const product = item.productId;
+								const imageUrl = product.images?.[0]?.url || '/images/placeholder-product.jpg';
+
+								return `
+									<div class="order-item">
+										<img src="${imageUrl}" alt="${product.productName}" class="product-image"
+											 onerror="this.src='/images/placeholder-product.jpg'">
+
+										<div class="product-details">
+											<h3 class="product-name">${product.productName}</h3>
+											<p class="product-brand">${product.brand || 'ChronoVa'}</p>
+											<p class="product-price">₹${product.price.toLocaleString()}</p>
+										</div>
+
+										<div class="quantity-info">
+											<span class="quantity-label">Qty:</span>
+											<span class="quantity-value">${item.quantity}</span>
+										</div>
+
+										<div class="item-total">
+											<span class="item-total-label">Total:</span>
+											<span class="item-total-value">₹${(product.price * item.quantity).toLocaleString()}</span>
+										</div>
+									</div>
+								`;
+							}).join('');
+
+							updateSummary(cart.items);
+							updatePlaceOrderButton();
+						}
+
+						function updateSummary(items) {
+							const subtotalEl = document.getElementById('subtotal');
+							const shippingEl = document.getElementById('shipping');
+							const taxEl = document.getElementById('tax');
+							const totalEl = document.getElementById('total');
+
+							let subtotal = 0;
+							items.forEach(item => {
+								subtotal += item.productId.finalPrice * item.quantity;
+							});
+
+							// const shipping = subtotal > 500 ? 0 : 50; // Free shipping over ₹500
+							// const tax = Math.round(subtotal * 0.18); // 18% GST
+							const shipping = 0;
+							const tax = 0;
+							const total = subtotal + shipping + tax;
+
+							subtotalEl.textContent = `₹${subtotal.toLocaleString()}`;
+							shippingEl.textContent = shipping === 0 ? 'Free' : `₹${shipping.toLocaleString()}`;
+							taxEl.textContent = `₹${tax.toLocaleString()}`;
+							totalEl.textContent = `₹${total.toLocaleString()}`;
+						}
+
+						function updatePlaceOrderButton() {
+							const placeOrderBtn = document.getElementById('placeOrderBtn');
+							const hasItems = checkoutData && checkoutData.items && checkoutData.items.length > 0;
+							const hasAddress = selectedAddressId !== null;
+
+							placeOrderBtn.disabled = !hasItems || !hasAddress;
+
+							if (!hasItems) {
+								placeOrderBtn.textContent = 'Cart is Empty';
+							} else if (!hasAddress) {
+								placeOrderBtn.textContent = 'Select Address';
+							} else {
+								placeOrderBtn.textContent = 'Place Order';
+							}
+						}
+
+			async function placeOrder() {
+				if (!checkoutData || !checkoutData.items || checkoutData.items.length === 0) {
+					showNotification('Your cart is empty', 'error');
+					return;
+				}
+
+				if (!selectedAddressId) {
+					showNotification('Please select a shipping address', 'error');
+					return;
+				}
+
+				const selectedPaymentMethod = document.querySelector('input[name="paymentMethod"]:checked').value;
+				const placeOrderBtn = document.getElementById('placeOrderBtn');
+				const originalText = placeOrderBtn.textContent;
+
+				try {
+					placeOrderBtn.disabled = true;
+					placeOrderBtn.textContent = 'Placing Order...';
+
+					const orderData = {
+						items: checkoutData.items,
+						shippingAddress: selectedAddressId,
+						paymentMethod: selectedPaymentMethod,
+						total: calculateTotal()
+					};
+
+					// console.log(orderData);
+
+					const response = await axios.post('/user/order/place', orderData);
+
+					showNotification(response.data.message || 'Order placed successfully!', 'success');
+
+					const orderId = response.data?.data?.orderId;
+					console.log(orderId);
+						setTimeout(() => {
+							window.location.href = `/user/order/conform?orderId=${orderId}`;
+						}, 2000);
+
+
+				} catch (error) {
+					console.error('Error placing order:', error);
+
+					// Extract and show a user-friendly error message
+					const message =
+						error?.response?.data?.error ||
+						error?.response?.data?.message ||
+						error?.message ||
+						'Failed to place order. Please try again.';
+
+					showNotification(message, 'error');
+
+				} finally {
+					placeOrderBtn.disabled = false;
+					placeOrderBtn.textContent = originalText;
+				}
+			}
+
+
+						function calculateTotal() {
+							if (!checkoutData || !checkoutData.items) return 0;
+
+							let subtotal = 0;
+							checkoutData.items.forEach(item => {
+								subtotal += item.productId.finalPrice * item.quantity;
+							});
+
+							// const shipping = subtotal > 500 ? 0 : 50;
+							// const tax = Math.round(subtotal * 0.18);
+							const shipping = 0;
+							const tax = 0;
+							return subtotal + shipping + tax;
+						}
+
+						// Main checkout loader
+						async function loadCheckout() {
+							const loadingState = document.getElementById('loadingState');
+							const orderItemsList = document.getElementById('orderItemsList');
+							const emptyCart = document.getElementById('emptyCart');
+
+							try {
+								loadingState.style.display = 'none';
+								orderItemsList.style.display = 'none';
+								emptyCart.style.display = 'none';
+
+								// Load checkout data and addresses in parallel
+								const [checkoutDataResult] = await Promise.all([
+									fetchCheckoutData(),
+									loadAddresses()
+								]);
+
+								checkoutData = checkoutDataResult;
+								renderOrderItems(checkoutData);
+
+							} catch (error) {
+								console.error('Error loading checkout:', error);
+								showNotification('Failed to load checkout data', 'error');
+								emptyCart.style.display = 'block';
+								document.getElementById('itemCount').textContent = '0';
+								updatePlaceOrderButton();
+							} finally {
+								loadingState.style.display = 'none';
+							}
+						}
+
+						// Event Listeners
+						document.addEventListener('DOMContentLoaded', function () {
+							loadCheckout();
+
+							// Payment method change listener
+							const paymentOptions = document.querySelectorAll('input[name="paymentMethod"]');
+							paymentOptions.forEach(option => {
+								option.addEventListener('change', function() {
+									console.log('Payment method changed to:', this.value);
+								});
+							});
+
+							// Modal close on outside click
+							const addressModal = document.getElementById('addressModal');
+							if (addressModal) {
+								addressModal.addEventListener('click', function(e) {
+									if (e.target === this) {
+										closeModal();
+									}
+								});
+							}
+
+							// Keyboard shortcuts
+							document.addEventListener('keydown', function(e) {
+								if (e.key === 'Escape') {
+									closeModal();
+								}
+							});
+						});
+
+						// Global axios error handler
+						axios.interceptors.response.use(
+							response => response,
+							error => {
+								if (error.response?.status === 401) {
+									showNotification('Please login to continue', 'error');
+									setTimeout(() => {
+										window.location.href = '/login';
+									}, 2000);
+								} else if (error.response?.status === 500) {
+									showNotification('Server error. Please try again later.', 'error');
+								}
+								return Promise.reject(error);
+							}
+						);
+
+						// Make functions available globally for HTML onclick handlers
+						window.openAddressModal = openAddressModal;
+						window.closeModal = closeModal;
+						window.saveAddress = saveAddress;
+						window.placeOrder = placeOrder;
+						window.selectAddress = selectAddress;
+						window.makeDefaultAddress = makeDefaultAddress;
+						window.editAddress = editAddress;
+		</script>
+	</body>
+</html>
