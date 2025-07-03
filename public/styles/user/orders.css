@@ -1154,3 +1154,32 @@ body {
     font-size: 0.625rem;
   }
 }
+
+
+.status-approved {
+  color: green;
+  font-weight: bold;
+}
+.status-pending {
+  color: orange;
+  font-style: italic;
+}
+
+.return-badge {
+    display: inline-block;
+    margin-top: 6px;
+    font-size: 0.85rem;
+    font-weight: 500;
+    padding: 4px 8px;
+    border-radius: 6px;
+}
+
+.return-badge.approved {
+    background-color: #d4edda;
+    color: #155724;
+}
+
+.return-badge.pending {
+    background-color: #fff3cd;
+    color: #856404;
+}

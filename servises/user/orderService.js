@@ -7,6 +7,7 @@ import PDFDocument from "pdfkit"
 
 export const placeOrderService = async (userId, orderData) => {
   const fullAddress = await Address.findById(orderData.shippingAddress).lean()
+
   if (!fullAddress) throw new Error("Shipping address not found")
 
   if (orderData.paymentMethod?.toLowerCase() === "online") {
@@ -131,19 +132,23 @@ export const orderListByUserId = async (userId) => {
 
 export const getSingleOrderService = async (userId, orderId) => {
   const order = await Order.findOne({ userId, orderId })
+
   if (!order) {
     throw new Error("Order not found or access denied.")
   }
+
   return order
 }
 
 export const cancelOrderItemService = async (userId, orderId, itemId) => {
   const order = await Order.findOne({ userId, orderId })
+
   if (!order) {
     throw new Error("Order not found or access denied.")
   }
 
   const item = order.items.id(itemId)
+
   if (!item) {
     throw new Error("Item not found in this order.")
   }
@@ -157,28 +162,23 @@ export const cancelOrderItemService = async (userId, orderId, itemId) => {
 
   await Products.findByIdAndUpdate(item.productId, { $inc: { stockQuantity: item.quantity } })
 
-  const allItemsCancelled = order.items.every((orderItem) => orderItem.status === "Cancelled")
-
-  if (allItemsCancelled) {
-    order.orderStatus = "Cancelled"
-    order.cancellation = {
-      cancelledAt: new Date(),
-      cancelledBy: "User",
-      reason: "All items cancelled by user",
-    }
-  }
+  // Update order status based on item statuses
+  await updateOrderStatusBasedOnItems(order)
 
   await order.save()
+
   return order
 }
 
 export const returnOrderItemService = async (userId, orderId, itemId, returnReason) => {
   const order = await Order.findOne({ userId, orderId })
+
   if (!order) {
     throw new Error("Order not found or access denied.")
   }
 
   const item = order.items.id(itemId)
+
   if (!item) {
     throw new Error("Item not found in this order.")
   }
@@ -191,27 +191,32 @@ export const returnOrderItemService = async (userId, orderId, itemId, returnReas
     throw new Error("Return request already submitted for this item.")
   }
 
-  item.status = "Returned"
+  // Set status to "Return Requested" and add return reason
+  item.status = "Return Requested"
   item.returnReason = returnReason
+  item.returnRequestedAt = new Date()
 
-  // Check if all items are returned
-  const allItemsReturned = order.items.every((orderItem) => orderItem.status === "Returned")
-
-  if (allItemsReturned) {
-    order.orderStatus = "Returned"
+  // Update return info
+  if (!order.returnInfo) {
     order.returnInfo = {
-      returnedAt: new Date(),
-      reason: returnReason,
-      approved: false,
+      totalReturnRequests: 0,
+      approvedReturns: 0,
+      rejectedReturns: 0,
     }
   }
+  order.returnInfo.totalReturnRequests += 1
+
+  // Update order status based on item statuses
+  await updateOrderStatusBasedOnItems(order)
 
   await order.save()
+
   return order
 }
 
 export const returnEntireOrderService = async (userId, orderId, returnReason) => {
   const order = await Order.findOne({ userId, orderId })
+
   if (!order) {
     throw new Error("Order not found or access denied.")
   }
@@ -222,37 +227,42 @@ export const returnEntireOrderService = async (userId, orderId, returnReason) =>
     throw new Error("No delivered items available for return.")
   }
 
-  // Update all delivered items to returned
+  // Update all delivered items to return requested
+  let returnRequestCount = 0
   order.items = order.items.map((item) => {
     if (item.status === "Delivered" && !item.returnReason) {
+      returnRequestCount++
       return {
         ...item._doc,
-        status: "Returned",
+        status: "Return Requested",
         returnReason: returnReason,
+        returnRequestedAt: new Date(),
       }
     }
     return item
   })
 
-  // Check if all items are now returned
-  const allItemsReturned = order.items.every((orderItem) => orderItem.status === "Returned")
-
-  if (allItemsReturned) {
-    order.orderStatus = "Returned"
+  // Update return info
+  if (!order.returnInfo) {
+    order.returnInfo = {
+      totalReturnRequests: 0,
+      approvedReturns: 0,
+      rejectedReturns: 0,
+    }
   }
+  order.returnInfo.totalReturnRequests += returnRequestCount
 
-  order.returnInfo = {
-    returnedAt: new Date(),
-    reason: returnReason,
-    approved: false,
-  }
+  // Update order status based on item statuses
+  await updateOrderStatusBasedOnItems(order)
 
   await order.save()
+
   return order
 }
 
 export const generateInvoiceService = async (userId, orderId) => {
   const order = await Order.findOne({ userId, orderId })
+
   if (!order) {
     throw new Error("Order not found or access denied.")
   }
@@ -277,44 +287,59 @@ export const generateInvoiceService = async (userId, orderId) => {
       doc.text("Shipping Address:", 50, 140)
       doc.text(`${order.shippingAddress.fullName}`, 50, 160)
       doc.text(`${order.shippingAddress.addressLine}`, 50, 180)
+
       if (order.shippingAddress.landmark) {
         doc.text(`${order.shippingAddress.landmark}`, 50, 200)
       }
+
       doc.text(
         `${order.shippingAddress.city}, ${order.shippingAddress.state} ${order.shippingAddress.pincode}`,
         50,
         220,
       )
+
       doc.text(`${order.shippingAddress.country}`, 50, 240)
       doc.text(`Phone: ${order.shippingAddress.phone}`, 50, 260)
 
       // Items Table
       let yPosition = 300
+
       doc.text("Items:", 50, yPosition)
       yPosition += 20
 
       doc.text("Product", 50, yPosition)
       doc.text("Qty", 200, yPosition)
       doc.text("Price", 250, yPosition)
-      doc.text("Total", 350, yPosition)
+      doc.text("Status", 300, yPosition)
+      doc.text("Total", 400, yPosition)
+
       yPosition += 20
 
       order.items.forEach((item) => {
         doc.text(item.productName, 50, yPosition)
         doc.text(item.quantity.toString(), 200, yPosition)
         doc.text(`₹${item.price}`, 250, yPosition)
-        doc.text(`₹${item.price * item.quantity}`, 350, yPosition)
+        doc.text(item.status, 300, yPosition)
+        doc.text(`₹${item.price * item.quantity}`, 400, yPosition)
         yPosition += 20
       })
 
       // Summary
       yPosition += 20
+
       doc.text(`Subtotal: ₹${order.subtotal}`, 250, yPosition)
       yPosition += 20
+
       if (order.discount > 0) {
         doc.text(`Discount: -₹${order.discount}`, 250, yPosition)
         yPosition += 20
       }
+
+      if (order.refundedAmount > 0) {
+        doc.text(`Refunded: -₹${order.refundedAmount}`, 250, yPosition)
+        yPosition += 20
+      }
+
       doc.fontSize(14).text(`Total: ₹${order.totalAmount}`, 250, yPosition)
 
       doc.end()
@@ -322,6 +347,48 @@ export const generateInvoiceService = async (userId, orderId) => {
       reject(error)
     }
   })
+}
+
+// Helper function to update order status based on item statuses
+async function updateOrderStatusBasedOnItems(order) {
+  const itemStatuses = order.items.map((item) => item.status)
+  const totalItems = order.items.length
+
+  // Count different status types
+  const statusCounts = {
+    placed: itemStatuses.filter((s) => s === "Placed").length,
+    cancelled: itemStatuses.filter((s) => s === "Cancelled").length,
+    shipped: itemStatuses.filter((s) => s === "Shipped").length,
+    delivered: itemStatuses.filter((s) => s === "Delivered").length,
+    returnRequested: itemStatuses.filter((s) => s === "Return Requested").length,
+    returnApproved: itemStatuses.filter((s) => s === "Return Approved").length,
+    returnRejected: itemStatuses.filter((s) => s === "Return Rejected").length,
+  }
+
+  // Determine order status based on item statuses
+  if (statusCounts.returnApproved === totalItems) {
+    order.orderStatus = "Return Approved"
+  } else if (statusCounts.returnApproved > 0) {
+    order.orderStatus = "Partially Return Approved"
+  } else if (statusCounts.returnRequested > 0) {
+    if (statusCounts.returnRequested === totalItems) {
+      order.orderStatus = "Return Requested"
+    } else {
+      order.orderStatus = "Return Requested"
+    }
+  } else if (statusCounts.cancelled === totalItems) {
+    order.orderStatus = "Cancelled"
+  } else if (statusCounts.cancelled > 0) {
+    order.orderStatus = "Partially Cancelled"
+  } else if (statusCounts.delivered === totalItems) {
+    order.orderStatus = "Delivered"
+  } else if (statusCounts.delivered > 0) {
+    order.orderStatus = "Delivered"
+  } else if (statusCounts.shipped > 0) {
+    order.orderStatus = "Shipped"
+  } else if (statusCounts.placed === totalItems) {
+    order.orderStatus = "Placed"
+  }
 }
 
 export const returnReason = ["Damaged", "Wrong Item", "Quality Issue", "Other"]

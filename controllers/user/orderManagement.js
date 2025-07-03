@@ -5,15 +5,12 @@ import {
   getSingleOrderService,
   orderListByUserId,
   placeOrderService,
-  cancelOrderItemService,
   returnOrderItemService,
   returnEntireOrderService,
   generateInvoiceService,
 } from "../../servises/user/orderService.js"
 import httpStatusCode from "../../utils/httpStatusCode.js"
 import { returnReason } from "../../utils/returnReason.js"
-
-
 
 export const getCheckoutPage = (req, res) => {
   try {
@@ -30,6 +27,7 @@ export const getCheckoutPage = (req, res) => {
 export const getCheckoutPageData = async (req, res) => {
   try {
     const userId = req.user._id || req.user.id
+
     const checkoutData = await getCartedProducts(userId)
 
     if (!checkoutData || checkoutData.items.length === 0) {
@@ -58,7 +56,6 @@ export const placeOrder = async (req, res) => {
   try {
     const userId = req.user._id || req.user.id
     const data = await placeOrderService(userId, req.body)
-
     return res.status(httpStatusCode.OK.code).json({
       success: true,
       message: "Order placed successfully.",
@@ -157,109 +154,114 @@ export const getSingleOrderController = async (req, res) => {
 
 export const cancelEntireOrderController = async (req, res) => {
   try {
-    const userId = req.user._id || req.user.id;
-    const { orderId } = req.params;
+    const userId = req.user._id || req.user.id
+    const { orderId } = req.params
 
-    const order = await Order.findOne({ userId, orderId });
+    const order = await Order.findOne({ userId, orderId })
+
     if (!order) {
-      return res.status(404).json({ success: false, message: "Order not found." });
+      return res.status(404).json({ success: false, message: "Order not found." })
     }
 
     if (order.orderStatus === "Cancelled") {
-      return res.status(400).json({ success: false, message: "Order already cancelled." });
+      return res.status(400).json({ success: false, message: "Order already cancelled." })
     }
 
-    const allItemsPlaced = order.items.every((item) => item.status === "Placed");
+    const allItemsPlaced = order.items.every((item) => item.status === "Placed")
+
     if (!allItemsPlaced) {
       return res.status(400).json({
         success: false,
         message: "Only orders with all items in 'Placed' status can be cancelled.",
-      });
+      })
     }
 
     for (const item of order.items) {
       await Products.findByIdAndUpdate(item.productId, {
         $inc: { stockQuantity: item.quantity },
-      });
+      })
 
-      item.status = "Cancelled";
-      item.cancelReason = "Cancelled by user";
+      item.status = "Cancelled"
+      item.cancelReason = "Cancelled by user"
     }
 
-    order.orderStatus = "Cancelled";
+    order.orderStatus = "Cancelled"
     order.cancellation = {
       cancelledAt: new Date(),
       cancelledBy: "User",
       reason: "Cancelled by user",
-    };
+    }
 
-    await order.save();
+    await order.save()
 
     return res.status(200).json({
       success: true,
       message: "Order cancelled successfully.",
       order,
-    });
+    })
   } catch (error) {
-    console.error("Error cancelling entire order:", error);
+    console.error("Error cancelling entire order:", error)
     return res.status(500).json({
       success: false,
       message: error.message || "Server error while cancelling entire order.",
-    });
+    })
   }
-};
+}
 
 export const cancelSingleItemController = async (req, res) => {
   try {
-    const userId = req.user._id || req.user.id;
-    const { orderId, itemId } = req.params;
+    const userId = req.user._id || req.user.id
+    const { orderId, itemId } = req.params
 
-    const order = await Order.findOne({ userId, orderId });
+    const order = await Order.findOne({ userId, orderId })
+
     if (!order) {
-      return res.status(404).json({ success: false, message: "Order not found." });
+      return res.status(404).json({ success: false, message: "Order not found." })
     }
 
-    const item = order.items.id(itemId);
+    const item = order.items.id(itemId)
+
     if (!item) {
-      return res.status(404).json({ success: false, message: "Item not found in order." });
+      return res.status(404).json({ success: false, message: "Item not found in order." })
     }
 
     if (item.status !== "Placed") {
-      return res.status(400).json({ success: false, message: "Item cannot be cancelled." });
+      return res.status(400).json({ success: false, message: "Item cannot be cancelled." })
     }
 
     await Products.findByIdAndUpdate(item.productId, {
       $inc: { stockQuantity: item.quantity },
-    });
+    })
 
-    item.status = "Cancelled";
-    item.cancelReason = "Cancelled by user";
+    item.status = "Cancelled"
+    item.cancelReason = "Cancelled by user"
 
-    const allItemsCancelled = order.items.every((item) => item.status === "Cancelled");
+    const allItemsCancelled = order.items.every((item) => item.status === "Cancelled")
+
     if (allItemsCancelled) {
-      order.orderStatus = "Cancelled";
+      order.orderStatus = "Cancelled"
       order.cancellation = {
         cancelledAt: new Date(),
         cancelledBy: "User",
         reason: "All items cancelled",
-      };
+      }
     }
 
-    await order.save();
+    await order.save()
 
     return res.status(200).json({
       success: true,
       message: "Item cancelled successfully.",
       order,
-    });
+    })
   } catch (error) {
-    console.error("Error cancelling item:", error);
+    console.error("Error cancelling item:", error)
     return res.status(500).json({
       success: false,
       message: error.message || "Server error while cancelling item.",
-    });
+    })
   }
-};
+}
 
 export const returnOrderItemController = async (req, res) => {
   try {
@@ -285,7 +287,7 @@ export const returnOrderItemController = async (req, res) => {
 
     return res.status(httpStatusCode.OK.code).json({
       success: true,
-      message: "Return request submitted successfully.",
+      message: "Return request submitted successfully. Admin will review and approve your request.",
       order: result,
     })
   } catch (error) {
@@ -321,7 +323,7 @@ export const returnEntireOrderController = async (req, res) => {
 
     return res.status(httpStatusCode.OK.code).json({
       success: true,
-      message: "Return request submitted successfully.",
+      message: "Return request submitted successfully. Admin will review and approve your request.",
       order: result,
     })
   } catch (error) {

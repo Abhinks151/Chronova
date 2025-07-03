@@ -1,0 +1,1017 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Order Management - Admin</title>
+    <link rel="stylesheet" href="/styles/admin-order.css">
+    <link rel="stylesheet" href="/styles/dashboard.css">
+    <script src="https://cdn.jsdelivr.net/npm/axios@1.6.0/dist/axios.min.js"></script>
+    <style>
+        /* Enhanced Toast Styles */
+        .toast-container {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            z-index: 10000;
+        }
+        
+        .toast {
+            background: white;
+            border-radius: 8px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+            padding: 16px 20px;
+            margin-bottom: 10px;
+            min-width: 300px;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            animation: slideIn 0.3s ease-out;
+            border-left: 4px solid #10b981;
+        }
+        
+        .toast.error {
+            border-left-color: #ef4444;
+        }
+        
+        .toast.warning {
+            border-left-color: #f59e0b;
+        }
+        
+        .toast.info {
+            border-left-color: #3b82f6;
+        }
+        
+        .toast-icon {
+            font-size: 18px;
+        }
+        
+        .toast.success .toast-icon {
+            color: #10b981;
+        }
+        
+        .toast.error .toast-icon {
+            color: #ef4444;
+        }
+        
+        .toast.warning .toast-icon {
+            color: #f59e0b;
+        }
+        
+        .toast.info .toast-icon {
+            color: #3b82f6;
+        }
+        
+        .toast-close {
+            margin-left: auto;
+            background: none;
+            border: none;
+            font-size: 18px;
+            cursor: pointer;
+            color: #6b7280;
+        }
+        
+        @keyframes slideIn {
+            from {
+                transform: translateX(100%);
+                opacity: 0;
+            }
+            to {
+                transform: translateX(0);
+                opacity: 1;
+            }
+        }
+        
+        /* Enhanced Confirmation Modal Styles */
+        .confirmation-modal {
+            display: none;
+            position: fixed;
+            z-index: 9999;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0,0,0,0.5);
+        }
+        
+        .confirmation-modal-content {
+            background-color: white;
+            margin: 10% auto;
+            padding: 30px;
+            border-radius: 12px;
+            width: 90%;
+            max-width: 600px;
+            text-align: center;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.2);
+        }
+        
+        .confirmation-modal h3 {
+            margin-bottom: 15px;
+            color: #1f2937;
+        }
+        
+        .confirmation-modal p {
+            margin-bottom: 25px;
+            color: #6b7280;
+            line-height: 1.5;
+        }
+        
+        .confirmation-modal-buttons {
+            display: flex;
+            gap: 15px;
+            justify-content: center;
+        }
+        
+        .btn-confirm {
+            background: #ef4444;
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-weight: 500;
+        }
+        
+        .btn-confirm.approve {
+            background: #10b981;
+        }
+        
+        .btn-confirm.reject {
+            background: #ef4444;
+        }
+        
+        .btn-cancel {
+            background: #6b7280;
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-weight: 500;
+        }
+        
+        .btn-confirm:hover {
+            opacity: 0.9;
+        }
+        
+        .btn-cancel:hover {
+            background: #4b5563;
+        }
+        
+        /* Return Request Card Styles */
+        .return-request-card {
+            border: 2px solid #f59e0b;
+            background: #fffbeb;
+        }
+        
+        .return-request-card .item-info {
+            position: relative;
+        }
+        
+        .return-actions {
+            display: flex;
+            gap: 10px;
+            margin-top: 15px;
+        }
+        
+        .btn-approve {
+            background: #10b981;
+            color: white;
+            border: none;
+            padding: 8px 16px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 14px;
+        }
+        
+        .btn-reject {
+            background: #ef4444;
+            color: white;
+            border: none;
+            padding: 8px 16px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 14px;
+        }
+        
+        .btn-approve:hover {
+            background: #059669;
+        }
+        
+        .btn-reject:hover {
+            background: #dc2626;
+        }
+        
+        /* Rejection Reason Input */
+        .rejection-reason-input {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid #d1d5db;
+            border-radius: 6px;
+            margin: 15px 0;
+            font-size: 14px;
+            resize: vertical;
+            min-height: 80px;
+        }
+        
+        /* Status Badge Enhancements */
+        .status-badge.status-return-requested {
+            background-color: #fef3c7;
+            color: #92400e;
+        }
+        
+        .status-badge.status-return-approved {
+            background-color: #d1fae5;
+            color: #065f46;
+        }
+        
+        .status-badge.status-return-rejected {
+            background-color: #fee2e2;
+            color: #991b1b;
+        }
+        
+        .status-badge.status-partially-returned {
+            background-color: #fef3c7;
+            color: #92400e;
+        }
+        
+        .status-badge.status-partially-cancelled {
+            background-color: #fee2e2;
+            color: #991b1b;
+        }
+        
+        .status-badge.status-partially-return-approved {
+            background-color: #d1fae5;
+            color: #065f46;
+        }
+    </style>
+</head>
+<body>
+    
+    <%- include('../../partials/sidebar') %>
+    <div class="container">
+        <header class="page-header">
+            <h1>Order Management</h1>
+            <div class="header-stats">
+                <span class="stat">Total Orders: <%= totalOrders %></span>
+            </div>
+        </header>
+
+        <!-- Search and Filter Section -->
+        <div class="filters-section">
+            <form id="filterForm" class="filters-form">
+                <div class="search-group">
+                    <input 
+                        type="text" 
+                        id="searchInput" 
+                        name="search" 
+                        placeholder="Search by Order ID, Customer Name, Product Name, or Brand..."
+                        value="<%= search %>"
+                        class="search-input"
+                    >
+                    <button type="submit" class="search-btn">Search</button>
+                </div>
+                
+                <div class="filter-group">
+                    <select id="statusFilter" name="status" class="filter-select">
+                        <option value="">All Statuses</option>
+                        <% statuses.forEach(statusOption => { %>
+                            <option value="<%= statusOption %>" <%= status === statusOption ? 'selected' : '' %>>
+                                <%= statusOption %>
+                            </option>
+                        <% }) %>
+                    </select>
+                    
+                    <select id="sortBy" name="sortBy" class="filter-select">
+                        <option value="createdAt" <%= sortBy === 'createdAt' ? 'selected' : '' %>>Date</option>
+                        <option value="totalAmount" <%= sortBy === 'totalAmount' ? 'selected' : '' %>>Amount</option>
+                        <option value="orderStatus" <%= sortBy === 'orderStatus' ? 'selected' : '' %>>Status</option>
+                    </select>
+                    
+                    <select id="sortOrder" name="sortOrder" class="filter-select">
+                        <option value="desc" <%= sortOrder === 'desc' ? 'selected' : '' %>>Descending</option>
+                        <option value="asc" <%= sortOrder === 'asc' ? 'selected' : '' %>>Ascending</option>
+                    </select>
+                </div>
+            </form>
+        </div>
+
+        <!-- Orders Table -->
+        <div class="table-container">
+            <table class="orders-table">
+                <thead>
+                    <tr>
+                        <th>Order ID</th>
+                        <th>Customer</th>
+                        <th>Date</th>
+                        <th>Status</th>
+                        <th>Payment</th>
+                        <th>Total</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <% if (orders.length === 0) { %>
+                        <tr>
+                            <td colspan="7" class="no-data">No orders found</td>
+                        </tr>
+                    <% } else { %>
+                        <% orders.forEach(order => { %>
+                            <tr>
+                                <td class="order-id">#<%= order.orderId %></td>
+                                <td>
+                                    <div class="customer-info">
+                                        <div class="customer-name"><%= order.userId?.name || order.shippingAddress.fullName %></div>
+                                        <div class="customer-email"><%= order.userId?.email || 'N/A' %></div>
+                                    </div>
+                                </td>
+                                <td><%= new Date(order.createdAt).toLocaleDateString() %></td>
+                                <td>
+                                    <span class="status-badge status-<%= order.orderStatus.toLowerCase().replace(/\s+/g, '-') %>">
+                                        <%= order.orderStatus %>
+                                    </span>
+                                </td>
+                                <td>
+                                    <div class="payment-info">
+                                        <div class="payment-method"><%= order.paymentMethod %></div>
+                                        <div class="payment-status status-<%= order.paymentStatus.toLowerCase() %>">
+                                            <%= order.paymentStatus %>
+                                        </div>
+                                    </div>
+                                </td>
+                                <td class="amount">
+                                    ₹<%= order.totalAmount.toFixed(2) %>
+                                    <% if (order.refundedAmount > 0) { %>
+                                        <br><small style="color: #ef4444;">Refunded: ₹<%= order.refundedAmount.toFixed(2) %></small>
+                                    <% } %>
+                                </td>
+                                <td>
+                                    <button 
+                                        class="btn btn-primary view-details-btn" 
+                                        onclick="viewOrderDetails('<%= order._id %>')"
+                                    >
+                                        View Details
+                                    </button>
+                                </td>
+                            </tr>
+                        <% }) %>
+                    <% } %>
+                </tbody>
+            </table>
+        </div>
+
+        <!-- Pagination -->
+        <div class="pagination-container">
+            <div class="pagination-info">
+                Showing <%= (currentPage - 1) * limit + 1 %> to <%= Math.min(currentPage * limit, totalOrders) %> of <%= totalOrders %> orders
+            </div>
+            <div class="pagination">
+                <% if (currentPage > 1) { %>
+                    <button class="pagination-btn" onclick="goToPage(<%= currentPage - 1 %>)">Previous</button>
+                <% } %>
+                
+                <% for (let i = Math.max(1, currentPage - 2); i <= Math.min(totalPages, currentPage + 2); i++) { %>
+                    <button 
+                        class="pagination-btn <%= i === currentPage ? 'active' : '' %>" 
+                        onclick="goToPage(<%= i %>)"
+                    >
+                        <%= i %>
+                    </button>
+                <% } %>
+                
+                <% if (currentPage < totalPages) { %>
+                    <button class="pagination-btn" onclick="goToPage(<%= currentPage + 1 %>)">Next</button>
+                <% } %>
+            </div>
+        </div>
+    </div>
+
+    <!-- Order Details Modal -->
+    <div id="orderModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2 id="modalTitle">Order Details</h2>
+                <span class="close" onclick="closeModal()">&times;</span>
+            </div>
+            <div class="modal-body" id="modalBody">
+                <!-- Order details will be loaded here -->
+            </div>
+        </div>
+    </div>
+
+    <!-- Enhanced Confirmation Modal -->
+    <div id="confirmationModal" class="confirmation-modal">
+        <div class="confirmation-modal-content">
+            <h3 id="confirmationTitle">Confirm Action</h3>
+            <p id="confirmationMessage">Are you sure you want to proceed?</p>
+            <div id="rejectionReasonContainer" style="display: none;">
+                <textarea 
+                    id="rejectionReasonInput" 
+                    class="rejection-reason-input" 
+                    placeholder="Please provide a reason for rejecting this return request..."
+                    maxlength="500"
+                ></textarea>
+                <div style="text-align: right; font-size: 12px; color: #6b7280;">
+                    <span id="rejectionCharCount">0</span>/500 characters
+                </div>
+            </div>
+            <div class="confirmation-modal-buttons">
+                <button class="btn-cancel" onclick="closeConfirmationModal()">Cancel</button>
+                <button class="btn-confirm" id="confirmationButton" onclick="executeConfirmedAction()">Confirm</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Loading Spinner -->
+    <div id="loadingSpinner" class="loading-spinner">
+        <div class="spinner"></div>
+    </div>
+
+    <!-- Toast Container -->
+    <div id="toastContainer" class="toast-container"></div>
+
+    <script>
+        // Global variables
+        let currentFilters = {
+            search: '<%= search %>',
+            status: '<%= status %>',
+            sortBy: '<%= sortBy %>',
+            sortOrder: '<%= sortOrder %>',
+            page: <%= currentPage %>
+        };
+
+        let pendingAction = null;
+
+        // Initialize event listeners
+        document.addEventListener('DOMContentLoaded', function() {
+            const filterForm = document.getElementById('filterForm');
+            const searchInput = document.getElementById('searchInput');
+            const statusFilter = document.getElementById('statusFilter');
+            const sortBy = document.getElementById('sortBy');
+            const sortOrder = document.getElementById('sortOrder');
+
+            // Form submission
+            filterForm.addEventListener('submit', function(e) {
+                e.preventDefault();
+                applyFilters();
+            });
+
+            // Real-time filtering on select changes
+            statusFilter.addEventListener('change', applyFilters);
+            sortBy.addEventListener('change', applyFilters);
+            sortOrder.addEventListener('change', applyFilters);
+
+            // Search on Enter key
+            searchInput.addEventListener('keypress', function(e) {
+                if (e.key === 'Enter') {
+                    e.preventDefault();
+                    applyFilters();
+                }
+            });
+
+            // Character counter for rejection reason
+            const rejectionInput = document.getElementById('rejectionReasonInput');
+            const charCount = document.getElementById('rejectionCharCount');
+            
+            rejectionInput.addEventListener('input', function() {
+                charCount.textContent = this.value.length;
+            });
+        });
+
+        // Apply filters and reload page
+        function applyFilters() {
+            const search = document.getElementById('searchInput').value;
+            const status = document.getElementById('statusFilter').value;
+            const sortBy = document.getElementById('sortBy').value;
+            const sortOrder = document.getElementById('sortOrder').value;
+
+            const params = new URLSearchParams();
+            if (search) params.append('search', search);
+            if (status) params.append('status', status);
+            if (sortBy) params.append('sortBy', sortBy);
+            if (sortOrder) params.append('sortOrder', sortOrder);
+            params.append('page', '1'); // Reset to first page
+
+            window.location.href = `${window.location.pathname}?${params.toString()}`;
+        }
+
+        // Pagination
+        function goToPage(page) {
+            const params = new URLSearchParams(window.location.search);
+            params.set('page', page);
+            window.location.href = `${window.location.pathname}?${params.toString()}`;
+        }
+
+        // Modal functions
+        async function viewOrderDetails(orderId) {
+            showLoading();
+            
+            try {
+                const response = await axios.get(`/admin/orders/${orderId}`);
+                displayOrderDetails(response.data.order);
+                showModal();
+            } catch (error) {
+                console.error('Error fetching order details:', error);
+                const errorMessage = error.response?.data?.error || 'Error fetching order details';
+                showToast(errorMessage, 'error');
+            } finally {
+                hideLoading();
+            }
+        }
+
+        function displayOrderDetails(order) {
+            const modalBody = document.getElementById('modalBody');
+            const modalTitle = document.getElementById('modalTitle');
+            modalTitle.textContent = `Order #${order.orderId}`;
+
+            const returnRequests = order.items.filter(item => item.status === "Return Requested");
+
+            modalBody.innerHTML = `
+                <div class="order-details">
+                    <!-- Customer Info -->
+                    <div class="detail-section">
+                        <h3>Customer Information</h3>
+                        <div class="detail-grid">
+                            <div class="detail-item"><label>Name:</label><span>${order.userId?.name || order.shippingAddress.fullName}</span></div>
+                            <div class="detail-item"><label>Email:</label><span>${order.userId?.email || 'N/A'}</span></div>
+                            <div class="detail-item"><label>Phone:</label><span>${order.userId?.phone || order.shippingAddress.phone}</span></div>
+                        </div>
+                    </div>
+
+                    <!-- Address -->
+                    <div class="detail-section">
+                        <h3>Shipping Address (${order.shippingAddress.addressName})</h3>
+                        <div class="address">
+                            <strong>${order.shippingAddress.fullName}</strong><br>
+                            ${order.shippingAddress.addressLine}<br>
+                            ${order.shippingAddress.landmark ? order.shippingAddress.landmark + '<br>' : ''}
+                            ${order.shippingAddress.city}, ${order.shippingAddress.state}<br>
+                            ${order.shippingAddress.country} - ${order.shippingAddress.pincode}<br>
+                            Phone: ${order.shippingAddress.phone}
+                        </div>
+                    </div>
+
+                    <!-- Order Status -->
+                    <div class="detail-section">
+                        <h3>Order Status</h3>
+                        <div class="status-update">
+                            <select id="orderStatusSelect" class="status-select">
+                                <option value="Pending" ${order.orderStatus === 'Pending' ? 'selected' : ''}>Pending</option>
+                                <option value="Placed" ${order.orderStatus === 'Placed' ? 'selected' : ''}>Placed</option>
+                                <option value="Shipped" ${order.orderStatus === 'Shipped' ? 'selected' : ''}>Shipped</option>
+                                <option value="Delivered" ${order.orderStatus === 'Delivered' ? 'selected' : ''}>Delivered</option>
+                                <option value="Cancelled" ${order.orderStatus === 'Cancelled' ? 'selected' : ''}>Cancelled</option>
+                                <option value="Partially Cancelled" ${order.orderStatus === 'Partially Cancelled' ? 'selected' : ''}>Partially Cancelled</option>
+                                <option value="Return Requested" ${order.orderStatus === 'Return Requested' ? 'selected' : ''}>Return Requested</option>
+                                <option value="Partially Returned" ${order.orderStatus === 'Partially Returned' ? 'selected' : ''}>Partially Returned</option>
+                                <option value="Returned" ${order.orderStatus === 'Returned' ? 'selected' : ''}>Returned</option>
+                                <option value="Return Approved" ${order.orderStatus === 'Return Approved' ? 'selected' : ''}>Return Approved</option>
+                                <option value="Partially Return Approved" ${order.orderStatus === 'Partially Return Approved' ? 'selected' : ''}>Partially Return Approved</option>
+                            </select>
+                            <button class="btn btn-primary" onclick="updateOrderStatus('${order._id}')">Update Status</button>
+                            ${!order.orderStatus.includes('Cancelled') && !order.orderStatus.includes('Delivered') ? `
+                                <button class="btn btn-danger" onclick="showCancelOrderConfirmation('${order._id}')">Cancel Order</button>
+                            ` : ''}
+                        </div>
+                    </div>
+
+                    <!-- Pending Return Requests -->
+                    ${returnRequests.length > 0 ? `
+                        <div class="detail-section" id="returnRequestsSection">
+                            <h3>🔄 Pending Return Requests (${returnRequests.length})</h3>
+                            <div class="items-list">
+                                ${returnRequests.map(item => `
+                                    <div class="item-card return-request-card" id="return-item-${item._id}">
+                                        <div class="item-info">
+                                            <h4>${item.productName}</h4>
+                                            <p><strong>Brand:</strong> ${item.brand}</p>
+                                            <p><strong>Qty:</strong> ${item.quantity}</p>
+                                            <p><strong>Price:</strong> ₹${(item.price * item.quantity).toLocaleString()}</p>
+                                            <p><strong>Return Reason:</strong> ${item.returnReason || 'N/A'}</p>
+                                            <p><strong>Requested On:</strong> ${item.returnRequestedAt ? new Date(item.returnRequestedAt).toLocaleDateString() : 'N/A'}</p>
+                                            <div class="return-actions">
+                                                <button class="btn-approve" onclick="showApproveReturnConfirmation('${order._id}', '${item._id}', '${item.productName}', ${item.price * item.quantity})">
+                                                    ✅ Approve & Refund
+                                                </button>
+                                                <button class="btn-reject" onclick="showRejectReturnConfirmation('${order._id}', '${item._id}', '${item.productName}')">
+                                                    ❌ Reject Request
+                                                </button>
+                                            </div>
+                                        </div>
+                                    </div>
+                                `).join('')}
+                            </div>
+                        </div>
+                    ` : ''}
+
+                    <!-- Payment Info -->
+                    <div class="detail-section">
+                        <h3>Payment Information</h3>
+                        <div class="detail-grid">
+                            <div class="detail-item"><label>Payment Method:</label><span>${order.paymentMethod}</span></div>
+                            <div class="detail-item"><label>Payment Status:</label>
+                                <span class="status-badge status-${order.paymentStatus.toLowerCase().replace(/\s+/g, '-')}">${order.paymentStatus}</span>
+                            </div>
+                            <div class="detail-item"><label>Paid:</label><span>${order.isPaid ? 'Yes' : 'No'}</span></div>
+                            ${order.refundedAmount > 0 ? `
+                                <div class="detail-item"><label>Refunded Amount:</label><span>₹${order.refundedAmount.toLocaleString()}</span></div>
+                            ` : ''}
+                            ${order.paymentDetails?.transactionId ? `
+                                <div class="detail-item"><label>Transaction ID:</label><span>${order.paymentDetails.transactionId}</span></div>
+                            ` : ''}
+                        </div>
+                    </div>
+
+                    <!-- Items -->
+                    <div class="detail-section">
+                        <h3>Order Items</h3>
+                        <div class="items-list">
+                            ${order.items.map(item => `
+                                <div class="item-card">
+                                    <div class="item-image">
+                                        <img src="${item.image?.url || '/placeholder.svg'}" alt="${item.productName}" />
+                                    </div>
+                                    <div class="item-info">
+                                        <h4>${item.productName}</h4>
+                                        <p><strong>Brand:</strong> ${item.brand}</p>
+                                        <p><strong>Price:</strong> ₹${item.price.toLocaleString()} × ${item.quantity} = ₹${(item.price * item.quantity).toLocaleString()}</p>
+                                        <p><strong>Status:</strong> 
+                                            <span class="status-badge status-${item.status.toLowerCase().replace(/\s+/g, '-')}">${item.status}</span>
+                                        </p>
+                                        <div class="item-actions">
+                                            <select class="item-status-select" data-item-id="${item._id}">
+                                                <option value="Placed" ${item.status === 'Placed' ? 'selected' : ''}>Placed</option>
+                                                <option value="Shipped" ${item.status === 'Shipped' ? 'selected' : ''}>Shipped</option>
+                                                <option value="Delivered" ${item.status === 'Delivered' ? 'selected' : ''}>Delivered</option>
+                                                <option value="Cancelled" ${item.status === 'Cancelled' ? 'selected' : ''}>Cancelled</option>
+                                                <option value="Return Requested" ${item.status === 'Return Requested' ? 'selected' : ''}>Return Requested</option>
+                                                <option value="Return Approved" ${item.status === 'Return Approved' ? 'selected' : ''}>Return Approved</option>
+                                                <option value="Return Rejected" ${item.status === 'Return Rejected' ? 'selected' : ''}>Return Rejected</option>
+                                            </select>
+                                            <button class="btn btn-sm btn-primary" onclick="updateItemStatus('${order._id}', '${item._id}')">
+                                                Update Item Status
+                                            </button>
+                                        </div>
+                                        ${item.status === 'Return Approved' ? `
+                                            <span class="status-badge bg-success text-white mt-2">
+                                                ✅ Return Approved & Refunded
+                                            </span>
+                                        ` : ''}
+                                        ${item.status === 'Return Rejected' ? `
+                                            <span class="status-badge bg-danger text-white mt-2">
+                                                ❌ Return Rejected
+                                            </span>
+                                        ` : ''}
+                                        ${item.cancelReason ? `
+                                            <div class="reason-info">
+                                                <p><strong>Cancel Reason:</strong> ${item.cancelReason}</p>
+                                            </div>
+                                        ` : ''}
+                                        ${item.returnReason ? `
+                                            <div class="reason-info">
+                                                <p><strong>Return Reason:</strong> ${item.returnReason}</p>
+                                            </div>
+                                        ` : ''}
+                                        ${item.returnRejectionReason ? `
+                                            <div class="reason-info">
+                                                <p><strong>Rejection Reason:</strong> ${item.returnRejectionReason}</p>
+                                            </div>
+                                        ` : ''}
+                                    </div>
+                                </div>
+                            `).join('')}
+                        </div>
+                    </div>
+
+                    <!-- Summary -->
+                    <div class="detail-section">
+                        <h3>Order Summary</h3>
+                        <div class="order-summary">
+                            <div class="summary-row"><span>Subtotal:</span><span>₹${order.subtotal.toLocaleString()}</span></div>
+                            ${order.coupon?.code ? `
+                                <div class="summary-row"><span>Coupon (${order.coupon.code}):</span><span>-₹${order.coupon.discountAmount.toLocaleString()}</span></div>
+                            ` : ''}
+                            <div class="summary-row"><span>Discount:</span><span>-₹${order.discount.toLocaleString()}</span></div>
+                            ${order.refundedAmount > 0 ? `
+                                <div class="summary-row"><span>Refunded:</span><span style="color: #ef4444;">-₹${order.refundedAmount.toLocaleString()}</span></div>
+                            ` : ''}
+                            <div class="summary-row total"><span>Total:</span><span>₹${order.totalAmount.toLocaleString()}</span></div>
+                        </div>
+                    </div>
+
+                    <!-- Timeline -->
+                    <div class="detail-section">
+                        <h3>Timeline</h3>
+                        <div class="timeline">
+                            <div class="timeline-item"><strong>Created:</strong> ${new Date(order.createdAt).toLocaleString()}</div>
+                            <div class="timeline-item"><strong>Updated:</strong> ${new Date(order.updatedAt).toLocaleString()}</div>
+                            ${order.cancellation?.cancelledAt ? `
+                                <div class="timeline-item">
+                                    <strong>Cancelled:</strong> ${new Date(order.cancellation.cancelledAt).toLocaleString()}
+                                    <br><strong>By:</strong> ${order.cancellation.cancelledBy}
+                                    <br><strong>Reason:</strong> ${order.cancellation.reason}
+                                </div>
+                            ` : ''}
+                            ${order.returnInfo?.returnedAt ? `
+                                <div class="timeline-item">
+                                    <strong>Return Info:</strong> ${new Date(order.returnInfo.returnedAt).toLocaleString()}
+                                    <br><strong>Total Requests:</strong> ${order.returnInfo.totalReturnRequests || 0}
+                                    <br><strong>Approved:</strong> ${order.returnInfo.approvedReturns || 0}
+                                    <br><strong>Rejected:</strong> ${order.returnInfo.rejectedReturns || 0}
+                                </div>
+                            ` : ''}
+                        </div>
+                    </div>
+                </div>
+            `;
+        }
+
+        async function updateOrderStatus(orderId) {
+            const newStatus = document.getElementById('orderStatusSelect').value;
+            showLoading();
+            try {
+                const response = await axios.put(`/admin/orders/${orderId}/status`, {
+                    status: newStatus
+                });
+                showToast('Order status updated successfully!', 'success');
+                // Refresh the page to show updated data
+                setTimeout(() => {
+                    window.location.reload();
+                }, 1500);
+            } catch (error) {
+                console.error('Error updating order status:', error);
+                const errorMessage = error.response?.data?.error || 'Error updating order status';
+                showToast(errorMessage, 'error');
+            } finally {
+                hideLoading();
+            }
+        }
+
+        async function updateItemStatus(orderId, itemId) {
+            const selectElement = document.querySelector(`[data-item-id="${itemId}"]`);
+            const newStatus = selectElement.value;
+            let reason = '';
+
+            if (newStatus === 'Cancelled' || newStatus === 'Return Requested') {
+                reason = prompt(`Please enter reason for ${newStatus.toLowerCase()}:`);
+                if (!reason) return;
+            }
+
+            showLoading();
+            try {
+                const response = await axios.put(`/admin/orders/${orderId}/items/${itemId}/status`, {
+                    status: newStatus,
+                    reason: reason
+                });
+                showToast('Item status updated successfully!', 'success');
+                // Refresh the modal with updated data
+                setTimeout(() => {
+                    viewOrderDetails(orderId);
+                }, 1000);
+            } catch (error) {
+                console.error('Error updating item status:', error);
+                const errorMessage = error.response?.data?.error || 'Error updating item status';
+                showToast(errorMessage, 'error');
+            } finally {
+                hideLoading();
+            }
+        }
+
+        function showApproveReturnConfirmation(orderId, itemId, productName, refundAmount) {
+            showConfirmationModal(
+                'Approve Return Request',
+                `Are you sure you want to approve the return for "${productName}"?\n\nThis will refund ₹${refundAmount.toLocaleString("en-IN")} to the customer's wallet and restore the product stock.`,
+                () => approveReturn(orderId, itemId),
+                'approve'
+            );
+        }
+
+        function showRejectReturnConfirmation(orderId, itemId, productName) {
+            showConfirmationModal(
+                'Reject Return Request',
+                `Are you sure you want to reject the return request for "${productName}"?\n\nPlease provide a reason for rejection:`,
+                () => {
+                    const rejectionReason = document.getElementById('rejectionReasonInput').value.trim();
+                    if (!rejectionReason) {
+                        showToast('Please provide a rejection reason', 'error');
+                        return;
+                    }
+                    rejectReturn(orderId, itemId, rejectionReason);
+                },
+                'reject',
+                true
+            );
+        }
+
+        async function approveReturn(orderId, itemId) {
+            showLoading();
+            try {
+                const response = await axios.post(`/admin/orders/${orderId}/items/${itemId}/approve-return`);
+                
+                const message = response.data.message || 'Return approved successfully!';
+                showToast(message, 'success');
+                
+                // Remove the item from pending returns section
+                const itemElement = document.getElementById(`return-item-${itemId}`);
+                if (itemElement) {
+                    itemElement.remove();
+                }
+                
+                // Check if there are any more pending returns
+                const returnSection = document.getElementById('returnRequestsSection');
+                const remainingItems = returnSection?.querySelectorAll('.return-request-card');
+                if (remainingItems && remainingItems.length === 0) {
+                    returnSection.style.display = 'none';
+                }
+                
+                // Refresh modal data after a short delay
+                setTimeout(() => {
+                    viewOrderDetails(orderId);
+                }, 2000);
+                
+            } catch (error) {
+                console.error('Error approving return:', error);
+                const errorMessage = error.response?.data?.error || 'Unknown error occurred during return approval.';
+                showToast(errorMessage, 'error');
+            } finally {
+                hideLoading();
+            }
+        }
+
+        async function rejectReturn(orderId, itemId, rejectionReason) {
+            showLoading();
+            try {
+                const response = await axios.post(`/admin/orders/${orderId}/items/${itemId}/reject-return`, {
+                    rejectionReason: rejectionReason
+                });
+                
+                const message = response.data.message || 'Return request rejected successfully!';
+                showToast(message, 'warning');
+                
+                // Remove the item from pending returns section
+                const itemElement = document.getElementById(`return-item-${itemId}`);
+                if (itemElement) {
+                    itemElement.remove();
+                }
+                
+                // Check if there are any more pending returns
+                const returnSection = document.getElementById('returnRequestsSection');
+                const remainingItems = returnSection?.querySelectorAll('.return-request-card');
+                if (remainingItems && remainingItems.length === 0) {
+                    returnSection.style.display = 'none';
+                }
+                
+                // Refresh modal data after a short delay
+                setTimeout(() => {
+                    viewOrderDetails(orderId);
+                }, 2000);
+                
+            } catch (error) {
+                console.error('Error rejecting return:', error);
+                const errorMessage = error.response?.data?.error || 'Unknown error occurred during return rejection.';
+                showToast(errorMessage, 'error');
+            } finally {
+                hideLoading();
+            }
+        }
+
+        function showCancelOrderConfirmation(orderId) {
+            showConfirmationModal(
+                'Cancel Order',
+                'Are you sure you want to cancel this entire order? This action cannot be undone.',
+                () => {
+                    const reason = prompt('Please enter cancellation reason:');
+                    if (reason) {
+                        cancelOrder(orderId, reason);
+                    }
+                }
+            );
+        }
+
+        async function cancelOrder(orderId, reason) {
+            showLoading();
+            try {
+                const response = await axios.put(`/admin/orders/${orderId}/cancel`, {
+                    reason: reason
+                });
+                showToast('Order cancelled successfully!', 'success');
+                // Refresh the page to show updated data
+                setTimeout(() => {
+                    window.location.reload();
+                }, 1500);
+            } catch (error) {
+                console.error('Error cancelling order:', error);
+                const errorMessage = error.response?.data?.error || 'Error cancelling order';
+                showToast(errorMessage, 'error');
+            } finally {
+                hideLoading();
+            }
+        }
+
+        // Enhanced Confirmation Modal Functions
+        function showConfirmationModal(title, message, onConfirm, type = 'default', showRejectionInput = false) {
+            document.getElementById('confirmationTitle').textContent = title;
+            document.getElementById('confirmationMessage').textContent = message;
+            
+            const confirmButton = document.getElementById('confirmationButton');
+            const rejectionContainer = document.getElementById('rejectionReasonContainer');
+            const rejectionInput = document.getElementById('rejectionReasonInput');
+            
+            // Reset rejection input
+            rejectionInput.value = '';
+            document.getElementById('rejectionCharCount').textContent = '0';
+            
+            if (showRejectionInput) {
+                rejectionContainer.style.display = 'block';
+            } else {
+                rejectionContainer.style.display = 'none';
+            }
+            
+            // Style the confirm button based on type
+            confirmButton.className = `btn-confirm ${type}`;
+            if (type === 'approve') {
+                confirmButton.textContent = 'Approve Return';
+            } else if (type === 'reject') {
+                confirmButton.textContent = 'Reject Return';
+            } else {
+                confirmButton.textContent = 'Confirm';
+            }
+            
+            pendingAction = onConfirm;
+            document.getElementById('confirmationModal').style.display = 'block';
+        }
+
+        function closeConfirmationModal() {
+            document.getElementById('confirmationModal').style.display = 'none';
+            document.getElementById('rejectionReasonContainer').style.display = 'none';
+            pendingAction = null;
+        }
+
+        function executeConfirmedAction() {
+            if (pendingAction) {
+                pendingAction();
+                closeConfirmationModal();
+            }
+        }
+
+        // Toast Functions
+        function showToast(message, type = 'info') {
+            const toast = document.createElement('div');
+            toast.className = `toast ${type}`;
+            
+            const iconMap = {
+                success: '✓',
+                error: '✕',
+                warning: '⚠',
+                info: 'ℹ'
+            };
+            
+            toast.innerHTML = `
+                <span class="toast-icon">${iconMap[type] || 'ℹ'}</span>
+                <span class="toast-message">${message}</span>
+                <button class="toast-close" onclick="this.parentElement.remove()">×</button>
+            `;
+            
+            document.getElementById('toastContainer').appendChild(toast);
+            
+            // Auto remove after 5 seconds
+            setTimeout(() => {
+                if (toast.parentElement) {
+                    toast.remove();
+                }
+            }, 5000);
+        }
+
+        // Modal utility functions
+        function showModal() {
+            document.getElementById('orderModal').style.display = 'block';
+            document.body.style.overflow = 'hidden';
+        }
+
+        function closeModal() {
+            document.getElementById('orderModal').style.display = 'none';
+            document.body.style.overflow = 'auto';
+        }
+
+        function showLoading() {
+            document.getElementById('loadingSpinner').style.display = 'flex';
+        }
+
+        function hideLoading() {
+            document.getElementById('loadingSpinner').style.display = 'none';
+        }
+
+        // Close modal when clicking outside
+        window.onclick = function(event) {
+            const modal = document.getElementById('orderModal');
+            const confirmModal = document.getElementById('confirmationModal');
+            if (event.target === modal) {
+                closeModal();
+            }
+            if (event.target === confirmModal) {
+                closeConfirmationModal();
+            }
+        }
+    </script>
+</body>
+</html>
