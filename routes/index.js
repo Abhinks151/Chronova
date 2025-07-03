@@ -11,6 +11,8 @@ import userAccountRoutes from "./user/userAccountRoutes.js";
 import userLandingRoutes from "./user/userLandingRoutes.js";
 import userOrderRoutes from "./user/userOrderRoutes.js";
 import adminOrderRouter from './adminDashboardRoutes/orderRoutes.js';
+import userWalletRoutes from "./user/userWalletRoutes.js";
+
 
 const indexRoutes = express.Router();
 
@@ -25,13 +27,16 @@ indexRoutes.use('/admin', adminProductManagement);
 indexRoutes.use('/admin', categoryRouter)
 
 indexRoutes.use('/user', userProductPageRoutes);
-indexRoutes.use('/user',userLandingRoutes)
+indexRoutes.use('/user', userLandingRoutes)
 
-indexRoutes.use('/user',userAccountRoutes)
+indexRoutes.use('/user', userAccountRoutes)
 
-indexRoutes.use('/user',userOrderRoutes) 
+indexRoutes.use('/user', userOrderRoutes)
 
 indexRoutes.use('/admin', adminOrderRouter)
+
+indexRoutes.use('/user', userWalletRoutes)
+
 
 export default indexRoutes;
 
