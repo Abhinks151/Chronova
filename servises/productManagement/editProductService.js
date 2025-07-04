@@ -2,6 +2,7 @@ import { Products } from "../../models/products.js";
 import httpStatusCode from "../../utils/httpStatusCode.js";
 import mongoose from "mongoose";
 import { v2 as cloudinary } from 'cloudinary';
+import { logStockChange } from "../../utils/logStockRegistry.js";
 
 export const getProduct = async (id) => {
   return await Products.findOne({ _id: id, isBlocked: false }).lean();
@@ -57,9 +58,7 @@ export const updateProductService = async (productId, body, files) => {
       }
     });
 
-    // Filter out nulls
     const finalImages = updatedImages.filter((img) => img);
-
     existingProduct.images = finalImages;
 
     const productData = {
@@ -67,7 +66,6 @@ export const updateProductService = async (productId, body, files) => {
       images: finalImages,
       updatedAt: new Date(),
     };
-
 
     const { productName, description, price, stockQuantity, category, brand } = productData;
 
@@ -119,14 +117,22 @@ export const updateProductService = async (productId, body, files) => {
       };
     }
 
-    // const nameExists = await Products.findOne({ productName: new RegExp(`^${productName.trim()}$`, 'i') });
-    // if (nameExists) {
-    //   return {
-    //     status: false,
-    //     statusCode: httpStatusCode.BAD_REQUEST.code,
-    //     message: "Product name already exists. Please use a different name.",
-    //   };
-    // }
+    const oldStock = existingProduct.stockQuantity;
+    const newStock = Number(stockQuantity);
+
+    if (oldStock !== newStock) {
+      const action = newStock > oldStock ? 'stock_in' : 'stock_out';
+      const quantity = Math.abs(newStock - oldStock);
+      const reason = 'Manual update by admin';
+
+      await logStockChange({
+        productId,
+        action,
+        quantity,
+        reason,
+        updatedBy: 'admin'
+      });
+    }
 
     const updatedProduct = await Products.findByIdAndUpdate(productId, productData, {
       new: true,
@@ -137,6 +143,7 @@ export const updateProductService = async (productId, body, files) => {
       message: "Product updated successfully!",
       product: updatedProduct,
     };
+
   } catch (error) {
     console.error("Service error in updateProductService:", error);
 
@@ -147,4 +154,5 @@ export const updateProductService = async (productId, body, files) => {
     };
   }
 };
+
 

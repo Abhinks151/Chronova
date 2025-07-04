@@ -29,7 +29,7 @@ userAuthRouter.get('/resend-otp', getVerifyUserOTP);
 userAuthRouter.post('/resend-otp', validate(['email']), resendVerificationCode);
 
 userAuthRouter.get('/login',preventLoggedInAccess, getUserLogin);
-userAuthRouter.post('/login',preventLoggedInAccess, validate(['email', 'password']), postUserLogin);
+userAuthRouter.post('/login', validate(['email', 'password']), postUserLogin);
 
 userAuthRouter.get('/forgot-password', getForgotPassord);
 userAuthRouter.post('/forgot-password', postForgotPassword);

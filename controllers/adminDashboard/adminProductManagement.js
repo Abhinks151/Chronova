@@ -33,6 +33,8 @@ export const getFilteredProducts = async (req, res) => {
   try {
     const paginated = await paginationService(req.query);
     const categories = await getCategory();
+
+    
     res.status(httpStatusCode.OK.code).json({
       success: true,
       products: paginated.products,

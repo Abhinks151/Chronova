@@ -1,0 +1,251 @@
+<!-- Wallet Page EJS (Search Removed) -->
+<!DOCTYPE html>
+<html lang="en">
+	<head>
+		<meta charset="UTF-8" />
+		<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+		<title>Wallet</title>
+		<link rel="stylesheet" href="/styles/user/user-profile-sidebar.css" />
+		<link rel="stylesheet" href="/styles/user/wallet.css" />
+		<link
+			rel="stylesheet"
+			href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css"
+		/>
+		<script src="https://cdnjs.cloudflare.com/ajax/libs/axios/1.6.0/axios.min.js"></script>
+	</head>
+	<body>
+		<!-- Toast Container -->
+		<div id="toast-container" class="toast-container"></div>
+
+		<!-- Sidebar -->
+		<div class="sidebar-container">
+			<%- include('../../partials/user-profile-sidebar') %>
+		</div>
+
+		<!-- Main Content -->
+		<div class="main-content">
+			<div class="wallet-container">
+				<div class="wallet-header">
+					<h1>Wallet Management</h1>
+					<div class="wallet-balance">
+						<span class="balance-label">Current Balance:</span>
+						<span class="balance-amount" id="current-balance"
+							>₹0.00</span
+						>
+					</div>
+				</div>
+
+				<div class="wallet-content">
+					<!-- Filter Section -->
+					<div class="filter-section">
+						<select id="type-filter" class="filter-select">
+							<option value="">All Types</option>
+							<option value="credit">Credit</option>
+							<option value="debit">Debit</option>
+						</select>
+						<select id="sort-filter" class="filter-select">
+							<option value="desc">Latest First</option>
+							<option value="asc">Oldest First</option>
+						</select>
+					</div>
+
+					<!-- Transactions -->
+					<div class="transactions-section">
+						<div class="table-header">
+							<div class="header-cell">Date</div>
+							<div class="header-cell">Description</div>
+							<div class="header-cell">Type</div>
+							<div class="header-cell">Amount</div>
+						</div>
+
+						<div
+							id="transactions-container"
+							class="transactions-container"
+						></div>
+
+						<div
+							id="loading"
+							class="loading"
+							style="display: none;"
+						>
+							<div class="loading-spinner"></div>
+							<span>Loading transactions...</span>
+						</div>
+
+						<div
+							id="no-data"
+							class="no-data"
+							style="display: none;"
+						>
+							<span>No transactions found</span>
+						</div>
+					</div>
+
+					<!-- Pagination -->
+					<div
+						class="pagination-section"
+						id="pagination-section"
+						style="display: none;"
+					>
+						<button id="prev-btn" class="pagination-btn" disabled>
+							Previous
+						</button>
+						<span id="page-info" class="page-info">Page 1</span>
+						<button id="next-btn" class="pagination-btn" disabled>
+							Next
+						</button>
+					</div>
+				</div>
+			</div>
+		</div>
+
+		<script>
+			function showToast(message, type = 'success') {
+			  const toast = document.createElement('div');
+			  toast.className = `toast toast-${type}`;
+			  toast.innerHTML = `
+			    <span>${message}</span>
+			    <button class="toast-close" onclick="this.parentElement.remove()">×</button>
+			  `;
+			  document.getElementById('toast-container').appendChild(toast);
+			  setTimeout(() => {
+			    if (toast.parentElement) toast.remove();
+			  }, 5000);
+			}
+
+			let currentPage = 1;
+			let currentFilters = {
+			  type: '',
+			  sort: 'desc'
+			};
+			let walletData = null;
+
+			document.addEventListener('DOMContentLoaded', function () {
+			  loadWalletData();
+			  setupEventListeners();
+			});
+
+			function setupEventListeners() {
+			  document.getElementById('type-filter').addEventListener('change', handleFilterChange);
+			  document.getElementById('sort-filter').addEventListener('change', handleFilterChange);
+			  document.getElementById('prev-btn').addEventListener('click', () => changePage(-1));
+			  document.getElementById('next-btn').addEventListener('click', () => changePage(1));
+			}
+
+			async function loadWalletData() {
+			  try {
+			    showLoading(true);
+			    const response = await axios.get('/user/wallet/data');
+			    if (response.data.success) {
+			      walletData = response.data.data;
+			      updateBalance(walletData.balance);
+			      await loadTransactions();
+			      showToast('Wallet data loaded successfully', 'info');
+			    } else {
+			      showToast(response.data.message || 'Failed to load wallet data', 'error');
+			    }
+			  } catch (error) {
+			    console.error('Error loading wallet data:', error);
+			    showToast('Error loading wallet data', 'error');
+			  } finally {
+			    showLoading(false);
+			  }
+			}
+
+			async function loadTransactions() {
+			  try {
+			    showLoading(true);
+			    const params = {
+			      page: currentPage,
+			      limit: 10,
+			      ...currentFilters
+			    };
+
+			    const response = await axios.get('/user/wallet/filter', { params });
+			    if (response.data.success) {
+			      const transactions = response.data.data.transactions || [];
+			      const totalPages = response.data.data.totalPages || 1;
+			      renderTransactions(transactions);
+			      updatePagination(totalPages);
+			      showNoData(transactions.length === 0);
+			    } else {
+			      showToast(response.data.message || 'Failed to load transactions', 'error');
+			    }
+			  } catch (error) {
+			    console.error('Error loading transactions:', error);
+			    showToast('Error loading transactions', 'error');
+			  } finally {
+			    showLoading(false);
+			  }
+			}
+
+			function renderTransactions(transactions) {
+			  const container = document.getElementById('transactions-container');
+			  container.innerHTML = '';
+			  transactions.forEach(transaction => {
+			    const transactionEl = document.createElement('div');
+			    transactionEl.className = 'transaction-row';
+
+			    const date = new Date(transaction.timestamp).toLocaleDateString('en-IN', {
+			      year: 'numeric', month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit'
+			    });
+
+			    transactionEl.innerHTML = `
+			      <div class="transaction-cell date-cell">${date}</div>
+			      <div class="transaction-cell description-cell">${transaction.description}</div>
+			      <div class="transaction-cell type-cell">
+			        <span class="transaction-type ${transaction.type}">${transaction.type.toUpperCase()}</span>
+			      </div>
+			      <div class="transaction-cell amount-cell">
+			        <span class="amount ${transaction.type}">
+			          ${transaction.type === 'credit' ? '+' : '-'}₹${transaction.amount.toFixed(2)}
+			        </span>
+			      </div>
+			    `;
+
+			    container.appendChild(transactionEl);
+			  });
+			}
+
+			function updateBalance(balance) {
+			  document.getElementById('current-balance').textContent = `₹${balance.toFixed(2)}`;
+			}
+
+			function handleFilterChange() {
+			  currentFilters.type = document.getElementById('type-filter').value;
+			  currentFilters.sort = document.getElementById('sort-filter').value;
+			  currentPage = 1;
+			  loadTransactions();
+			}
+
+			function changePage(direction) {
+			  currentPage += direction;
+			  loadTransactions();
+			}
+
+			function updatePagination(totalPages) {
+			  const paginationSection = document.getElementById('pagination-section');
+			  const prevBtn = document.getElementById('prev-btn');
+			  const nextBtn = document.getElementById('next-btn');
+			  const pageInfo = document.getElementById('page-info');
+
+			  if (totalPages > 1) {
+			    paginationSection.style.display = 'flex';
+			    prevBtn.disabled = currentPage === 1;
+			    nextBtn.disabled = currentPage === totalPages;
+			    pageInfo.textContent = `Page ${currentPage} of ${totalPages}`;
+			  } else {
+			    paginationSection.style.display = 'none';
+			  }
+			}
+
+			function showLoading(show) {
+			  document.getElementById('loading').style.display = show ? 'flex' : 'none';
+			}
+
+			function showNoData(show) {
+			  document.getElementById('no-data').style.display = show ? 'flex' : 'none';
+			}
+		</script>
+	</body>
+</html>

@@ -1,6 +1,6 @@
 import { fetchFilteredProducts } from "../../servises/user/filterUserProductsService.js";
 import { getActiveCategories, getActiveProducts } from "../../servises/user/getUserProductService.js";
-import { countWishlistProductByUserId, findWishlistByUserId } from "../../servises/user/wishlistServices.js";
+import {  findWishlistByUserId } from "../../servises/user/wishlistServices.js";
 import HttpStatusCode from "../../utils/httpStatusCode.js";
 
 
