@@ -85,15 +85,16 @@ export const authenticateUser = async (req, res, next) => {
   }
 };
 
+
 export const preventLoggedInAccess = (req, res, next) => {
   const token = req.cookies?.token;
-
   if (!token) return next();
 
   try {
-    jwt.verify(token, process.env.JWT_SECRET_KEY);
-    return res.redirect('/user/home');
+    const decoded = jwt.verify(token, process.env.JWT_SECRET_KEY);
+    if (decoded) return res.redirect('/user/home');
   } catch (err) {
+    // Token is invalid or expired — allow access to login
     return next();
   }
 };

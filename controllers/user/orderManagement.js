@@ -10,6 +10,7 @@ import {
   generateInvoiceService,
 } from "../../servises/user/orderService.js"
 import httpStatusCode from "../../utils/httpStatusCode.js"
+import { logStockChange } from "../../utils/logStockRegistry.js"
 import { returnReason } from "../../utils/returnReason.js"
 
 export const getCheckoutPage = (req, res) => {
@@ -55,7 +56,7 @@ export const getCheckoutPageData = async (req, res) => {
 export const placeOrder = async (req, res) => {
   try {
     const userId = req.user._id || req.user.id
-    const data = await placeOrderService(userId, req.body)
+    const data = await placeOrderService(userId, req.body, req)
     return res.status(httpStatusCode.OK.code).json({
       success: true,
       message: "Order placed successfully.",
@@ -154,186 +155,227 @@ export const getSingleOrderController = async (req, res) => {
 
 export const cancelEntireOrderController = async (req, res) => {
   try {
-    const userId = req.user._id || req.user.id
-    const { orderId } = req.params
+    const userId = req.user._id || req.user.id;
+    const { orderId } = req.params;
 
-    const order = await Order.findOne({ userId, orderId })
-
+    const order = await Order.findOne({ userId, orderId });
     if (!order) {
-      return res.status(404).json({ success: false, message: "Order not found." })
+      return res.status(404).json({ success: false, message: "Order not found." });
     }
 
     if (order.orderStatus === "Cancelled") {
-      return res.status(400).json({ success: false, message: "Order already cancelled." })
+      return res.status(400).json({ success: false, message: "Order already cancelled." });
     }
 
-    const allItemsPlaced = order.items.every((item) => item.status === "Placed")
-
+    const allItemsPlaced = order.items.every((item) => item.status === "Placed");
     if (!allItemsPlaced) {
       return res.status(400).json({
         success: false,
         message: "Only orders with all items in 'Placed' status can be cancelled.",
-      })
+      });
     }
 
     for (const item of order.items) {
       await Products.findByIdAndUpdate(item.productId, {
         $inc: { stockQuantity: item.quantity },
-      })
+      });
 
-      item.status = "Cancelled"
-      item.cancelReason = "Cancelled by user"
+      item.status = "Cancelled";
+      item.cancelReason = "Cancelled by user";
+
+      await logStockChange({
+        productId: item.productId,
+        action: "stock_in",
+        quantity: item.quantity,
+        reason: "Order Cancelled",
+        updatedBy: "system",
+        userId,
+      });
     }
 
-    order.orderStatus = "Cancelled"
+    order.orderStatus = "Cancelled";
     order.cancellation = {
       cancelledAt: new Date(),
       cancelledBy: "User",
       reason: "Cancelled by user",
-    }
+    };
 
-    await order.save()
+    await order.save();
 
     return res.status(200).json({
       success: true,
       message: "Order cancelled successfully.",
       order,
-    })
+    });
   } catch (error) {
-    console.error("Error cancelling entire order:", error)
+    console.error("Error cancelling entire order:", error);
     return res.status(500).json({
       success: false,
       message: error.message || "Server error while cancelling entire order.",
-    })
+    });
   }
-}
+};
+
 
 export const cancelSingleItemController = async (req, res) => {
   try {
-    const userId = req.user._id || req.user.id
-    const { orderId, itemId } = req.params
+    const userId = req.user._id || req.user.id;
+    const { orderId, itemId } = req.params;
 
-    const order = await Order.findOne({ userId, orderId })
-
+    const order = await Order.findOne({ userId, orderId });
     if (!order) {
-      return res.status(404).json({ success: false, message: "Order not found." })
+      return res.status(404).json({ success: false, message: "Order not found." });
     }
 
-    const item = order.items.id(itemId)
-
+    const item = order.items.id(itemId);
     if (!item) {
-      return res.status(404).json({ success: false, message: "Item not found in order." })
+      return res.status(404).json({ success: false, message: "Item not found in order." });
     }
 
     if (item.status !== "Placed") {
-      return res.status(400).json({ success: false, message: "Item cannot be cancelled." })
+      return res.status(400).json({ success: false, message: "Item cannot be cancelled." });
     }
 
     await Products.findByIdAndUpdate(item.productId, {
       $inc: { stockQuantity: item.quantity },
-    })
+    });
 
-    item.status = "Cancelled"
-    item.cancelReason = "Cancelled by user"
+    item.status = "Cancelled";
+    item.cancelReason = "Cancelled by user";
 
-    const allItemsCancelled = order.items.every((item) => item.status === "Cancelled")
+    await logStockChange({
+      productId: item.productId,
+      action: "stock_in",
+      quantity: item.quantity,
+      reason: "Item Cancelled",
+      updatedBy: "system",
+      userId,
+    });
 
+    const allItemsCancelled = order.items.every((i) => i.status === "Cancelled");
     if (allItemsCancelled) {
-      order.orderStatus = "Cancelled"
+      order.orderStatus = "Cancelled";
       order.cancellation = {
         cancelledAt: new Date(),
         cancelledBy: "User",
         reason: "All items cancelled",
-      }
+      };
     }
 
-    await order.save()
+    await order.save();
 
     return res.status(200).json({
       success: true,
       message: "Item cancelled successfully.",
       order,
-    })
+    });
   } catch (error) {
-    console.error("Error cancelling item:", error)
+    console.error("Error cancelling item:", error);
     return res.status(500).json({
       success: false,
       message: error.message || "Server error while cancelling item.",
-    })
+    });
   }
-}
+};
+
 
 export const returnOrderItemController = async (req, res) => {
   try {
-    const userId = req.user._id || req.user.id
-    const { orderId, itemId } = req.params
-    const { returnReason } = req.body
+    const userId = req.user._id || req.user.id;
+    const { orderId, itemId } = req.params;
+    const { returnReason } = req.body;
 
-    if (!userId || !orderId || !itemId) {
-      return res.status(httpStatusCode.BAD_REQUEST.code).json({
-        success: false,
-        message: "User ID, Order ID and Item ID are required.",
-      })
+    if (!returnReason?.trim()) {
+      return res.status(400).json({ success: false, message: "Return reason is required." });
     }
 
-    if (!returnReason || returnReason.trim().length === 0) {
-      return res.status(httpStatusCode.BAD_REQUEST.code).json({
-        success: false,
-        message: "Return reason is required.",
-      })
+    const order = await Order.findOne({ userId, orderId });
+    if (!order) return res.status(404).json({ success: false, message: "Order not found." });
+
+    const item = order.items.id(itemId);
+    if (!item) return res.status(404).json({ success: false, message: "Item not found." });
+
+    if (item.status !== "Delivered") {
+      return res.status(400).json({ success: false, message: "Only delivered items can be returned." });
     }
 
-    const result = await returnOrderItemService(userId, orderId, itemId, returnReason.trim())
+    item.status = "Return Requested";
+    item.returnReason = returnReason.trim();
 
-    return res.status(httpStatusCode.OK.code).json({
+    await order.save();
+
+    return res.status(200).json({
       success: true,
-      message: "Return request submitted successfully. Admin will review and approve your request.",
-      order: result,
-    })
+      message: "Return request submitted successfully.",
+      order,
+    });
   } catch (error) {
-    console.error("Error returning order item:", error)
-    return res.status(httpStatusCode.INTERNAL_SERVER_ERROR.code).json({
-      success: false,
-      message: error.message || "Something went wrong while processing the return request.",
-    })
+    console.error("Error returning item:", error);
+    return res.status(500).json({ success: false, message: error.message || "Return failed." });
   }
-}
+};
+
+
 
 export const returnEntireOrderController = async (req, res) => {
   try {
-    const userId = req.user._id || req.user.id
-    const { orderId } = req.params
-    const { returnReason } = req.body
+    const userId = req.user._id || req.user.id;
+    const { orderId } = req.params;
+    const { returnReason } = req.body;
 
-    if (!userId || !orderId) {
-      return res.status(httpStatusCode.BAD_REQUEST.code).json({
-        success: false,
-        message: "User ID and Order ID are required.",
-      })
-    }
-
-    if (!returnReason || returnReason.trim().length === 0) {
-      return res.status(httpStatusCode.BAD_REQUEST.code).json({
+    if (!returnReason?.trim()) {
+      return res.status(400).json({
         success: false,
         message: "Return reason is required.",
-      })
+      });
     }
 
-    const result = await returnEntireOrderService(userId, orderId, returnReason.trim())
+    const order = await Order.findOne({ userId, orderId });
+    if (!order) {
+      return res.status(404).json({
+        success: false,
+        message: "Order not found.",
+      });
+    }
 
-    return res.status(httpStatusCode.OK.code).json({
+    const allEligible = order.items.every((item) => item.status === "Delivered");
+    if (!allEligible) {
+      return res.status(400).json({
+        success: false,
+        message: "Only delivered orders can be returned.",
+      });
+    }
+
+    for (const item of order.items) {
+      item.status = "Return Requested";
+      item.returnReason = returnReason.trim();
+    }
+
+    order.orderStatus = "Return Requested";
+    order.returnRequest = {
+      requestedAt: new Date(),
+      requestedBy: "User",
+      reason: returnReason.trim(),
+    };
+
+    await order.save();
+
+    return res.status(200).json({
       success: true,
-      message: "Return request submitted successfully. Admin will review and approve your request.",
-      order: result,
-    })
+      message: "Return request submitted successfully.",
+      order,
+    });
   } catch (error) {
-    console.error("Error returning entire order:", error)
-    return res.status(httpStatusCode.INTERNAL_SERVER_ERROR.code).json({
+    console.error("Error returning entire order:", error);
+    return res.status(500).json({
       success: false,
-      message: error.message || "Something went wrong while processing the return request.",
-    })
+      message: error.message || "Return failed.",
+    });
   }
-}
+};
+
+
+
 
 export const downloadInvoiceController = async (req, res) => {
   try {

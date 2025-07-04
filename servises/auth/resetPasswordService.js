@@ -29,9 +29,9 @@ export const resetPassword = async ({ body }) => {
 
 
 
-
 export const handlePasswordReset = async (body) => {
   const { token, password, confirmPassword } = body;
+
   if (!token || !password || !confirmPassword) {
     return {
       status: httpStatusCode.BAD_REQUEST.code,
@@ -40,9 +40,8 @@ export const handlePasswordReset = async (body) => {
         token,
         error: 'All fields are required.'
       }
-    }
-  };
-
+    };
+  }
 
   if (password !== confirmPassword) {
     return {
@@ -52,8 +51,8 @@ export const handlePasswordReset = async (body) => {
         token,
         error: 'Passwords do not match.'
       }
-    }
-  };
+    };
+  }
 
   const user = await User.findOne({
     resetPasswordToken: token,
@@ -64,7 +63,10 @@ export const handlePasswordReset = async (body) => {
     return {
       status: httpStatusCode.BAD_REQUEST.code,
       view: 'Layouts/userResetPassword',
-      data: { token, error: 'Reset link is invalid or has expired.' }
+      data: {
+        token,
+        error: 'Reset link is invalid or has expired.'
+      }
     };
   }
 
@@ -72,11 +74,14 @@ export const handlePasswordReset = async (body) => {
   user.resetPasswordToken = undefined;
   user.resetPasswordExpire = undefined;
   await user.save();
+  console.log("Resetting password for:", user.email);
+  console.log("New hashed password:", user.password);
 
   return {
     status: httpStatusCode.OK.code,
     view: 'Layouts/userLogin',
-    data: { successMessage: 'Password reset successfully. Please login.' }
+    data: {
+      successMessage: 'Password reset successfully. Please login.'
+    }
   };
-
-}
+};

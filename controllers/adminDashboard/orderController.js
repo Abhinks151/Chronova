@@ -1,6 +1,7 @@
 import { Order } from "../../models/order.js"
 import { Products } from "../../models/products.js"
 import Wallet from "../../models/wallet.js"
+import { logStockChange } from "../../utils/logStockRegistry.js"
 
 export const getOrders = async (req, res) => {
   try {
@@ -243,100 +244,101 @@ export const updateItemStatus = async (req, res) => {
 
 export const approveReturn = async (req, res) => {
   try {
-    const { orderId, itemId } = req.params
+    const { orderId, itemId } = req.params;
 
     if (!orderId || !itemId) {
-      return res.status(400).json({ error: "Order ID and Item ID are required" })
+      return res.status(400).json({ error: "Order ID and Item ID are required" });
     }
 
-    const order = await Order.findById(orderId).populate("userId", "name email")
+    const order = await Order.findById(orderId).populate("userId", "name email");
     if (!order) {
-      return res.status(404).json({ error: "Order not found" })
+      return res.status(404).json({ error: "Order not found" });
     }
 
-    const item = order.items.find((item) => item._id.toString() === itemId)
+    const item = order.items.find((item) => item._id.toString() === itemId);
     if (!item) {
-      return res.status(404).json({ error: "Item not found in order" })
+      return res.status(404).json({ error: "Item not found in order" });
     }
 
     if (item.status !== "Return Requested") {
-      return res.status(400).json({ error: "Item is not in return request state" })
+      return res.status(400).json({ error: "Item is not in return request state" });
     }
 
-    // Step 1: Increase product stock
     await Products.findByIdAndUpdate(item.productId, {
       $inc: { stockQuantity: item.quantity },
-    })
+    });
 
-    // Step 2: Update item status to Return Approved
-    item.status = "Return Approved"
-    item.returnProcessedAt = new Date()
-    item.returnProcessedBy = "Admin"
+    await logStockChange({
+      productId: item.productId,
+      action: "stock_in",
+      quantity: item.quantity,
+      reason: "Return Approved",
+      updatedBy: "admin",
+      userId: order.userId._id,
+    });
 
-    // Step 3: Update return info
+    item.status = "Return Approved";
+    item.returnProcessedAt = new Date();
+    item.returnProcessedBy = "Admin";
+
     if (!order.returnInfo) {
       order.returnInfo = {
         totalReturnRequests: 0,
         approvedReturns: 0,
         rejectedReturns: 0,
-      }
+      };
     }
-    order.returnInfo.approvedReturns += 1
+    order.returnInfo.approvedReturns += 1;
 
-    // Step 4: Auto-update order status
-    await updateOrderStatusBasedOnItems(order)
+    await updateOrderStatusBasedOnItems(order); 
 
-    // Step 5: Save order
-    await order.save()
+    await order.save();
 
-    // Step 6: Wallet refund logic
-    const refundAmount = item.price * item.quantity
-    let wallet = await Wallet.findOne({ userId: order.userId._id })
+    const refundAmount = item.price * item.quantity;
+    let wallet = await Wallet.findOne({ userId: order.userId._id });
 
     const transaction = {
       amount: refundAmount,
       type: "credit",
       description: `Refund for returned item: ${item.productName} (Order: ${order.orderId})`,
       timestamp: new Date(),
-    }
+    };
 
     if (!wallet) {
       wallet = new Wallet({
         userId: order.userId._id,
         balance: refundAmount,
         transactions: [transaction],
-      })
+      });
     } else {
-      wallet.balance += refundAmount
-      wallet.transactions.push(transaction)
+      wallet.balance += refundAmount;
+      wallet.transactions.push(transaction);
     }
 
-    await wallet.save()
+    await wallet.save();
 
-    // Update order refunded amount
-    order.refundedAmount += refundAmount
+    order.refundedAmount = (order.refundedAmount || 0) + refundAmount;
 
-    // Update payment status if partially or fully refunded
-    const totalOrderAmount = order.totalAmount
-    if (order.refundedAmount >= totalOrderAmount) {
-      order.paymentStatus = "Refunded"
+    if (order.refundedAmount >= order.totalAmount) {
+      order.paymentStatus = "Refunded";
     } else if (order.refundedAmount > 0) {
-      order.paymentStatus = "Partially Refunded"
+      order.paymentStatus = "Partially Refunded";
     }
 
-    await order.save()
+    await order.save(); 
 
     return res.json({
       message: `Return approved successfully! ₹${refundAmount.toLocaleString("en-IN")} refunded to customer's wallet.`,
       refundAmount,
       itemStatus: item.status,
       orderStatus: order.orderStatus,
-    })
+    });
   } catch (error) {
-    console.error("Error approving return:", error)
-    return res.status(500).json({ error: "Internal server error during return approval" })
+    console.error("Error approving return:", error);
+    return res.status(500).json({ error: "Internal server error during return approval" });
   }
-}
+};
+
 
 export const rejectReturn = async (req, res) => {
   try {
@@ -436,6 +438,16 @@ export const cancelOrder = async (req, res) => {
         item.cancelReason = reason
       }
     })
+
+    await logStockChange({
+      productId: item.productId,
+      action: 'stock_in',
+      quantity: item.quantity,
+      reason: 'Product Returned',
+      updatedBy: 'system',
+      userId: req.user._id
+    });
+
 
     order.updatedAt = new Date()
     await order.save()

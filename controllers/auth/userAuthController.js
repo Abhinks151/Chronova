@@ -207,30 +207,45 @@ export const postForgotPassword = async (req, res) => {
 export const getResetPassword = async (req, res) => {
   try {
     const token = req.params.token;
-    // console.log(token)
-    // const token = req.query.id || req.query._id;
+
+    if (!token) {
+      return res.status(400).render("Layouts/userResetPassword", {
+        token: '',
+        error: "Invalid or missing token."
+      });
+    }
 
     const result = await resetPassword({ body: { token } });
-    return res.status(result.status).render('Layouts/userResetPassword', {
-      token,
-      error: result.error
+
+    if (!result || result.error) {
+      return res.status(result.status || 400).render("Layouts/userResetPassword", {
+        token: '',
+        error: result.error || "Token is invalid or expired."
+      });
+    }
+
+    return res.status(200).render("Layouts/userResetPassword", {
+      token, 
+      error: null
     });
+
   } catch (error) {
-    console.log(error);
-    res.status(httpStatusCode.BAD_REQUEST.code).json({
-      error
-    })
+    console.error("Error in getResetPassword:", error);
+    return res.status(500).render("Layouts/userResetPassword", {
+      token: '',
+      error: "Internal server error."
+    });
   }
 };
+
 
 export const postResetPassword = async (req, res) => {
   try {
     const result = await handlePasswordReset(req.body);
 
     return res.status(result.status).render(result.view, {
-      message: result.data,
-      title: "Login",
-
+      ...result.data,
+      title: result.view.includes("Login") ? "Login" : "Reset Password"
     });
 
   } catch (error) {
@@ -241,6 +256,7 @@ export const postResetPassword = async (req, res) => {
     });
   }
 };
+
 
 
 export const getUserLogin = async (req, res) => {
@@ -265,6 +281,12 @@ export const postUserLogin = async (req, res) => {
   try {
     const errors = validationResult(req);
     const { email, password } = req.body;
+
+    
+    console.log('Login attempt with email:', email);
+    console.log('Validation errors:', errors.array());
+    console.log(password);
+
 
     if (!errors.isEmpty()) {
       const extracted = {};
