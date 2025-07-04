@@ -74,6 +74,8 @@ export const paginationService = async (queryParams) => {
     'Smartwatch',
   ];
 
+  
+
   return {
     products,
     totalCount,
