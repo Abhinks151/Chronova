@@ -7,3 +7,6 @@ TODOS.todo
 somethings.txt
 
 
+logs/
+*.log
+*.gz

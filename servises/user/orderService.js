@@ -5,6 +5,7 @@ import { Order } from "../../models/order.js"
 import { Category } from "../../models/category.js"
 import PDFDocument from "pdfkit"
 import { logStockChange } from "../../utils/logStockRegistry.js"
+import { logger } from "../../config/logger.js"
 
 export const placeOrderService = async (userId, orderData, req) => {
   const fullAddress = await Address.findById(orderData.shippingAddress).lean();
@@ -12,6 +13,7 @@ export const placeOrderService = async (userId, orderData, req) => {
   if (!fullAddress) throw new Error("Shipping address not found");
 
   if (orderData.paymentMethod?.toLowerCase() === "online") {
+    logger.warn(`User ${req.user.email} attempted to place an order with online payment method, which is not supported yet.`);
     throw new Error("Online payment is not supported yet");
   }
 
