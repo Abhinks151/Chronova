@@ -1,4 +1,3 @@
-import { validationResult } from 'express-validator';
 import { User } from '../../models/userModels.js';
 import { sendVerificationOTP } from '../../utils/sendVerificationOTP.js';
 import httpStatusCode from '../../utils/httpStatusCode.js';
