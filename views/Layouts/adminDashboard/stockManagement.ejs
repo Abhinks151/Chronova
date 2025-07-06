@@ -514,8 +514,8 @@
 			            <tr>
 			                <td>
 			                    <div>
-			                        <strong>${new Date(entry.date).toLocaleDateString('en-IN')}</strong><br>
-			                        <small>${new Date(entry.date).toLocaleTimeString('en-IN')}</small>
+			                        <strong>${new Date(entry.timestamp).toLocaleDateString('en-IN')}</strong><br>
+			                        <small>${new Date(entry.timestamp).toLocaleTimeString('en-IN')}</small>
 			                    </div>
 			                </td>
 			                <td>
@@ -525,10 +525,10 @@
 			                    </span>
 			                </td>
 			                <td>
-			                    <strong class="${entry.quantity > 0 ? 'text-success' : 'text-danger'}">
-			                        ${entry.quantity > 0 ? '+' : ''}${entry.quantity}
-			                    </strong>
-			                </td>
+												<strong class="${entry.action === 'stock_in' ? 'text-success' : 'text-danger'}">
+													${entry.action === 'stock_in' ? '+' : '-'}${entry.quantity}
+												</strong>
+											</td>
 			                <td>${entry.reason || '-'}</td>
 			                <td>
 			                    <div>

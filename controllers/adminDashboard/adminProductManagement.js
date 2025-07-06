@@ -4,7 +4,6 @@ import { blockProductService } from '../../servises/productManagement/blockProdu
 import { deleteProductService } from '../../servises/productManagement/daleteProductServise.js';
 import { getCategory, paginationService } from '../../servises/productManagement/paginationService.js';
 import { getProduct, updateProductService } from '../../servises/productManagement/editProductService.js';
-import mongoose from 'mongoose';
 
 
 

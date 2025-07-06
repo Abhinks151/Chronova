@@ -125,13 +125,22 @@ export const updateProductService = async (productId, body, files) => {
       const quantity = Math.abs(newStock - oldStock);
       const reason = 'Manual update by admin';
 
+      // console.log("Old Stock:", oldStock);
+      // console.log("New Stock:", newStock);
+      // console.log("Action:", action);
+      // console.log("Quantity:", quantity);
+      // console.log('')
+
       await logStockChange({
         productId,
         action,
         quantity,
         reason,
-        updatedBy: 'admin'
+        updatedBy: 'admin',
+        previousStock: oldStock,
+        newStock: newStock,
       });
+
     }
 
     const updatedProduct = await Products.findByIdAndUpdate(productId, productData, {

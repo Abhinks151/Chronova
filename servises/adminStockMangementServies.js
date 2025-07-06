@@ -21,7 +21,7 @@ export const getActiveCategories = async () => {
 export const getStockRegistryByProductId = async (productId) => {
     try {
         return await stockRegistry.find({ productId })
-            .sort({ createdAt: -1 })
+            .sort({ timestamp: -1 })
             .limit(100) 
             .lean();
     } catch (error) {
