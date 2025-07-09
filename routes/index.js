@@ -14,6 +14,7 @@ import adminProductManagement from "./adminDashboardRoutes/adminProductManagemen
 import categoryRouter from "./adminDashboardRoutes/adminCategoryRoutes.js";
 import adminOrderRouter from './adminDashboardRoutes/orderRoutes.js';
 import adminStockRouter from "./adminDashboardRoutes/adminStockManagementRoutes.js";
+import offerRouter from "./adminDashboardRoutes/adminOfferRoutes.js";
 
 const indexRoutes = express.Router();
 
@@ -32,5 +33,6 @@ indexRoutes.use("/admin", adminProductManagement);
 indexRoutes.use("/admin", categoryRouter);
 indexRoutes.use("/admin", adminOrderRouter);
 indexRoutes.use("/admin", adminStockRouter);
+indexRoutes.use('/admin', offerRouter);
 
 export default indexRoutes;
