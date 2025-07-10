@@ -456,15 +456,15 @@
                     <td>
                         <div class="actions">
                             <button class="btn btn-sm btn-outline" onclick="editOffer('${offer._id}')" title="Edit">
-                                <i class="fas fa-edit"></i>
+                                Edit
                             </button>
                             <button class="btn btn-sm ${offer.isActive ? 'btn-warning' : 'btn-success'}" 
                                     onclick="toggleOfferStatus('${offer._id}')" 
                                     title="${offer.isActive ? 'Deactivate' : 'Activate'}">
-                                <i class="fas fa-${offer.isActive ? 'pause' : 'play'}"></i>
+                                ${offer.isActive ? 'Block' : 'Unblock'}
                             </button>
                             <button class="btn btn-sm btn-danger" onclick="deleteOffer('${offer._id}')" title="Delete">
-                                <i class="fas fa-trash"></i>
+                                Delete
                             </button>
                         </div>
                     </td>

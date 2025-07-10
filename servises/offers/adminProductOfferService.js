@@ -3,17 +3,30 @@ import { logger } from "../../config/logger.js";
 import { Products } from '../../models/products.js';
 import mongoose from "mongoose";
 
-export const getActiveProductOffers = async ({ page = 1, limit = 10, sort = "createdAt_desc", search = "" }) => {
-  const [sortField, sortOrder] = sort.split("_");
-  const sortOptions = { [sortField]: sortOrder === "desc" ? -1 : 1 };
-  const skip = (page - 1) * limit;
 
-  const query = {
-    isDeleted: false,
-    ...(search && {
-      name: { $regex: search, $options: "i" }
-    })
-  };
+
+export const getActiveProductOffers = async ({ page = 1, limit = 10, sort = "createdAt_desc", search = "", status = "" , discount = ""}) => {
+ const skip = (page - 1) * limit;
+
+  const query = { isDeleted: false };
+
+  if (search) {
+    query.name = { $regex: search, $options: "i" };
+  }
+
+  if (status === "active") {
+    query.isActive = true;
+  } else if (status === "inactive") {
+    query.isActive = false;
+  }
+
+  if (discount && /^\d{1,3}-\d{1,3}$/.test(discount)) {
+    const [min, max] = discount.split("-").map(Number);
+    query.discountPercentage = { $gte: min, $lte: max };
+  }
+
+  const [field, order] = sort.split("_");
+  const sortOptions = { [field || "createdAt"]: order === "asc" ? 1 : -1 };
 
   const [offers, total] = await Promise.all([
     ProductOffer.find(query)
@@ -24,23 +37,18 @@ export const getActiveProductOffers = async ({ page = 1, limit = 10, sort = "cre
     ProductOffer.countDocuments(query)
   ]);
 
-  const totalPages = Math.ceil(total / limit);
-  const currentPage = page;
-
   return {
     data: offers,
     pagination: {
       total,
       limit,
-      currentPage,
-      totalPages,
-      hasNext: currentPage < totalPages,
-      hasPrev: currentPage > 1
+      currentPage: page,
+      totalPages: Math.ceil(total / limit),
+      hasNext: page * limit < total,
+      hasPrev: page > 1
     }
   };
 };
-
-
 
 export const addProductOfferService = async (offerData) => {
   const { name, discountPercentage, startDate, endDate, products } = offerData;
@@ -48,6 +56,11 @@ export const addProductOfferService = async (offerData) => {
   if (!name || !discountPercentage || !startDate || !endDate || !Array.isArray(products) || products.length === 0) {
     logger.warn("Invalid product offer payload");
     throw new Error("All fields are required and at least one product must be selected");
+  }
+
+  const isExist = await ProductOffer.findOne({name});
+  if(isExist){
+    throw new Error("Product offer already exist"); 
   }
 
   if (discountPercentage <= 0 || discountPercentage > 100) {
@@ -90,6 +103,10 @@ export const editProductOfferService = async (offerId, data) => {
   if (!name || !discountPercentage || !startDate || !endDate || !Array.isArray(products) || products.length === 0) {
     logger.warn("Invalid product offer payload during edit");
     throw new Error("All fields are required and at least one product must be selected");
+  }
+   const isExist = await ProductOffer.findOne({name});
+  if(isExist){
+    throw new Error("Product offer already exist"); 
   }
 
   if (discountPercentage <= 0 || discountPercentage > 100) {

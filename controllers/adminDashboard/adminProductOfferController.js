@@ -25,14 +25,16 @@ export const getProductOfferManagementPage = async (req, res) => {
 
 export const getProductOfferManagementPageData = async (req, res) => {
   try {
-    const { page = 1, limit = 10, sort = "createdAt_desc", search = "" } = req.query;
+    const { page = 1, limit = 10, sort = "createdAt_desc", search = "",status="" ,discount=""} = req.query;
 
 
     const data = await getActiveProductOffers({
       page: parseInt(page),
       limit: parseInt(limit),
       sort,
-      search
+      search,
+      status,
+      discount
     });
 
     const products = await getActiveProducts();
