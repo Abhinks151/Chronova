@@ -51,7 +51,8 @@ export const getCategoryOfferManagementPageData = async (req, res) => {
     });
 
     const categories = await getActiveCategories();
-
+    // console.log('Data::',data)
+    // console.log('Category::',categories)
     return res.status(200).json({
       success: true,
       ...data,

@@ -7,6 +7,7 @@
     <link rel="stylesheet" href="/styles/admin-product-offer.css">
     <link rel="stylesheet" href="/styles/dashboard.css">
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/axios/1.6.0/axios.min.js"></script>
 </head>
 <body>
     <%- include('../../partials/sidebar') %>
@@ -295,9 +296,11 @@
                 
                 const sort = document.getElementById('sortFilter').value;
                 if (sort) params.append('sort', sort);
+                
                 console.log(params.toString());
-                const response = await fetch(`/admin/offer/products/data?${params.toString()}`);
-                const data = await response.json();
+                
+                const response = await axios.get(`/admin/offer/products/data?${params.toString()}`);
+                const data = response.data;
                 
                 if (data.success) {
                     displayOffers(data.data);
@@ -319,8 +322,8 @@
         // Load products for dropdown
         async function loadProducts() {
             try {
-                const response = await fetch('/admin/offer/products/data');
-                const data = await response.json();
+                const response = await axios.get('/admin/offer/products/data');
+                const data = response.data;
                 
                 if (data.success) {
                     availableProducts = data.products || [];
@@ -592,8 +595,8 @@
         // Edit offer
         async function editOffer(offerId) {
             try {
-                const response = await fetch(`/admin/offer/products/${offerId}`);
-                const data = await response.json();
+                const response = await axios.get(`/admin/offer/products/${offerId}`);
+                const data = response.data;
                 
                 if (!data.success) {
                     showToast(data.message || 'Failed to load offer', 'error');
@@ -653,17 +656,19 @@
                     ? `/admin/offer/products/edit/${editingOfferId}`
                     : '/admin/offer/products/add';
                 
-                const method = editingOfferId ? 'PATCH' : 'POST';
+                const response = editingOfferId 
+                    ? await axios.patch(url, formData, {
+                        headers: {
+                            'Content-Type': 'application/json'
+                        }
+                    })
+                    : await axios.post(url, formData, {
+                        headers: {
+                            'Content-Type': 'application/json'
+                        }
+                    });
                 
-                const response = await fetch(url, {
-                    method: method,
-                    headers: {
-                        'Content-Type': 'application/json'
-                    },
-                    body: JSON.stringify(formData)
-                });
-                
-                const data = await response.json();
+                const data = response.data;
                 
                 if (data.success) {
                     showToast(editingOfferId ? 'Offer updated successfully!' : 'Offer added successfully!', 'success');
@@ -721,11 +726,8 @@
         // Toggle offer status
         async function toggleOfferStatus(offerId) {
             try {
-                const response = await fetch(`/admin/offer/products/toggle/${offerId}`, {
-                    method: 'PATCH'
-                });
-                
-                const data = await response.json();
+                const response = await axios.patch(`/admin/offer/products/toggle/${offerId}`);
+                const data = response.data;
                 
                 if (data.success) {
                     showToast('Offer status updated successfully!', 'success');
@@ -759,11 +761,8 @@
                 deleteBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Deleting...';
                 deleteBtn.disabled = true;
                 
-                const response = await fetch(`/admin/offer/products/delete/${deletingOfferId}`, {
-                    method: 'PATCH'
-                });
-                
-                const data = await response.json();
+                const response = await axios.patch(`/admin/offer/products/delete/${deletingOfferId}`);
+                const data = response.data;
                 
                 if (data.success) {
                     showToast('Offer deleted successfully!', 'success');
