@@ -84,7 +84,8 @@ export const editProductOffers = async (req,res)=>{
     const data = await editProductOfferService(offerId,newData);
     res.status(httpStatusCode.OK.code).json({
       success: true,
-      data
+      data,
+      message:"Product offer updated "
     });
   }catch(error){
     console.error("Error in editProductOffers:", error.message);

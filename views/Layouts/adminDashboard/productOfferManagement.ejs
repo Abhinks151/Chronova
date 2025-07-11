@@ -635,58 +635,73 @@
 
         // Submit offer
         async function submitOffer() {
-            try {
-                if (!validateForm()) return;
-                
-                const submitBtn = document.getElementById('submitBtn');
-                const originalText = submitBtn.innerHTML;
-                
-                submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Processing...';
-                submitBtn.disabled = true;
-                
-                const formData = {
-                    name: document.getElementById('offerName').value.trim(),
-                    discountPercentage: parseInt(document.getElementById('discountPercentage').value),
-                    startDate: document.getElementById('startDate').value,
-                    endDate: document.getElementById('endDate').value,
-                    products: selectedProductIds
-                };
-                
-                const url = editingOfferId 
-                    ? `/admin/offer/products/edit/${editingOfferId}`
-                    : '/admin/offer/products/add';
-                
-                const response = editingOfferId 
-                    ? await axios.patch(url, formData, {
-                        headers: {
-                            'Content-Type': 'application/json'
-                        }
-                    })
-                    : await axios.post(url, formData, {
-                        headers: {
-                            'Content-Type': 'application/json'
-                        }
-                    });
-                
-                const data = response.data;
-                
-                if (data.success) {
-                    showToast(editingOfferId ? 'Offer updated successfully!' : 'Offer added successfully!', 'success');
-                    closeOfferModal();
-                    loadOffers();
-                } else {
-                    showToast(data.message || 'Operation failed', 'error');
+    try {
+        if (!validateForm()) return;
+
+        const submitBtn = document.getElementById('submitBtn');
+        const originalText = submitBtn.innerHTML;
+
+        submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Processing...';
+        submitBtn.disabled = true;
+
+        const formData = {
+            name: document.getElementById('offerName').value.trim(),
+            discountPercentage: parseInt(document.getElementById('discountPercentage').value),
+            startDate: document.getElementById('startDate').value,
+            endDate: document.getElementById('endDate').value,
+            products: selectedProductIds
+        };
+
+        const url = editingOfferId
+            ? `/admin/offer/products/edit/${editingOfferId}`
+            : '/admin/offer/products/add';
+
+        const response = editingOfferId
+            ? await axios.patch(url, formData, {
+                headers: {
+                    'Content-Type': 'application/json'
                 }
-                
-            } catch (error) {
-                console.error('Error submitting offer:', error);
-                showToast('Failed to save offer', 'error');
-            } finally {
-                const submitBtn = document.getElementById('submitBtn');
-                submitBtn.innerHTML = editingOfferId ? '<i class="fas fa-save"></i> Update Offer' : '<i class="fas fa-save"></i> Save Offer';
-                submitBtn.disabled = false;
+            })
+            : await axios.post(url, formData, {
+                headers: {
+                    'Content-Type': 'application/json'
+                }
+            });
+
+        const data = response.data;
+        console.log('Server response:', data);
+
+        if (data.success === true) {
+            showToast(data.message || 'Offer saved successfully!', 'success');
+            await closeOfferModal();
+            await loadOffers();
+        } else {
+            console.log('Entered else block:', data);
+            const message = data?.message || 'Something went wrong while submitting the offer.';
+            showToast(message, 'error');
+        }
+
+    } catch (error) {
+        console.error('Error submitting offer:', error);
+
+        let message = 'An unexpected error occurred.';
+        if (error.response) {
+            if (typeof error.response.data === 'string') {
+                message = error.response.data;
+            } else if (typeof error.response.data?.message === 'string') {
+                message = error.response.data.message;
             }
         }
+
+        showToast(message, 'error');
+
+    } finally {
+        const submitBtn = document.getElementById('submitBtn');
+        submitBtn.innerHTML = editingOfferId ? '<i class="fas fa-save"></i> Update Offer' : '<i class="fas fa-save"></i> Save Offer';
+        submitBtn.disabled = false;
+    }
+}
+
 
         // Validate form
         function validateForm() {

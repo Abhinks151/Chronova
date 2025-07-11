@@ -1,6 +1,8 @@
 import { Products } from '../../models/products.js';
 import { Category } from '../../models/category.js';
 
+import {findBestPriceForProduct} from '../offers/bestOfferForProductService.js'
+
 import mongoose from 'mongoose';
 
 export const getProductDetails = async (productId) => {
@@ -12,6 +14,22 @@ export const getProductDetails = async (productId) => {
         data: null
       };
     }
+
+
+    
+
+await findBestPriceForProduct(productId);
+
+
+
+
+
+
+
+
+
+
+
 
     const product = await Products.findOne({
       _id: productId,

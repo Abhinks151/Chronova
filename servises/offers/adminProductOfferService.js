@@ -60,7 +60,7 @@ export const addProductOfferService = async (offerData) => {
 
   const isExist = await ProductOffer.findOne({name});
   if(isExist){
-    throw new Error("Product offer already exist"); 
+    throw new Error("Product offer name already exist"); 
   }
 
   if (discountPercentage <= 0 || discountPercentage > 100) {
@@ -106,7 +106,7 @@ export const editProductOfferService = async (offerId, data) => {
   }
    const isExist = await ProductOffer.findOne({name});
   if(isExist){
-    throw new Error("Product offer already exist"); 
+    throw new Error("Product offer name already exist"); 
   }
 
   if (discountPercentage <= 0 || discountPercentage > 100) {
