@@ -1,16 +1,14 @@
-import mongoose from 'mongoose';
-import { Products } from '../../models/products.js';
+import mongoose from "mongoose";
+import { Products } from "../../models/products.js";
+import { findBestPriceForProduct } from "../offers/bestOfferForProductService.js";
 
 export const fetchFilteredProducts = async (filters) => {
   const query = { isBlocked: false, isDeleted: false };
   const sort = {};
 
   if (filters.search) {
-    const searchRegex = new RegExp(filters.search, 'i');
-    query.$or = [
-      { productName: searchRegex },
-      { brand: searchRegex }
-    ];
+    const searchRegex = new RegExp(filters.search, "i");
+    query.$or = [{ productName: searchRegex }, { brand: searchRegex }];
   }
 
   if (filters.category && mongoose.Types.ObjectId.isValid(filters.category)) {
@@ -31,15 +29,15 @@ export const fetchFilteredProducts = async (filters) => {
     }
   }
 
-  if (filters.sort === 'price-low') {
+  if (filters.sort === "price-low") {
     sort.salePrice = 1;
-  } else if (filters.sort === 'price-high') {
+  } else if (filters.sort === "price-high") {
     sort.salePrice = -1;
-  } else if (filters.sort === 'name-asc') {
+  } else if (filters.sort === "name-asc") {
     sort.productName = 1;
-  } else if (filters.sort === 'name-desc') {
+  } else if (filters.sort === "name-desc") {
     sort.productName = -1;
-  } else if (filters.sort === 'newest') {
+  } else if (filters.sort === "newest") {
     sort.createdAt = -1;
   } else {
     sort.createdAt = -1;
@@ -53,39 +51,44 @@ export const fetchFilteredProducts = async (filters) => {
     { $match: query },
     {
       $lookup: {
-        from: 'categories',
-        localField: 'category',
-        foreignField: '_id',
-        as: 'categoryDetails'
-      }
+        from: "categories",
+        localField: "category",
+        foreignField: "_id",
+        as: "categoryDetails",
+      },
     },
     {
       $addFields: {
         validCategories: {
           $filter: {
-            input: '$categoryDetails',
-            as: 'cat',
+            input: "$categoryDetails",
+            as: "cat",
             cond: {
               $and: [
-                { $eq: ['$$cat.isBlocked', false] },
-                { $eq: ['$$cat.isDeleted', false] }
-              ]
-            }
-          }
-        }
-      }
+                { $eq: ["$$cat.isBlocked", false] },
+                { $eq: ["$$cat.isDeleted", false] },
+              ],
+            },
+          },
+        },
+      },
     },
     {
       $match: {
         $expr: {
-          $eq: [{ $size: '$category' }, { $size: '$validCategories' }]
-        }
-      }
+          $eq: [{ $size: "$category" }, { $size: "$validCategories" }],
+        },
+      },
     },
     { $sort: sort },
     { $skip: skip },
-    { $limit: limit }
+    { $limit: limit },
   ]);
+  // products.offer = await findBestPriceForProduct
+  for (let key in products) {
+    products[key].offer = await findBestPriceForProduct(products[key]._id);
+  }
+  // console.log(products[0]);
 
   // console.log("Sort", sort);
   // console.log("Query", query);
@@ -98,36 +101,36 @@ export const fetchFilteredProducts = async (filters) => {
     { $match: query },
     {
       $lookup: {
-        from: 'categories',
-        localField: 'category',
-        foreignField: '_id',
-        as: 'categoryDetails'
-      }
+        from: "categories",
+        localField: "category",
+        foreignField: "_id",
+        as: "categoryDetails",
+      },
     },
     {
       $addFields: {
         validCategories: {
           $filter: {
-            input: '$categoryDetails',
-            as: 'cat',
+            input: "$categoryDetails",
+            as: "cat",
             cond: {
               $and: [
-                { $eq: ['$$cat.isBlocked', false] },
-                { $eq: ['$$cat.isDeleted', false] }
-              ]
-            }
-          }
-        }
-      }
+                { $eq: ["$$cat.isBlocked", false] },
+                { $eq: ["$$cat.isDeleted", false] },
+              ],
+            },
+          },
+        },
+      },
     },
     {
       $match: {
         $expr: {
-          $eq: [{ $size: '$category' }, { $size: '$validCategories' }]
-        }
-      }
+          $eq: [{ $size: "$category" }, { $size: "$validCategories" }],
+        },
+      },
     },
-    { $count: 'total' }
+    { $count: "total" },
   ]);
 
   const totalProducts = totalCountResult[0]?.total || 0;
@@ -139,6 +142,6 @@ export const fetchFilteredProducts = async (filters) => {
     totalPages,
     totalProducts,
     hasNextPage: page < totalPages,
-    hasPrevPage: page > 1
+    hasPrevPage: page > 1,
   };
 };

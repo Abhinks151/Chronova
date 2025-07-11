@@ -115,7 +115,10 @@
                         </div>
                         <h3 class="product-name">${product.productName}</h3>
                         <p class="product-brand">${product.brand}</p>
-                        ${product.salePrice ? `<div class="product-price">₹${product.salePrice.toLocaleString()}</div>` : ''}
+                        <p class="product-discount" style="color: #16e042; font-weight: bold; font-size: 14px;">
+                            ${product.offer.discount ? `${product.offer.discount}% OFF` : ''}
+                        </p>
+                        ${product.offer.offerPrice ? `<div class="product-price">₹${product.offer.offerPrice} <span class="original-price">₹${product.price}</span></div>` : ''}
                         <div class="product-actions">
                             
                             <button class="btn btn-secondary ${product.stockQuantity === 0 ? 'btn-disabled' : ''}" onclick="addToCart('${product._id}')" ${product.stockQuantity === 0 ? 'disabled' : ''}>

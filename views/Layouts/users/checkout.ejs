@@ -421,7 +421,6 @@
 						async function fetchCheckoutData() {
 							try {
 								const response = await axios.get('/user/checkout/data');
-								console.log('Checkout data fetched successfully:', response.data);
 								return response.data.checkoutData;
 							} catch (error) {
 								console.error('Error fetching checkout data:', error);
@@ -432,7 +431,6 @@
 						async function fetchUserAddresses() {
 							try {
 								const response = await axios.get('/user/profile/get-address');
-								console.log('Addresses fetched successfully:', response.data);
 								return response.data.addresses || [];
 							} catch (error) {
 								console.error('Error fetching addresses:', error);
@@ -443,7 +441,6 @@
 						async function saveNewAddress(addressData) {
 							try {
 								const response = await axios.post('/user/profile/address/add', addressData);
-								console.log('Address saved successfully:', response.data);
 								return response.data;
 							} catch (error) {
 								console.error('Error saving address:', error);
@@ -454,7 +451,6 @@
 						async function updateExistingAddress(addressId, addressData) {
 							try {
 								const response = await axios.put(`/user/profile/address/edit/${addressId}`, addressData);
-								console.log('Address updated successfully:', response.data);
 								return response.data;
 							} catch (error) {
 								console.error('Error updating address:', error);
@@ -567,7 +563,7 @@
 							}
 
 							updatePlaceOrderButton();
-							console.log('Address selected:', addressId);
+							// console.log('Address selected:', addressId);
 						}
 
 						async function makeDefaultAddress(addressId) {
@@ -771,7 +767,7 @@
 										<div class="product-details">
 											<h3 class="product-name">${product.productName}</h3>
 											<p class="product-brand">${product.brand || 'ChronoVa'}</p>
-											<p class="product-price">₹${product.price.toLocaleString()}</p>
+											<p class="product-price">₹${item.offer.offerPrice}</p>
 										</div>
 
 										<div class="quantity-info">
@@ -799,7 +795,7 @@
 
 							let subtotal = 0;
 							items.forEach(item => {
-								subtotal += item.productId.finalPrice * item.quantity;
+								subtotal += item.offer.offerPrice * item.quantity;
 							});
 
 							// const shipping = subtotal > 500 ? 0 : 50; // Free shipping over ₹500
@@ -863,7 +859,7 @@
 					showNotification(response.data.message || 'Order placed successfully!', 'success');
 
 					const orderId = response.data?.data?.orderId;
-					console.log(orderId);
+					// console.log(orderId);
 						setTimeout(() => {
 							window.location.href = `/user/order/conform?orderId=${orderId}`;
 						}, 2000);

@@ -569,9 +569,9 @@
 			                            <i class="fas fa-eye"></i> View
 			                        </button>
 			                    </div>
-			                    ${product.salePrice < product.regularPrice ? `
+			                    ${product.offer.offerPrice < product.price ? `
 			                        <div class="discount-badge">
-			                            ${Math.round(((product.regularPrice - product.salePrice) / product.regularPrice) * 100)}% OFF
+			                            ${product.offer.discount}% OFF
 			                        </div>
 			                    ` : ''}
 			                </div>
@@ -590,9 +590,9 @@
 			                        <span class="review-count">(0 reviews)</span>
 			                    </div>
 			                    <div class="product-price">
-			                        <span class="current-price">₹${product.salePrice ? product.salePrice.toLocaleString() : '0'}</span>
-			                        ${product.salePrice < product.regularPrice ? `
-			                            <span class="original-price">₹${product.regularPrice.toLocaleString()}</span>
+			                        <span class="current-price">₹${product.offer.offerPrice}</span>
+			                        ${product.offer.offerPrice < product.price ? `
+			                            <span class="original-price">₹${product.price.toLocaleString()}</span>
 			                        ` : ''}
 			                    </div>
 			                    <div class="product-actions">

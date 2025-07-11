@@ -113,8 +113,7 @@ function renderProducts() {
                 <img src="${product.images && product.images[0] ? product.images[0].url : '/images/placeholder-watch.jpg'}" 
                      alt="${product.productName}" 
                      onerror="this.src='/images/placeholder-watch.jpg'">
-                ${product.isNew ? '<span class="product-badge new">New</span>' : ''}
-                ${product.salePrice < product.regularPrice ? '<span class="product-badge sale">Sale</span>' : ''}
+                ${product.offer.discount >= 30 ? '<span class="product-badge sale">Sale</span>' : ''}
                 <button class="wishlist-btn-card" 
                     onclick="event.stopPropagation(); toggleWishlist('${product._id}')" 
                     title="Add to Wishlist">
@@ -135,10 +134,10 @@ function renderProducts() {
                 </div>
                 
                 <div class="product-price">
-                    <span class="current-price">₹${formatPrice(product.salePrice || product.regularPrice)}</span>
-                    ${product.salePrice && product.salePrice < product.regularPrice ?
-            `<span class="original-price">₹${formatPrice(product.regularPrice)}</span>
-                         <span class="discount">${Math.round(((product.regularPrice - product.salePrice) / product.regularPrice) * 100)}% off</span>`
+                    <span class="current-price">₹${formatPrice(product.offer.offerPrice)}</span>
+                    ${product.offer.offerPrice && product.offer.offerPrice < product.price ?
+            `<span class="original-price">₹${formatPrice(product.price)}</span>
+                         <span class="discount">${product.offer.discount}% off</span>`
             : ''
         }
                 </div>

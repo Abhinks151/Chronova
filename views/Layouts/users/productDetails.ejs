@@ -89,10 +89,10 @@
                 </div>
 
                 <div class="price-section">
-                    <span class="current-price">₹<%= product.salePrice.toLocaleString() %></span>
+                    <span class="current-price">₹<%= price.offerPrice %></span>
                     <% if(product.price !== product.salePrice) { %>
                     <span class="original-price">₹<%= product.price.toLocaleString() %></span>
-                    <span class="discount-badge"><%= Math.round(((product.price - product.salePrice) / product.price) * 100) %>% OFF</span>
+                    <span class="discount-badge"><%= price.discount %>% OFF</span>
                     <% } %>
                     <div class="stock-status <%= product.stockQuantity > 0 ? '' : 'out-of-stock' %>">
                         <%= product.stockQuantity > 0 ? `In Stock (${product.stockQuantity} available)` : 'Out of Stock' %>
@@ -613,10 +613,8 @@
     }
 
     function createFeaturedProductCard(product) {
-    const discountPercentage = product.price !== product.salePrice 
-        ? Math.round(((product.price - product.salePrice) / product.price) * 100)
-        : 0;
-
+  
+  
     const heartClass = product.isInWishlist ? 'fas filled' : 'far';
     const heartStyle = product.isInWishlist ? 'color: #e11d48;' : ''; // optional: use a red color when active
 
@@ -627,10 +625,10 @@
                 <h3 class="featured-title">${product.productName}</h3>
                 <div class="featured-brand">${product.brand}</div>
                 <div class="featured-price">
-                    <span class="featured-current-price">₹${product.salePrice.toLocaleString()}</span>
+                    <span class="featured-current-price">₹${product.offerPrice.offerPrice}</span>
                     ${product.price !== product.salePrice ? `
                         <span class="featured-original-price">₹${product.price.toLocaleString()}</span>
-                        <span class="featured-discount">${discountPercentage}% OFF</span>
+                        <span class="featured-discount">${product.offerPrice.discount}% OFF</span>
                     ` : ''}
                 </div>
                 <div class="featured-actions">

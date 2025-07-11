@@ -1,6 +1,7 @@
 import { Wishlist } from "../../models/wishlist.js";
 import { Products } from '../../models/products.js';
 import {Cart} from '../../models/cart.js';
+import { findBestPriceForProduct } from "../offers/bestOfferForProductService.js";
 
 export const wishlistToggleService = async (userId, productId) => {
   const ifExisting = await Wishlist.findOne({ userId, productId });
@@ -80,13 +81,19 @@ export const getWishlistProductsByUserId = async (userId) => {
         .populate({
             path: 'category',
             select: '_id isBlocked categoryName'
-        });
+        }).lean();
 
     const visibleProducts = products.filter(product => {
         if (product.isBlocked || product.isDeleted) return false;
         if (!product.category || product.category.some(cat => cat.isBlocked)) return false;
         return true;
     });
+
+
+    for(let elem of visibleProducts) {
+        elem.offer = await findBestPriceForProduct(elem._id);
+    }
+    // console.log(visibleProducts);
 
     return visibleProducts;
 };

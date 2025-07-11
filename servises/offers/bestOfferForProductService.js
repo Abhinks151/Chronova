@@ -4,7 +4,7 @@ import { CategoryOffer } from "../../models/categoryOffer.js";
 
 export const findBestPriceForProduct = async (productId) => {
   if (!productId) {
-    throw new Error(":Product Id is required");
+    throw new Error("Product Id is required");
   }
 
   const product = await Products.findById(productId).select(
@@ -14,6 +14,7 @@ export const findBestPriceForProduct = async (productId) => {
   if (!product) {
     throw new Error("Product not found");
   }
+
   const productOffers = await ProductOffer.find({
     products: productId,
     isActive: true,
@@ -30,29 +31,31 @@ export const findBestPriceForProduct = async (productId) => {
     endDate: { $gte: new Date() },
   });
 
-  let totalOffers = [...productOffers];
-  totalOffers = totalOffers.concat(categoryOffers);
-  let bestOffer = totalOffers.reduce((acc, curr) => {
-    if (curr.discountPercentage > acc.discountPercentage) {
-      return curr;
-    } else {
-      return acc;
-    }
-  }, totalOffers[0]);
+  const totalOffers = [...productOffers, ...categoryOffers];
 
-  let offerPrice = 0;
-  if (totalOffers.length > 0 && bestOffer?.discountPercentage) {
-    offerPrice = product.price * (1 - bestOffer.discountPercentage / 100);
-    console.log("Actual Price: ", product.price);
-    console.log("Offer Price: ", offerPrice);
-    console.log("Discount used: ", bestOffer.discountPercentage);
-    console.log();
-  } else {
-    offerPrice = product.salePrice; 
-    console.log("Actual Price: ", product.price);
-    console.log("Offer Price: ", offerPrice);
-    console.log();
+  let bestOffer = totalOffers[0];
+
+  for (const offer of totalOffers) {
+    if (offer.discountPercentage > bestOffer.discountPercentage) {
+      bestOffer = offer;
+    }
   }
 
+  let offerPrice;
+  let discount;
 
+  if (totalOffers.length > 0 && bestOffer?.discountPercentage) {
+    offerPrice = Math.round(
+      product.price * (1 - bestOffer.discountPercentage / 100)
+    );
+    discount = bestOffer.discountPercentage;
+  } else {
+    offerPrice = product.salePrice;
+    discount = Math.round(
+      (product.price - product.salePrice) / product.price * 100)
+  }
+  
+  
+
+  return { offerPrice, discount };
 };
