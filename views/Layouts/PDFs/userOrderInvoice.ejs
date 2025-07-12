@@ -1,0 +1,69 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Invoice - <%= order.orderId %></title>
+  <style>
+    body { font-family: Arial, sans-serif; padding: 40px; }
+    h1 { text-align: center; }
+    .info, .address, .items, .summary { margin-bottom: 30px; }
+    table { width: 100%; border-collapse: collapse; }
+    table, th, td { border: 1px solid #ccc; }
+    th, td { padding: 10px; text-align: left; }
+    .right { text-align: right; }
+  </style>
+</head>
+<body>
+  <h1>INVOICE</h1>
+
+  <div class="info">
+    <p>Order ID: <%= order.orderId %></p>
+    <p>Date: <%= order.createdAt.toLocaleDateString() %></p>
+  </div>
+
+  <div class="address">
+    <h3>Shipping Address</h3>
+    <p><%= order.shippingAddress.fullName %></p>
+    <p><%= order.shippingAddress.addressLine %></p>
+    <% if (order.shippingAddress.landmark) { %>
+      <p><%= order.shippingAddress.landmark %></p>
+    <% } %>
+    <p><%= order.shippingAddress.city %>, <%= order.shippingAddress.state %> - <%= order.shippingAddress.pincode %></p>
+    <p><%= order.shippingAddress.country %></p>
+    <p>Phone: <%= order.shippingAddress.phone %></p>
+  </div>
+
+  <div class="items">
+    <h3>Items</h3>
+    <table>
+      <thead>
+        <tr>
+          <th>Product</th><th>Qty</th><th>Price</th><th>Status</th><th>Total</th>
+        </tr>
+      </thead>
+      <tbody>
+        <% order.items.forEach(item => { %>
+          <tr>
+            <td><%= item.productName %></td>
+            <td><%= item.quantity %></td>
+            <td>₹<%= item.price %></td>
+            <td><%= item.status %></td>
+            <td>₹<%= item.quantity * item.price %></td>
+          </tr>
+        <% }) %>
+      </tbody>
+    </table>
+  </div>
+
+  <div class="summary">
+    <p class="right">Subtotal: ₹<%= order.subtotal %></p>
+    <% if (order.discount > 0) { %>
+      <p class="right">Discount: -₹<%= order.discount %></p>
+    <% } %>
+    <% if (order.refundedAmount > 0) { %>
+      <p class="right">Refunded: -₹<%= order.refundedAmount %></p>
+    <% } %>
+    <h3 class="right">Total: ₹<%= order.totalAmount %></h3>
+  </div>
+</body>
+</html>
