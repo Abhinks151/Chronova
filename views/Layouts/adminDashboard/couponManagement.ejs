@@ -3,6 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <title>Add New Coupon</title>
+  <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
   <style>
     body {
       font-family: 'Segoe UI', sans-serif;
@@ -71,12 +72,17 @@
       color: red;
       margin-top: 0.5rem;
     }
+
+    .success {
+      color: green;
+      margin-top: 0.5rem;
+    }
   </style>
 </head>
 <body>
   <div class="form-container">
     <h2>Add New Coupon</h2>
-    <form id="addCouponForm" method="POST" action="/admin/coupons/add">
+    <form id="addCouponForm">
       <div class="form-group">
         <label for="coupon">Coupon Code <span class="note">(optional, auto-generated if left blank)</span></label>
         <input type="text" id="coupon" name="coupon" placeholder="e.g. WELCOME500">
@@ -98,7 +104,42 @@
       </div>
 
       <button type="submit">Create Coupon</button>
+
+      <div id="message" class="success" style="display:none;"></div>
     </form>
   </div>
+
+  <script>
+    const form = document.getElementById('addCouponForm');
+    const messageDiv = document.getElementById('message');
+
+    form.addEventListener('submit', async (e) => {
+      e.preventDefault();
+
+      const formData = {
+        coupon: document.getElementById('coupon').value.trim(),
+        discountAmount: document.getElementById('discountAmount').value,
+        minimumCartAmount: document.getElementById('minimumCartAmount').value,
+        expiryTime: document.getElementById('expiryTime').value
+      };
+
+      try {
+        const res = await axios.post('/admin/coupons/add', formData);
+
+        // Handle success
+        messageDiv.textContent = 'Coupon created successfully!';
+        messageDiv.className = 'success';
+        messageDiv.style.display = 'block';
+
+        // Optional: Reset form
+        form.reset();
+      } catch (err) {
+        // Handle error
+        messageDiv.textContent = err.response?.data?.message || 'Failed to create coupon.';
+        messageDiv.className = 'error';
+        messageDiv.style.display = 'block';
+      }
+    });
+  </script>
 </body>
 </html>
