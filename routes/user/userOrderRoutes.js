@@ -12,6 +12,7 @@ import {
   downloadInvoiceController,
   cancelSingleItemController,
   cancelEntireOrderController,
+  ViewInvoiceController,
 } from "../../controllers/user/orderManagement.js"
 import { authenticateUser } from "../../middlewares/userAuthMiddleware.js"
 
@@ -33,6 +34,8 @@ router.post("/orders/:orderId/cancel/:itemId", authenticateUser, cancelSingleIte
 router.post("/orders/:orderId/return/:itemId", authenticateUser, returnOrderItemController)
 router.post("/orders/:orderId/return", authenticateUser, returnEntireOrderController)
 
-router.get("/orders/invoice/:orderId", authenticateUser, downloadInvoiceController)
+router.get("/orders/invoice/:orderId", authenticateUser, ViewInvoiceController)
+router.get("/orders/invoice/download/:orderId", authenticateUser, downloadInvoiceController)
+
 
 export default router

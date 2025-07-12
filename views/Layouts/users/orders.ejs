@@ -703,7 +703,7 @@
         // Download invoice
         async function downloadInvoice(orderId) {
             try {
-                const response = await axios.get(`/user/orders/invoice/${orderId}`, {
+                const response = await axios.get(`/user/orders/invoice/download/${orderId}`, {
                     responseType: 'blob'
                 });
 

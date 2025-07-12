@@ -10,3 +10,5 @@ somethings.txt
 logs/
 *.log
 *.gz
+
+test.js

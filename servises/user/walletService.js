@@ -42,6 +42,8 @@ export const getWalletHistoryService = async (userId) => {
       throw new Error("Wallet not found for the given user ID");
     }
 
+
+    
     return data;
   } catch (error) {
     console.error("Error in getWalletHistory:", error);

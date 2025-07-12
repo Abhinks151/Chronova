@@ -233,7 +233,7 @@ function renderCartItems(cart) {
                 <div class="product-details">
                     <h3 class="product-name">${product.productName}</h3>
                     <p class="product-brand">${product.brand || 'ChronoVa'}</p>
-                    <p class="product-price">₹${product.price.toLocaleString()}</p>
+                    <p class="product-price">₹${item.offer.offerPrice}</p>
                 </div>
 
                 <div class="quantity-controls">
@@ -262,7 +262,7 @@ function updateSummary(items) {
 
     let subtotal = 0;
     items.forEach(item => {
-        subtotal += item.productId.finalPrice * item.quantity;
+        subtotal += item.offer.offerPrice * item.quantity;
     });
 
     // const shipping = subtotal > 1000 ? 0 : 50;

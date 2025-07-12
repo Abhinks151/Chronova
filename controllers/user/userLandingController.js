@@ -1,17 +1,21 @@
-import jwt from 'jsonwebtoken';
-import { getActiveCategories, getProductByCategoryId } from '../../servises/user/getUserProductService.js';
-import { findWishlistByUserId } from '../../servises/user/wishlistServices.js';
-import httpStatusCode from '../../utils/httpStatusCode.js';
-import dotenv from 'dotenv';
+import jwt from "jsonwebtoken";
+import {
+  getActiveCategories,
+  getProductByCategoryId,
+} from "../../servises/user/getUserProductService.js";
+import { findWishlistByUserId } from "../../servises/user/wishlistServices.js";
+import httpStatusCode from "../../utils/httpStatusCode.js";
+import dotenv from "dotenv";
+import { findBestPriceForProduct } from "../../servises/offers/bestOfferForProductService.js";
 
 dotenv.config();
 const config = {
-  JWT_SECRET: process.env.JWT_SECRET_KEY
+  JWT_SECRET: process.env.JWT_SECRET_KEY,
 };
 
 export const getLandingPage = async (req, res) => {
   let isLoggedIn = false;
-  const token = req.cookies?.token || req.headers.authorization?.split(' ')[1];
+  const token = req.cookies?.token || req.headers.authorization?.split(" ")[1];
 
   if (token) {
     try {
@@ -20,15 +24,19 @@ export const getLandingPage = async (req, res) => {
         isLoggedIn = true;
       }
     } catch (err) {
-      console.warn('Invalid or expired token:', err.message);
+      console.warn("Invalid or expired token:", err.message);
     }
   }
 
   try {
-    res.status(httpStatusCode.OK.code).render('Layouts/users/userLanding', { isLoggedIn });
+    res
+      .status(httpStatusCode.OK.code)
+      .render("Layouts/users/userLanding", { isLoggedIn });
   } catch (error) {
-    console.error('Error rendering landing page:', error);
-    res.status(httpStatusCode.INTERNAL_SERVER_ERROR.code).send('Internal Server Error');
+    console.error("Error rendering landing page:", error);
+    res
+      .status(httpStatusCode.INTERNAL_SERVER_ERROR.code)
+      .send("Internal Server Error");
   }
 };
 
@@ -36,30 +44,30 @@ export const getCategories = async (req, res) => {
   try {
     const categories = await getActiveCategories();
     res.status(httpStatusCode.OK.code).json({
-      categories
+      categories,
     });
   } catch (error) {
-    console.error('Error fetching categories:', error);
+    console.error("Error fetching categories:", error);
     res.status(httpStatusCode.INTERNAL_SERVER_ERROR.code).json({
-      message: 'Failed to load categories'
+      message: "Failed to load categories",
     });
   }
 };
-
 
 export const getProducts = async (req, res) => {
   try {
     const categoryId = req.params.id;
     let userId = null;
 
-    const token = req.cookies?.token || req.headers.authorization?.split(' ')[1];
+    const token =
+      req.cookies?.token || req.headers.authorization?.split(" ")[1];
 
     if (token) {
       try {
         const decoded = jwt.verify(token, config.JWT_SECRET);
         userId = decoded?.id || decoded?._id;
       } catch (err) {
-        console.warn('Invalid or expired token:', err.message);
+        console.warn("Invalid or expired token:", err.message);
       }
     }
 
@@ -67,7 +75,7 @@ export const getProducts = async (req, res) => {
 
     if (!categoryId) {
       return res.status(httpStatusCode.BAD_REQUEST.code).json({
-        message: 'Category ID is required'
+        message: "Category ID is required",
       });
     }
 
@@ -78,24 +86,27 @@ export const getProducts = async (req, res) => {
       wishlistProductIds = await findWishlistByUserId(userId);
     }
 
-    const categoryProducts = products.map(product => {
-      const isInWishlist = wishlistProductIds.some(
-        id => id.toString() === product._id.toString()
-      );
-      return {
-        ...product,
-        isInWishlist
-      };
-    });
+    const categoryProducts = await Promise.all(
+      products.map(async (product) => {
+        const isInWishlist = wishlistProductIds.some(
+          (id) => id.toString() === product._id.toString()
+        );
+
+        const offer = await findBestPriceForProduct (product._id);
+        // console.log(product)
+        return {
+          ...product,
+          isInWishlist,
+          offer,
+        };
+      })
+    );
 
     res.status(httpStatusCode.OK.code).json({ categoryProducts });
-
   } catch (error) {
-    console.error('Error fetching products:', error);
+    console.error("Error fetching products:", error);
     res.status(httpStatusCode.INTERNAL_SERVER_ERROR.code).json({
-      message: 'Failed to load products'
+      message: "Failed to load products",
     });
   }
 };
-
-

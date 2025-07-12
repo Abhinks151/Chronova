@@ -1,6 +1,5 @@
 import { Products } from "../../models/products.js";
 import { Category } from '../../models/category.js';
-import { getCategories } from "./addProductServise.js";
 
 export const paginationService = async (queryParams) => {
   const {

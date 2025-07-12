@@ -1,5 +1,4 @@
 import express from 'express';
-import { authenticateUser } from '../../middlewares/userAuthMiddleware.js'
 import { getCategories, getLandingPage, getProducts } from '../../controllers/user/userLandingController.js';
 const userLandingRoutes = express.Router();
 

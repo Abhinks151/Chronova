@@ -1,0 +1,831 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Category Offer Management</title>
+    <link rel="stylesheet" href="/styles/admin-product-offer.css">
+    <link rel="stylesheet" href="/styles/dashboard.css">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/axios/1.6.0/axios.min.js"></script>
+</head>
+<body>
+    <%- include('../../partials/sidebar') %>
+    <div class="container"> 
+        <!-- Header -->
+        <div class="header">
+            <h1>Category Offer Management</h1>
+            <button class="btn btn-primary" onclick="openAddOfferModal()">
+                <i class="fas fa-plus"></i>
+                Add New Offer
+            </button>
+        </div>
+
+        <!-- Filters -->
+        <div class="filters-section">
+            <div class="search-container">
+                <input type="text" id="searchInput" placeholder="Search offers..." class="search-input">
+                <i class="fas fa-search search-icon"></i>
+            </div>
+            
+            <div class="filter-controls">
+                <select id="statusFilter" class="filter-select">
+                    <option value="">All Status</option>
+                    <option value="active">Active</option>
+                    <option value="inactive">Inactive</option>
+                </select>
+                
+                <select id="discountFilter" class="filter-select">
+                    <option value="">All Discounts</option>
+                    <option value="0-25">0% - 25%</option>
+                    <option value="26-50">26% - 50%</option>
+                    <option value="51-75">51% - 75%</option>
+                    <option value="76-100">76% - 100%</option>
+                </select>
+                
+                <select id="sortFilter" class="filter-select">
+                    <option value="createdAt_desc">Newest First</option>
+                    <option value="createdAt_asc">Oldest First</option>
+                    <option value="name_asc">Name A-Z</option>
+                    <option value="name_desc">Name Z-A</option>
+                    <option value="discountPercentage_desc">Highest Discount</option>
+                    <option value="discountPercentage_asc">Lowest Discount</option>
+                </select>
+                
+                <button class="btn btn-secondary" onclick="clearFilters()">
+                    <i class="fas fa-refresh"></i>
+                    Clear
+                </button>
+            </div>
+        </div>
+
+        <!-- Loading Spinner -->
+        <div class="loading-spinner" id="loadingSpinner">
+            <div class="spinner"></div>
+            <p>Loading offers...</p>
+        </div>
+
+        <!-- Offers Table -->
+        <div class="table-container" id="tableContainer">
+            <table class="offers-table">
+                <thead>
+                    <tr>
+                        <th>Offer Details</th>
+                        <th>Discount</th>
+                        <th>Duration</th>
+                        <th>Categories</th>
+                        <th>Status</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody id="offersTableBody">
+                    <!-- Table rows will be populated by JavaScript -->
+                </tbody>
+            </table>
+            
+            <div class="empty-state" id="emptyState" style="display: none;">
+                <i class="fas fa-tags"></i>
+                <h3>No offers found</h3>
+                <p>No category offers match your current filters.</p>
+                <button class="btn btn-primary" onclick="clearFilters()">Clear Filters</button>
+            </div>
+        </div>
+
+        <!-- Pagination -->
+        <div class="pagination-container" id="paginationContainer">
+            <div class="pagination-info" id="paginationInfo"></div>
+            <div class="pagination" id="pagination"></div>
+        </div>
+    </div>
+
+    <!-- Add/Edit Offer Modal -->
+    <div class="modal-overlay" id="offerModal">
+        <div class="modal">
+            <div class="modal-header">
+                <h3 id="modalTitle">Add New Offer</h3>
+                <button class="close-btn" onclick="closeOfferModal()">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            
+            <form id="offerForm" class="modal-body">
+                <div class="form-group">
+                    <label for="offerName">Offer Name *</label>
+                    <input type="text" id="offerName" name="name" required>
+                </div>
+                
+                <div class="form-group">
+                    <label for="discountPercentage">Discount Percentage *</label>
+                    <input type="number" id="discountPercentage" name="discountPercentage" min="1" max="100" required>
+                </div>
+                
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="startDate">Start Date *</label>
+                        <input type="date" id="startDate" name="startDate" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="endDate">End Date *</label>
+                        <input type="date" id="endDate" name="endDate" required>
+                    </div>
+                </div>
+                
+                <div class="form-group">
+                    <label for="categories">Select Categories *</label>
+                    <div class="product-selector">
+                        <div class="selected-products" id="selectedCategories">
+                            <span class="placeholder">No categories selected</span>
+                        </div>
+                        <button type="button" class="btn btn-outline" onclick="toggleCategoryDropdown()">
+                            <i class="fas fa-chevron-down"></i>
+                        </button>
+                    </div>
+                    <div class="product-dropdown" id="categoryDropdown">
+                        <div class="dropdown-header">
+                            <input type="text" id="categorySearch" placeholder="Search categories..." class="product-search">
+                        </div>
+                        <div class="product-options" id="categoryOptions">
+                            <!-- Category options will be populated by JavaScript -->
+                        </div>
+                    </div>
+                </div>
+            </form>
+            
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" onclick="closeOfferModal()">Cancel</button>
+                <button type="button" class="btn btn-primary" onclick="submitOffer()" id="submitBtn">
+                    <i class="fas fa-save"></i>
+                    Save Offer
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Delete Confirmation Modal -->
+    <div class="modal-overlay" id="deleteModal">
+        <div class="modal modal-small">
+            <div class="modal-header">
+                <h3>Confirm Delete</h3>
+                <button class="close-btn" onclick="closeDeleteModal()">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            
+            <div class="modal-body">
+                <div class="delete-confirmation">
+                    <i class="fas fa-exclamation-triangle"></i>
+                    <p>Are you sure you want to delete this offer?</p>
+                    <p class="warning-text">This action cannot be undone.</p>
+                </div>
+            </div>
+            
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" onclick="closeDeleteModal()">Cancel</button>
+                <button type="button" class="btn btn-danger" onclick="confirmDelete()" id="deleteBtn">
+                    <i class="fas fa-trash"></i>
+                    Delete Offer
+                </button>
+            </div>
+        </div>
+    </div>
+    
+
+    <!-- Toast Container -->
+    <div id="toaster-container">
+        <div id="toast" class="toaster"></div>
+    </div>
+
+    <script>
+        // Global variables
+        let currentPage = 1;
+        let itemsPerPage = 10;
+        let totalItems = 0;
+        let editingOfferId = null;
+        let deletingOfferId = null;
+        let availableCategories = [];
+        let selectedCategoryIds = [];
+
+        // Initialize page
+        document.addEventListener('DOMContentLoaded', function() {
+            loadOffers();
+            loadCategories();
+            setupEventListeners();
+            setMinDate();
+        });
+
+        // Setup event listeners
+        function setupEventListeners() {
+            let searchTimeout;
+            document.getElementById('searchInput').addEventListener('input', function() {
+                clearTimeout(searchTimeout);
+                searchTimeout = setTimeout(() => {
+                    currentPage = 1;
+                    loadOffers();
+                }, 500);
+            });
+
+            ['statusFilter', 'discountFilter', 'sortFilter'].forEach(id => {
+                document.getElementById(id).addEventListener('change', function() {
+                    currentPage = 1;
+                    loadOffers();
+                });
+            });
+
+            document.getElementById('offerForm').addEventListener('submit', function(e) {
+                e.preventDefault();
+                submitOffer();
+            });
+
+            document.getElementById('startDate').addEventListener('change', validateDates);
+            document.getElementById('endDate').addEventListener('change', validateDates);
+
+            // Category search
+            document.getElementById('categorySearch').addEventListener('input', function() {
+                filterCategories();
+            });
+
+            // Close dropdowns when clicking outside
+            document.addEventListener('click', function(e) {
+                if (!e.target.closest('.product-selector') && !e.target.closest('.product-dropdown')) {
+                    document.getElementById('categoryDropdown').classList.remove('show');
+                }
+            });
+        }
+
+        // Set minimum date to today
+        function setMinDate() {
+            const today = new Date().toISOString().split('T')[0];
+            document.getElementById('startDate').setAttribute('min', today);
+            document.getElementById('endDate').setAttribute('min', today);
+        }
+
+        // Validate date ranges
+        function validateDates() {
+            const startDate = document.getElementById('startDate').value;
+            const endDate = document.getElementById('endDate').value;
+            
+            if (startDate && endDate) {
+                if (new Date(startDate) >= new Date(endDate)) {
+                    showToast('End date must be after start date', 'error');
+                    document.getElementById('endDate').value = '';
+                }
+            }
+            
+            if (startDate) {
+                document.getElementById('endDate').setAttribute('min', startDate);
+            }
+        }
+
+        // Load offers
+        async function loadOffers() {
+            try {
+                showLoading(true);
+                
+                const params = new URLSearchParams();
+                params.append('page', currentPage);
+                params.append('limit', itemsPerPage);
+                
+                const search = document.getElementById('searchInput').value.trim();
+                if (search) params.append('search', search);
+                
+                const status = document.getElementById('statusFilter').value;
+                if (status) params.append('status', status);
+                
+                const discount = document.getElementById('discountFilter').value;
+                if (discount) params.append('discount', discount);
+                
+                const sort = document.getElementById('sortFilter').value;
+                if (sort) params.append('sort', sort);
+                
+                const response = await axios.get(`/admin/offer/category/data?${params.toString()}`);
+                const data = response.data;
+                
+                if (data.success) {
+                    displayOffers(data.data);
+                    updatePagination(data.pagination);
+                    updateTableInfo(data.pagination);
+                } else {
+                    showToast(data.message || 'Failed to load offers', 'error');
+                }
+                
+            } catch (error) {
+                console.error('Error loading offers:', error);
+                showToast('Failed to load offers', 'error');
+                showEmptyState();
+            } finally {
+                showLoading(false);
+            }
+        }
+
+        // Load categories for dropdown
+        async function loadCategories() {
+            try {
+                const response = await axios.get('/admin/offer/category/data');
+                const data = response.data;
+                
+                if (data.success) {
+                    availableCategories = data.categories || [];
+                    populateCategoryDropdown();
+                }
+            } catch (error) {
+                console.error('Error loading categories:', error);
+            }
+        }
+
+        // Populate category dropdown
+        function populateCategoryDropdown() {
+            const container = document.getElementById('categoryOptions');
+            container.innerHTML = availableCategories.map(category => `
+                <div class="product-option" data-id="${category._id}">
+                    <input type="checkbox" id="category_${category._id}" 
+                           onchange="toggleCategory('${category._id}')"
+                           ${selectedCategoryIds.includes(category._id) ? 'checked' : ''}>
+                    <label for="category_${category._id}">
+                        <div class="product-info">
+                            <span class="product-name">${escapeHtml(category.categoryName)}</span>
+                            <span class="product-brand category-type">${escapeHtml(category.type)}</span>
+                        </div>
+                    </label>
+                </div>
+            `).join('');
+        }
+
+        // Filter categories in dropdown
+        function filterCategories() {
+            const search = document.getElementById('categorySearch').value.toLowerCase();
+            const options = document.querySelectorAll('.product-option');
+            
+            options.forEach(option => {
+                const text = option.textContent.toLowerCase();
+                option.style.display = text.includes(search) ? 'block' : 'none';
+            });
+        }
+
+        // Toggle category selection
+        function toggleCategory(categoryId) {
+            const index = selectedCategoryIds.indexOf(categoryId);
+            if (index > -1) {
+                selectedCategoryIds.splice(index, 1);
+            } else {
+                selectedCategoryIds.push(categoryId);
+            }
+            updateSelectedCategories();
+        }
+
+        // Update selected categories display
+        function updateSelectedCategories() {
+            const container = document.getElementById('selectedCategories');
+            
+            if (selectedCategoryIds.length === 0) {
+                container.innerHTML = '<span class="placeholder">No categories selected</span>';
+                return;
+            }
+            
+            const selectedCategories = availableCategories.filter(c => selectedCategoryIds.includes(c._id));
+            container.innerHTML = selectedCategories.map(category => `
+                <div class="selected-product">
+                    <span>${escapeHtml(category.categoryName)}</span>
+                    <button type="button" onclick="removeCategory('${category._id}')">
+                        <i class="fas fa-times"></i>
+                    </button>
+                </div>
+            `).join('');
+        }
+
+        // Remove category from selection
+        function removeCategory(categoryId) {
+            selectedCategoryIds = selectedCategoryIds.filter(id => id !== categoryId);
+            updateSelectedCategories();
+            populateCategoryDropdown();
+        }
+
+        // Toggle category dropdown
+        function toggleCategoryDropdown() {
+            const dropdown = document.getElementById('categoryDropdown');
+            dropdown.classList.toggle('show');
+        }
+
+        // Display offers in table
+        function displayOffers(offers) {
+            const tbody = document.getElementById('offersTableBody');
+            const emptyState = document.getElementById('emptyState');
+            
+            if (!offers || offers.length === 0) {
+                tbody.innerHTML = '';
+                emptyState.style.display = 'block';
+                return;
+            }
+            
+            emptyState.style.display = 'none';
+            
+            tbody.innerHTML = offers.map(offer => `
+                <tr>
+                    <td>
+                        <div class="offer-details">
+                            <h4>${escapeHtml(offer.name)}</h4>
+                            <span class="offer-dates">
+                                ${formatDate(offer.startDate)} - ${formatDate(offer.endDate)}
+                            </span>
+                        </div>
+                    </td>
+                    <td>
+                        <span class="discount-badge">
+                            ${offer.discountPercentage}%
+                        </span>
+                    </td>
+                    <td>
+                        <div class="duration-info">
+                            <div class="date-range">
+                                <span class="start-date">${formatDate(offer.startDate)}</span>
+                                <span class="to">to</span>
+                                <span class="end-date">${formatDate(offer.endDate)}</span>
+                            </div>
+                            <span class="duration-status ${getDurationStatus(offer.startDate, offer.endDate)}">
+                                ${getDurationText(offer.startDate, offer.endDate)}
+                            </span>
+                        </div>
+                    </td>
+                    <td>
+                        <div class="category-list">
+                            ${offer.categories ? offer.categories.map(cat => `
+                                <span class="category-badge">${escapeHtml(cat.categoryName)}</span>
+                            `).join(',') : '<span class="product-count">0 categories</span>'}
+                        </div>
+                    </td>
+                    <td>
+                        <span class="status-badge ${offer.isActive ? 'active' : 'inactive'}">
+                            ${offer.isActive ? 'Active' : 'Inactive'}
+                        </span>
+                    </td>
+                    <td>
+                        <div class="actions">
+                            <button class="btn btn-sm btn-outline" onclick="editOffer('${offer._id}')" title="Edit">
+                                Edit
+                            </button>
+                            <button class="btn btn-sm ${offer.isActive ? 'btn-warning' : 'btn-success'}" 
+                                    onclick="toggleOfferStatus('${offer._id}')" 
+                                    title="${offer.isActive ? 'Deactivate' : 'Activate'}">
+                                ${offer.isActive ? 'Block' : 'Unblock'}
+                            </button>
+                            <button class="btn btn-sm btn-danger" onclick="deleteOffer('${offer._id}')" title="Delete">
+                                Delete
+                            </button>
+                        </div>
+                    </td>
+                </tr>
+            `).join('');
+        }
+
+        // Get duration status
+        function getDurationStatus(startDate, endDate) {
+            const now = new Date();
+            const start = new Date(startDate);
+            const end = new Date(endDate);
+            
+            if (now < start) return 'upcoming';
+            if (now > end) return 'expired';
+            return 'active';
+        }
+
+        // Get duration text
+        function getDurationText(startDate, endDate) {
+            const now = new Date();
+            const start = new Date(startDate);
+            const end = new Date(endDate);
+            
+            if (now < start) return 'Upcoming';
+            if (now > end) return 'Expired';
+            return 'Active';
+        }
+
+        // Update pagination
+        function updatePagination(pagination) {
+            const container = document.getElementById('pagination');
+            const { currentPage, totalPages, hasNext, hasPrev } = pagination;
+            
+            let html = '';
+            
+            html += `
+                <button class="page-btn" onclick="goToPage(${currentPage - 1})" ${!hasPrev ? 'disabled' : ''}>
+                    <i class="fas fa-chevron-left"></i>
+                </button>
+            `;
+            
+            const startPage = Math.max(1, currentPage - 2);
+            const endPage = Math.min(totalPages, currentPage + 2);
+            
+            for (let i = startPage; i <= endPage; i++) {
+                html += `
+                    <button class="page-btn ${i === currentPage ? 'active' : ''}" onclick="goToPage(${i})">
+                        ${i}
+                    </button>
+                `;
+            }
+            
+            html += `
+                <button class="page-btn" onclick="goToPage(${currentPage + 1})" ${!hasNext ? 'disabled' : ''}>
+                    <i class="fas fa-chevron-right"></i>
+                </button>
+            `;
+            
+            container.innerHTML = html;
+        }
+
+        // Update table info
+        function updateTableInfo(pagination) {
+            const info = document.getElementById('paginationInfo');
+            const { currentPage, total, limit } = pagination;
+            
+            const startItem = (currentPage - 1) * limit + 1;
+            const endItem = Math.min(currentPage * limit, total);
+            
+            info.textContent = `Showing ${startItem}-${endItem} of ${total} offers`;
+        }
+
+        // Navigate to page
+        function goToPage(page) {
+            currentPage = page;
+            loadOffers();
+        }
+
+        // Show/hide loading
+        function showLoading(show) {
+            const spinner = document.getElementById('loadingSpinner');
+            const container = document.getElementById('tableContainer');
+            
+            if (show) {
+                spinner.style.display = 'block';
+                container.style.display = 'none';
+            } else {
+                spinner.style.display = 'none';
+                container.style.display = 'block';
+            }
+        }
+
+        // Show empty state
+        function showEmptyState() {
+            const tbody = document.getElementById('offersTableBody');
+            const emptyState = document.getElementById('emptyState');
+            tbody.innerHTML = '';
+            emptyState.style.display = 'block';
+        }
+
+        // Clear filters
+        function clearFilters() {
+            document.getElementById('searchInput').value = '';
+            document.getElementById('statusFilter').value = '';
+            document.getElementById('discountFilter').value = '';
+            document.getElementById('sortFilter').value = 'createdAt_desc';
+            currentPage = 1;
+            loadOffers();
+        }
+
+        // Open add offer modal
+        function openAddOfferModal() {
+            editingOfferId = null;
+            selectedCategoryIds = [];
+            document.getElementById('modalTitle').textContent = 'Add New Offer';
+            document.getElementById('submitBtn').innerHTML = '<i class="fas fa-save"></i> Save Offer';
+            document.getElementById('offerForm').reset();
+            updateSelectedCategories();
+            populateCategoryDropdown();
+            setMinDate();
+            document.getElementById('offerModal').classList.add('show');
+        }
+
+        // Edit offer
+        async function editOffer(offerId) {
+            try {
+                const response = await axios.get(`/admin/offer/category/${offerId}`);
+                const data = response.data;
+                
+                if (!data.success) {
+                    showToast(data.message || 'Failed to load offer', 'error');
+                    return;
+                }
+                
+                const offer = data.data;
+                editingOfferId = offerId;
+                selectedCategoryIds = offer.categories ? offer.categories.map(cat => cat._id) : [];
+                
+                document.getElementById('modalTitle').textContent = 'Edit Offer';
+                document.getElementById('submitBtn').innerHTML = '<i class="fas fa-save"></i> Update Offer';
+                
+                document.getElementById('offerName').value = offer.name;
+                document.getElementById('discountPercentage').value = offer.discountPercentage;
+                document.getElementById('startDate').value = formatDateForInput(offer.startDate);
+                document.getElementById('endDate').value = formatDateForInput(offer.endDate);
+                
+                updateSelectedCategories();
+                populateCategoryDropdown();
+                
+                document.getElementById('offerModal').classList.add('show');
+                
+            } catch (error) {
+                console.error('Error loading offer:', error);
+                showToast('Failed to load offer details', 'error');
+            }
+        }
+
+        // Close offer modal
+        function closeOfferModal() {
+            document.getElementById('offerModal').classList.remove('show');
+            editingOfferId = null;
+            selectedCategoryIds = [];
+        }
+
+        // Submit offer
+        async function submitOffer() {
+            try {
+                if (!validateForm()) return;
+                
+                const submitBtn = document.getElementById('submitBtn');
+                const originalText = submitBtn.innerHTML;
+                
+                submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Processing...';
+                submitBtn.disabled = true;
+                
+                const formData = {
+                    name: document.getElementById('offerName').value.trim(),
+                    discountPercentage: parseInt(document.getElementById('discountPercentage').value),
+                    startDate: document.getElementById('startDate').value,
+                    endDate: document.getElementById('endDate').value,
+                    categories: selectedCategoryIds
+                };
+                
+                const url = editingOfferId 
+                    ? `/admin/offer/category/edit/${editingOfferId}`
+                    : '/admin/offer/category/add';
+                
+                const response = editingOfferId 
+                    ? await axios.patch(url, formData)
+                    : await axios.post(url, formData);
+                
+                const data = response.data;
+                
+                if (data.success) {
+                    showToast(editingOfferId ? 'Offer updated successfully!' : 'Offer added successfully!', 'success');
+                    closeOfferModal();
+                    loadOffers();
+                } else {
+                    showToast(data.message || 'Operation failed', 'error');
+                }
+                
+            } catch (error) {
+                console.error('Error submitting offer:', error);
+                showToast('Failed to save offer', 'error');
+            } finally {
+                const submitBtn = document.getElementById('submitBtn');
+                submitBtn.innerHTML = editingOfferId ? '<i class="fas fa-save"></i> Update Offer' : '<i class="fas fa-save"></i> Save Offer';
+                submitBtn.disabled = false;
+            }
+        }
+
+        // Validate form
+        function validateForm() {
+            const name = document.getElementById('offerName').value.trim();
+            const discountPercentage = document.getElementById('discountPercentage').value;
+            const startDate = document.getElementById('startDate').value;
+            const endDate = document.getElementById('endDate').value;
+            
+            if (!name) {
+                showToast('Offer name is required', 'error');
+                return false;
+            }
+            
+            if (!discountPercentage || discountPercentage < 1 || discountPercentage > 100) {
+                showToast('Discount percentage must be between 1 and 100', 'error');
+                return false;
+            }
+            
+            if (!startDate || !endDate) {
+                showToast('Start date and end date are required', 'error');
+                return false;
+            }
+            
+            if (new Date(startDate) >= new Date(endDate)) {
+                showToast('End date must be after start date', 'error');
+                return false;
+            }
+            
+            if (selectedCategoryIds.length === 0) {
+                showToast('Please select at least one category', 'error');
+                return false;
+            }
+            
+            return true;
+        }
+
+        // Toggle offer status
+        async function toggleOfferStatus(offerId) {
+            try {
+                const response = await axios.patch(`/admin/offer/category/toggle/${offerId}`);
+                const data = response.data;
+                
+                if (data.success) {
+                    showToast('Offer status updated successfully!', 'success');
+                    await loadOffers();
+                } else {
+                    showToast(data.message || 'Failed to update offer status', 'error');
+                }
+                
+            } catch (error) {
+                console.error('Error toggling offer status:', error);
+                showToast('Failed to update offer status', 'error');
+            }
+        }
+
+        // Delete offer
+        function deleteOffer(offerId) {
+            deletingOfferId = offerId;
+            document.getElementById('deleteModal').classList.add('show');
+        }
+
+        // Close delete modal
+        function closeDeleteModal() {
+            document.getElementById('deleteModal').classList.remove('show');
+            deletingOfferId = null;
+        }
+
+        // Confirm delete
+        async function confirmDelete() {
+            try {
+                const deleteBtn = document.getElementById('deleteBtn');
+                deleteBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Deleting...';
+                deleteBtn.disabled = true;
+                
+                const response = await axios.patch(`/admin/offer/category/delete/${deletingOfferId}`);
+                const data = response.data;
+                
+                if (data.success) {
+                    showToast('Offer deleted successfully!', 'success');
+                    closeDeleteModal();
+                    loadOffers();
+                } else {
+                    showToast(data.message || 'Failed to delete offer', 'error');
+                }
+                
+            } catch (error) {
+                console.error('Error deleting offer:', error);
+                showToast('Failed to delete offer', 'error');
+            } finally {
+                const deleteBtn = document.getElementById('deleteBtn');
+                deleteBtn.innerHTML = '<i class="fas fa-trash"></i> Delete Offer';
+                deleteBtn.disabled = false;
+            }
+        }
+
+        // Utility functions
+        function formatDate(dateString) {
+            const options = { year: 'numeric', month: 'short', day: 'numeric' };
+            return new Date(dateString).toLocaleDateString('en-US', options);
+        }
+
+        function formatDateForInput(dateString) {
+            return new Date(dateString).toISOString().split('T')[0];
+        }
+
+        function escapeHtml(text) {
+            const map = {
+                '&': '&amp;',
+                '<': '&lt;',
+                '>': '&gt;',
+                '"': '&quot;',
+                "'": '&#039;'
+            };
+            return text.replace(/[&<>"']/g, m => map[m]);
+        }
+
+        function showToast(message, type = 'success') {
+            const toast = document.getElementById('toast');
+            toast.textContent = message;
+            toast.className = `toaster ${type} show`;
+            
+            setTimeout(() => {
+                toast.classList.remove('show');
+            }, 3000);
+        }
+
+        // Handle modal clicks
+        document.getElementById('offerModal').addEventListener('click', function(e) {
+            if (e.target === this) {
+                closeOfferModal();
+            }
+        });
+
+        document.getElementById('deleteModal').addEventListener('click', function(e) {
+            if (e.target === this) {
+                closeDeleteModal();
+            }
+        });
+
+        // Handle escape key
+        document.addEventListener('keydown', function(e) {
+            if (e.key === 'Escape') {
+                closeOfferModal();
+                closeDeleteModal();
+            }
+        });
+    </script>
+</body>
+</html>
