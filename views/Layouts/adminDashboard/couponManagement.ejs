@@ -1,0 +1,104 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Add New Coupon</title>
+  <style>
+    body {
+      font-family: 'Segoe UI', sans-serif;
+      background-color: #f4f4f4;
+      margin: 0;
+      padding: 2rem;
+    }
+
+    .form-container {
+      max-width: 600px;
+      margin: 0 auto;
+      background-color: #fff;
+      padding: 2rem;
+      border-radius: 8px;
+      box-shadow: 0 0 10px rgba(0,0,0,0.1);
+    }
+
+    h2 {
+      text-align: center;
+      margin-bottom: 1.5rem;
+      color: #333;
+    }
+
+    .form-group {
+      margin-bottom: 1rem;
+    }
+
+    label {
+      display: block;
+      margin-bottom: 0.5rem;
+      color: #333;
+    }
+
+    input[type="text"],
+    input[type="number"],
+    input[type="datetime-local"] {
+      width: 100%;
+      padding: 0.7rem;
+      border: 1px solid #ccc;
+      border-radius: 4px;
+      font-size: 1rem;
+    }
+
+    button {
+      width: 100%;
+      padding: 0.8rem;
+      background-color: #007bff;
+      border: none;
+      color: #fff;
+      font-size: 1rem;
+      border-radius: 4px;
+      cursor: pointer;
+      transition: background-color 0.2s;
+    }
+
+    button:hover {
+      background-color: #0056b3;
+    }
+
+    .note {
+      font-size: 0.9rem;
+      color: #777;
+    }
+
+    .error {
+      color: red;
+      margin-top: 0.5rem;
+    }
+  </style>
+</head>
+<body>
+  <div class="form-container">
+    <h2>Add New Coupon</h2>
+    <form id="addCouponForm" method="POST" action="/admin/coupons/add">
+      <div class="form-group">
+        <label for="coupon">Coupon Code <span class="note">(optional, auto-generated if left blank)</span></label>
+        <input type="text" id="coupon" name="coupon" placeholder="e.g. WELCOME500">
+      </div>
+
+      <div class="form-group">
+        <label for="discountAmount">Discount Amount (₹)</label>
+        <input type="number" id="discountAmount" name="discountAmount" required min="1">
+      </div>
+
+      <div class="form-group">
+        <label for="minimumCartAmount">Minimum Cart Amount (₹)</label>
+        <input type="number" id="minimumCartAmount" name="minimumCartAmount" value="0" min="0">
+      </div>
+
+      <div class="form-group">
+        <label for="expiryTime">Expiry Date & Time</label>
+        <input type="datetime-local" id="expiryTime" name="expiryTime" required>
+      </div>
+
+      <button type="submit">Create Coupon</button>
+    </form>
+  </div>
+</body>
+</html>
