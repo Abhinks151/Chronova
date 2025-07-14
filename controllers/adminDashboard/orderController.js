@@ -2,6 +2,12 @@ import { Order } from "../../models/order.js"
 import { Products } from "../../models/products.js"
 import Wallet from "../../models/wallet.js"
 import { logStockChange } from "../../utils/logStockRegistry.js"
+import {
+  updateOrderPaymentStatus as updateOrderPaymentStatusService,
+  updateItemPaymentStatus as updateItemPaymentStatusService,
+  getOrderPaymentStatus as getOrderPaymentStatusService,
+} from '../../servises/adminOrderManagementService/orderService.js';
+
 
 export const getOrders = async (req, res) => {
   try {
@@ -459,7 +465,7 @@ export const cancelOrder = async (req, res) => {
   }
 }
 
-// Enhanced helper function to auto-update order status based on item statuses
+
 async function updateOrderStatusBasedOnItems(order) {
   const itemStatuses = order.items.map((item) => item.status)
   const totalItems = order.items.length
@@ -526,4 +532,140 @@ async function updateOrderStatusBasedOnItems(order) {
 
   order.returnInfo.totalReturnRequests =
     statusCounts.returnRequested + statusCounts.returnApproved + statusCounts.returnRejected
+}
+
+
+
+export const updateOrderPaymentStatus = async (req, res) => {
+  try {
+    const { orderId } = req.params
+    const { paymentStatus } = req.body
+    const adminId = req.user?.id || "admin" // Adjust based on your auth structure
+
+    // Validate payment status
+    const validStatuses = ["Pending", "Paid", "Failed", "Refunded", "Cancelled"]
+    if (!validStatuses.includes(paymentStatus)) {
+      return res.status(400).json({
+        success: false,
+        error: "Invalid payment status provided",
+      })
+    }
+
+    if (!orderId || !paymentStatus) {
+      return res.status(400).json({
+        success: false,
+        error: "Order ID and payment status are required",
+      })
+    }
+
+    const result = await updateOrderPaymentStatusService(orderId, paymentStatus, adminId)
+
+    if (!result.success) {
+      return res.status(400).json({
+        success: false,
+        error: result.error,
+      })
+    }
+
+    res.status(200).json({
+      success: true,
+      message: result.message,
+      data: {
+        orderId: orderId,
+        oldPaymentStatus: result.oldPaymentStatus,
+        newPaymentStatus: paymentStatus,
+        updatedAt: new Date().toISOString(),
+      },
+    })
+  } catch (error) {
+    console.error("Error updating order payment status:", error)
+    res.status(500).json({
+      success: false,
+      error: "Internal server error while updating payment status",
+    })
+  }
+}
+
+export const updateItemPaymentStatus = async (req, res) => {
+  try {
+    const { orderId, itemId } = req.params
+    const { paymentStatus } = req.body
+    const adminId = req.user?.id || "admin" // Adjust based on your auth structure
+
+    // Validate payment status
+    const validStatuses = ["Pending", "Paid", "Failed", "Refunded", "Cancelled"]
+    if (!validStatuses.includes(paymentStatus)) {
+      return res.status(400).json({
+        success: false,
+        error: "Invalid payment status provided",
+      })
+    }
+
+    if (!orderId || !itemId || !paymentStatus) {
+      return res.status(400).json({
+        success: false,
+        error: "Order ID, item ID, and payment status are required",
+      })
+    }
+
+    const result = await updateItemPaymentStatusService(orderId, itemId, paymentStatus, adminId)
+
+    if (!result.success) {
+      return res.status(400).json({
+        success: false,
+        error: result.error,
+      })
+    }
+
+    res.status(200).json({
+      success: true,
+      message: result.message,
+      data: {
+        orderId: orderId,
+        itemId: itemId,
+        oldPaymentStatus: result.oldPaymentStatus,
+        newPaymentStatus: paymentStatus,
+        updatedAt: new Date().toISOString(),
+      },
+    })
+  } catch (error) {
+    console.error("Error updating item payment status:", error)
+    res.status(500).json({
+      success: false,
+      error: "Internal server error while updating item payment status",
+    })
+  }
+}
+
+export const getOrderPaymentStatusController = async (req, res) => {
+  try {
+    const { orderId } = req.params
+
+    if (!orderId) {
+      return res.status(400).json({
+        success: false,
+        error: "Order ID is required",
+      })
+    }
+
+    const result = await getOrderPaymentStatusService(orderId)
+
+    if (!result.success) {
+      return res.status(404).json({
+        success: false,
+        error: result.error,
+      })
+    }
+
+    res.status(200).json({
+      success: true,
+      data: result.data,
+    })
+  } catch (error) {
+    console.error("Error fetching order payment status:", error)
+    res.status(500).json({
+      success: false,
+      error: "Internal server error while fetching payment status",
+    })
+  }
 }

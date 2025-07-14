@@ -118,7 +118,6 @@
               <th>Minimum Cart</th>
               <th>Expiry Date</th>
               <th>Status</th>
-              <th>Usage Count</th>
               <th>Created Date</th>
               <th>Actions</th>
             </tr>
@@ -365,9 +364,7 @@
                             ${getStatusText(coupon)}
                         </span>
                     </td>
-                    <td>${coupon.applicableFor?.usageCount || 0} / ${
-              coupon.applicableFor?.limit || 1
-            }</td>
+                    
                     <td>${formatDate(coupon.createdAt)}</td>
                     <td>
                         <div class="actions-group">
@@ -434,8 +431,7 @@
           year: "numeric",
           month: "short",
           day: "numeric",
-          hour: "2-digit",
-          minute: "2-digit",
+         
         });
       }
 

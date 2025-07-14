@@ -167,3 +167,9 @@ export const deleteCouponService = async (couponId) => {
 
   return coupon;
 };
+
+
+export const getAllActiveCouponsService = async () => {
+  const data = await Coupon.find({ isActive: true, isDeleted: false });
+  return data;
+}

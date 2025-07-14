@@ -2,6 +2,7 @@ import {
   createCouponService,
   deleteCouponService,
   editCouponService,
+  getAllActiveCouponsService,
   getCouponManagemntPageDataService,
   toggleActiveStatusService,
 } from "../../servises/offers/adminCouponServices.js";
@@ -26,10 +27,10 @@ export const getCouponManagementPageData = async (req, res) => {
     const {
       page = 1,
       limit = 10,
-      sort = 'newest',
-      status = '',
-      date = '',
-      search = ''
+      sort = "newest",
+      status = "",
+      date = "",
+      search = "",
     } = req.query;
 
     const pageNum = parseInt(page);
@@ -40,13 +41,13 @@ export const getCouponManagementPageData = async (req, res) => {
 
     if (status) {
       const now = new Date();
-      if (status === 'active') {
+      if (status === "active") {
         filterConditions.isActive = true;
         filterConditions.expiryTime = { $gt: now };
-      } else if (status === 'inactive') {
+      } else if (status === "inactive") {
         filterConditions.isActive = false;
         filterConditions.expiryTime = { $gt: now };
-      } else if (status === 'expired') {
+      } else if (status === "expired") {
         filterConditions.expiryTime = { $lte: now };
       }
     }
@@ -54,35 +55,35 @@ export const getCouponManagementPageData = async (req, res) => {
     if (date) {
       const now = new Date();
       const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
-      
-      if (date === 'today') {
+
+      if (date === "today") {
         const tomorrow = new Date(today.getTime() + 24 * 60 * 60 * 1000);
         filterConditions.createdAt = { $gte: today, $lt: tomorrow };
-      } else if (date === 'week') {
+      } else if (date === "week") {
         const weekAgo = new Date(today.getTime() - 7 * 24 * 60 * 60 * 1000);
         filterConditions.createdAt = { $gte: weekAgo };
-      } else if (date === 'month') {
+      } else if (date === "month") {
         const monthAgo = new Date(today.getTime() - 30 * 24 * 60 * 60 * 1000);
         filterConditions.createdAt = { $gte: monthAgo };
       }
     }
 
     if (search) {
-  filterConditions.coupon = { $regex: search, $options: 'i' };
-}
+      filterConditions.coupon = { $regex: search, $options: "i" };
+    }
 
     let sortConditions = {};
     switch (sort) {
-      case 'oldest':
+      case "oldest":
         sortConditions = { createdAt: 1 };
         break;
-      case 'discount':
+      case "discount":
         sortConditions = { discountAmount: -1 };
         break;
-      case 'expiry':
+      case "expiry":
         sortConditions = { expiryTime: 1 };
         break;
-      case 'newest':
+      case "newest":
       default:
         sortConditions = { createdAt: -1 };
         break;
@@ -101,16 +102,16 @@ export const getCouponManagementPageData = async (req, res) => {
       totalItems: data.totalCount,
       currentPage: pageNum,
       totalPages: Math.ceil(data.totalCount / limitNum),
-      itemsPerPage: limitNum
+      itemsPerPage: limitNum,
     });
   } catch (error) {
     logger.error(error);
     res.status(httpStatusCOde.INTERNAL_SERVER_ERROR.code).json({
       success: false,
-      message: error.message || "Something went wrong"
+      message: error.message || "Something went wrong",
     });
   }
-}
+};
 
 export const addCoupon = async (req, res) => {
   try {
@@ -171,24 +172,7 @@ export const toggleCouponStatus = async (req, res) => {
     res.status(httpStatusCOde.OK.code).json({
       success: true,
       message: "Coupon status updated successfully",
-      coupon
-    });
-  } catch (error) {
-    logger.error(error);
-    res.status(httpStatusCOde.INTERNAL_SERVER_ERROR.code).json({
-      success: false,
-      message: error.message || "Something went wrong"
-    });
-  }
-};
-
-export const deleteCoupon = async (req, res) => {
-  try {
-    const couponId = req.params.id;
-    await deleteCouponService(couponId);
-    res.status(httpStatusCOde.OK.code).json({
-      success: true,
-      message: "Coupon deleted successfully"
+      coupon,
     });
   } catch (error) {
     logger.error(error);
@@ -199,3 +183,35 @@ export const deleteCoupon = async (req, res) => {
   }
 };
 
+export const deleteCoupon = async (req, res) => {
+  try {
+    const couponId = req.params.id;
+    await deleteCouponService(couponId);
+    res.status(httpStatusCOde.OK.code).json({
+      success: true,
+      message: "Coupon deleted successfully",
+    });
+  } catch (error) {
+    logger.error(error);
+    res.status(httpStatusCOde.INTERNAL_SERVER_ERROR.code).json({
+      success: false,
+      message: error.message || "Something went wrong",
+    });
+  }
+};
+
+export const getAllActiveCoupons = async (req, res) => {
+  try {
+    const data = await getAllActiveCouponsService();
+    res.status(httpStatusCOde.OK.code).json({
+      success: true,
+      data,
+    });
+  } catch (error) {
+    logger.error(error);
+    res.status(httpStatusCOde.INTERNAL_SERVER_ERROR.code).json({
+      success: false,
+      message: error.message || "Something went wrong",
+    });
+  }
+};

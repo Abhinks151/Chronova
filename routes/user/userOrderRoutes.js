@@ -15,12 +15,14 @@ import {
   ViewInvoiceController,
 } from "../../controllers/user/orderManagement.js"
 import { authenticateUser } from "../../middlewares/userAuthMiddleware.js"
+import { getAllActiveCoupons } from "../../controllers/adminDashboard/adminCoupionManagementController.js"
 
 const router = express.Router()
 
 // Checkout routes
 router.get("/checkout", authenticateUser, getCheckoutPage)
 router.get("/checkout/data", authenticateUser, getCheckoutPageData)
+router.get("/checkout/coupon/data", authenticateUser, getAllActiveCoupons)
 router.post("/order/place", authenticateUser, placeOrder)
 router.get("/order/conform", authenticateUser, getConformPage)
 

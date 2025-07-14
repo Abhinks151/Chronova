@@ -52,10 +52,9 @@ export const findBestPriceForProduct = async (productId) => {
   } else {
     offerPrice = product.salePrice;
     discount = Math.round(
-      (product.price - product.salePrice) / product.price * 100)
+      ((product.price - product.salePrice) / product.price) * 100
+    );
   }
-  
-  
 
   return { offerPrice, discount };
 };

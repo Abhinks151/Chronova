@@ -1,7 +1,7 @@
-import mongoose from "mongoose"
-import { customAlphabet } from "nanoid"
+import mongoose from "mongoose";
+import { customAlphabet } from "nanoid";
 
-const nanoid = customAlphabet("ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789", 10)
+const nanoid = customAlphabet("ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789", 10);
 
 const orderSchema = new mongoose.Schema(
   {
@@ -15,6 +15,7 @@ const orderSchema = new mongoose.Schema(
       required: true,
       trim: true,
       default: () => `CHRONO-${nanoid()}`,
+      unique: true,
     },
     shippingAddress: {
       addressName: {
@@ -232,9 +233,9 @@ const orderSchema = new mongoose.Schema(
   },
   {
     timestamps: true,
-  },
-)
+  }
+);
 
-orderSchema.index({ orderId: 1 }, { unique: true })
+export const Order =
+  mongoose.models.Order || mongoose.model("Order", orderSchema);
 
-export const Order = mongoose.models.Order || mongoose.model("Order", orderSchema)
