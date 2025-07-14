@@ -6,7 +6,6 @@
     <title>Checkout</title>
     <link rel="stylesheet" href="/styles/user/checkout.css" />
     <link rel="stylesheet" href="/styles/user/user-profile-sidebar.css" />
-    <link rel="stylesheet" href="/styles/user/user-checkout-coupon.css" />
     <link
       rel="stylesheet"
       href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css"
@@ -153,7 +152,9 @@
       <div class="modal">
         <div class="modal-header">
           <h2>Select Coupon</h2>
-          <button class="modal-close" onclick="closeCouponModal()">&times;</button>
+          <button class="modal-close" onclick="closeCouponModal()">
+            &times;
+          </button>
         </div>
         <div class="modal-body">
           <!-- Coupon Loading -->
@@ -161,12 +162,12 @@
             <div class="spinner"></div>
             <span>Loading coupons...</span>
           </div>
-          
+
           <!-- Coupon List -->
           <div id="couponList" class="coupon-list" style="display: none">
             <!-- Coupons will be loaded here -->
           </div>
-          
+
           <!-- Empty Coupon State -->
           <div id="emptyCoupons" class="coupon-empty" style="display: none">
             <div class="coupon-empty-icon">
@@ -293,17 +294,18 @@
             <div class="coupon-section">
               <div class="coupon-section-header">
                 <h3 class="section-title">Apply Coupon</h3>
-                <button
-                  class="select-coupon-btn"
-                  onclick="openCouponModal()"
-                >
+                <button class="select-coupon-btn" onclick="openCouponModal()">
                   <i class="fas fa-ticket-alt"></i>
                   Select Coupon
                 </button>
               </div>
-              
+
               <!-- Selected Coupon Display -->
-              <div id="selectedCouponDisplay" class="selected-coupon" style="display: none">
+              <div
+                id="selectedCouponDisplay"
+                class="selected-coupon"
+                style="display: none"
+              >
                 <div class="coupon-info">
                   <div class="coupon-code">
                     <i class="fas fa-ticket-alt"></i>
@@ -317,7 +319,7 @@
                   <i class="fas fa-times"></i>
                 </button>
               </div>
-              
+
               <!-- No Coupon State -->
               <div id="noCouponState" class="no-coupon-state">
                 <div class="no-coupon-icon">
@@ -388,9 +390,15 @@
                 <span>Tax:</span>
                 <span id="tax">₹0.00</span>
               </div>
-              <div class="summary-row coupon-discount-row" id="couponDiscountRow" style="display: none">
+              <div
+                class="summary-row coupon-discount-row"
+                id="couponDiscountRow"
+                style="display: none"
+              >
                 <span>Coupon Discount:</span>
-                <span id="couponDiscountAmount" class="discount-amount">-₹0.00</span>
+                <span id="couponDiscountAmount" class="discount-amount"
+                  >-₹0.00</span
+                >
               </div>
               <div class="summary-total">
                 <span>Total:</span>
@@ -410,6 +418,7 @@
       </div>
     </div>
 
+    <script src="https://checkout.razorpay.com/v1/checkout.js"></script>
     <script>
       let checkoutData = null;
       let userAddresses = [];
@@ -540,14 +549,15 @@
           emptyCoupons.style.display = "none";
 
           availableCoupons = await fetchCoupons();
-          
+
           // Filter coupons based on cart amount and active status
           const cartSubtotal = calculateSubtotal();
-          const validCoupons = availableCoupons.filter(coupon => 
-            coupon.isActive && 
-            !coupon.isDeleted && 
-            cartSubtotal >= coupon.minimumCartAmount &&
-            new Date(coupon.expiryTime) > new Date()
+          const validCoupons = availableCoupons.filter(
+            (coupon) =>
+              coupon.isActive &&
+              !coupon.isDeleted &&
+              cartSubtotal >= coupon.minimumCartAmount &&
+              new Date(coupon.expiryTime) > new Date()
           );
 
           if (validCoupons.length === 0) {
@@ -568,14 +578,15 @@
 
       function renderCoupons(coupons) {
         const couponList = document.getElementById("couponList");
-        
-        const couponCards = coupons.map(coupon => {
-          const isSelected = selectedCouponId === coupon._id;
-          const expiryDate = new Date(coupon.expiryTime).toLocaleDateString();
-          
-          return `
-            <div class="coupon-card ${isSelected ? 'selected' : ''}" 
-                 data-coupon-id="${coupon._id}" 
+
+        const couponCards = coupons
+          .map((coupon) => {
+            const isSelected = selectedCouponId === coupon._id;
+            const expiryDate = new Date(coupon.expiryTime).toLocaleDateString();
+
+            return `
+            <div class="coupon-card ${isSelected ? "selected" : ""}"
+                 data-coupon-id="${coupon._id}"
                  onclick="selectCouponInModal('${coupon._id}')">
               <div class="coupon-header">
                 <div class="coupon-code-display">
@@ -583,7 +594,9 @@
                   <span class="coupon-code-text">${coupon.coupon}</span>
                 </div>
                 <div class="coupon-radio">
-                  <input type="radio" name="selectedCoupon" value="${coupon._id}" ${isSelected ? 'checked' : ''}>
+                  <input type="radio" name="selectedCoupon" value="${
+                    coupon._id
+                  }" ${isSelected ? "checked" : ""}>
                 </div>
               </div>
               <div class="coupon-details">
@@ -604,28 +617,31 @@
               </div>
             </div>
           `;
-        }).join('');
+          })
+          .join("");
 
         couponList.innerHTML = couponCards;
       }
 
       function selectCouponInModal(couponId) {
         selectedCouponId = couponId;
-        
+
         // Update visual selection
-        document.querySelectorAll('.coupon-card').forEach(card => {
-          card.classList.remove('selected');
+        document.querySelectorAll(".coupon-card").forEach((card) => {
+          card.classList.remove("selected");
         });
-        
-        const selectedCard = document.querySelector(`[data-coupon-id="${couponId}"]`);
+
+        const selectedCard = document.querySelector(
+          `[data-coupon-id="${couponId}"]`
+        );
         if (selectedCard) {
-          selectedCard.classList.add('selected');
+          selectedCard.classList.add("selected");
           const radio = selectedCard.querySelector('input[type="radio"]');
           if (radio) radio.checked = true;
         }
 
         // Enable apply button
-        const applyCouponBtn = document.getElementById('applyCouponBtn');
+        const applyCouponBtn = document.getElementById("applyCouponBtn");
         applyCouponBtn.disabled = false;
       }
 
@@ -644,9 +660,9 @@
           modal.classList.remove("show");
           document.body.style.overflow = "auto";
           selectedCouponId = null;
-          
+
           // Reset apply button
-          const applyCouponBtn = document.getElementById('applyCouponBtn');
+          const applyCouponBtn = document.getElementById("applyCouponBtn");
           applyCouponBtn.disabled = true;
         }
       }
@@ -657,7 +673,7 @@
           return;
         }
 
-        const coupon = availableCoupons.find(c => c._id === selectedCouponId);
+        const coupon = availableCoupons.find((c) => c._id === selectedCouponId);
         if (!coupon) {
           showNotification("Coupon not found", "error");
           return;
@@ -666,14 +682,17 @@
         // Check cart amount again
         const cartSubtotal = calculateSubtotal();
         if (cartSubtotal < coupon.minimumCartAmount) {
-          showNotification(`Minimum order amount should be ₹${coupon.minimumCartAmount}`, "error");
+          showNotification(
+            `Minimum order amount should be ₹${coupon.minimumCartAmount}`,
+            "error"
+          );
           return;
         }
 
         selectedCoupon = {
           id: coupon._id,
           code: coupon.coupon,
-          discountAmount: coupon.discountAmount
+          discountAmount: coupon.discountAmount,
         };
 
         updateCouponDisplay();
@@ -691,19 +710,24 @@
       }
 
       function updateCouponDisplay() {
-        const selectedCouponDisplay = document.getElementById('selectedCouponDisplay');
-        const noCouponState = document.getElementById('noCouponState');
-        const selectedCouponCode = document.getElementById('selectedCouponCode');
-        const selectedCouponDiscount = document.getElementById('selectedCouponDiscount');
+        const selectedCouponDisplay = document.getElementById(
+          "selectedCouponDisplay"
+        );
+        const noCouponState = document.getElementById("noCouponState");
+        const selectedCouponCode =
+          document.getElementById("selectedCouponCode");
+        const selectedCouponDiscount = document.getElementById(
+          "selectedCouponDiscount"
+        );
 
         if (selectedCoupon) {
           selectedCouponCode.textContent = selectedCoupon.code;
           selectedCouponDiscount.textContent = selectedCoupon.discountAmount;
-          selectedCouponDisplay.style.display = 'flex';
-          noCouponState.style.display = 'none';
+          selectedCouponDisplay.style.display = "flex";
+          noCouponState.style.display = "none";
         } else {
-          selectedCouponDisplay.style.display = 'none';
-          noCouponState.style.display = 'block';
+          selectedCouponDisplay.style.display = "none";
+          noCouponState.style.display = "block";
         }
       }
 
@@ -758,7 +782,9 @@
             }')">
                 <div class="address-card-header">
                   <div class="address-type">
-                    <i class="${iconMap[address.addressName] || "fas fa-map-marker-alt"}"></i>
+                    <i class="${
+                      iconMap[address.addressName] || "fas fa-map-marker-alt"
+                    }"></i>
                     <span>${address.addressName}</span>
                   </div>
                   <div class="address-card-actions">
@@ -787,9 +813,9 @@
                   </div>
                 </div>
                 <div class="address-radio">
-                  <input type="radio" name="selectedAddress" value="${address._id}" ${
-              selectedAddressId === address._id ? "checked" : ""
-            }>
+                  <input type="radio" name="selectedAddress" value="${
+                    address._id
+                  }" ${selectedAddressId === address._id ? "checked" : ""}>
                 </div>
               </div>
             `;
@@ -994,7 +1020,9 @@
               product.images?.[0]?.url || "/images/placeholder-product.jpg";
             return `
               <div class="order-item">
-                <img src="${imageUrl}" alt="${product.productName}" class="product-image"
+                <img src="${imageUrl}" alt="${
+              product.productName
+            }" class="product-image"
                      onerror="this.src='/images/placeholder-product.jpg'">
                 <div class="product-details">
                   <h3 class="product-name">${product.productName}</h3>
@@ -1034,12 +1062,14 @@
         const taxEl = document.getElementById("tax");
         const totalEl = document.getElementById("total");
         const couponDiscountRow = document.getElementById("couponDiscountRow");
-        const couponDiscountAmount = document.getElementById("couponDiscountAmount");
+        const couponDiscountAmount = document.getElementById(
+          "couponDiscountAmount"
+        );
 
         let subtotal = calculateSubtotal();
         const shipping = 0;
         const tax = 0;
-        
+
         // Calculate coupon discount
         let couponDiscount = 0;
         if (selectedCoupon) {
@@ -1087,17 +1117,22 @@
           showNotification("Please select a shipping address", "error");
           return;
         }
+
         const selectedPaymentMethod = document.querySelector(
           'input[name="paymentMethod"]:checked'
         ).value;
+
         const placeOrderBtn = document.getElementById("placeOrderBtn");
         const originalText = placeOrderBtn.textContent;
+
         try {
           placeOrderBtn.disabled = true;
           placeOrderBtn.textContent = "Placing Order...";
+
           const total = calculateTotal();
           const discountPercentage = calculateDiscount();
           const discount = total * (discountPercentage / 100);
+
           const orderData = {
             items: checkoutData.items,
             shippingAddress: selectedAddressId,
@@ -1106,26 +1141,91 @@
             discount,
           };
 
-          // Add coupon data if selected
           if (selectedCoupon) {
             orderData.coupon = {
               code: selectedCoupon.code,
-              discountAmount: selectedCoupon.discountAmount
+              discountAmount: selectedCoupon.discountAmount,
             };
           }
 
-          const response = await axios.post("/user/order/place", orderData);
-          showNotification(
-            response.data.message || "Order placed successfully!",
-            "success"
-          );
-          const orderId = response.data?.data?.orderId;
-          setTimeout(() => {
-            window.location.href = `/user/order/conform?orderId=${orderId}`;
-          }, 2000);
+          if (selectedPaymentMethod === "cod") {
+            // 🧾 COD Flow (use existing backend logic)
+            const response = await axios.post("/user/order/place", orderData);
+            showNotification(
+              response.data.message || "Order placed successfully!",
+              "success"
+            );
+            const orderId = response.data?.data?.orderId;
+            setTimeout(() => {
+              window.location.href = `/user/order/conform?orderId=${orderId}`;
+            }, 2000);
+          } else {
+            // 💳 ONLINE Flow: Create Razorpay Order
+            const razorRes = await axios.post("/api/create-razorpay-order", {
+              amount: total,
+              receipt: `receipt_${Date.now()}`,
+            });
+
+            window.__orderData = orderData;
+
+            const { order } = razorRes.data;
+
+            const options = {
+              key: "<%= razorpayKey %>",
+              amount: order.amount,
+              currency: order.currency,
+              name: "Chronova",
+              description: "Order Payment",
+              order_id: order.id,
+              handler: async function (response) {
+                try {
+                  const verifyRes = await axios.post("/user/verify-payment", {
+                    razorpay_order_id: response.razorpay_order_id,
+                    razorpay_payment_id: response.razorpay_payment_id,
+                    razorpay_signature: response.razorpay_signature,
+                    orderData,
+                  });
+
+                  if (verifyRes.data.success) {
+                    const orderId = verifyRes.data?.orderId;
+                    showNotification(
+                      "Payment successful and order placed!",
+                      "success"
+                    );
+                    setTimeout(() => {
+                      window.location.href = `/user/order/conform?orderId=${orderId}`;
+                    }, 2000);
+                  } else {
+                    showNotification("Payment verification failed", "error");
+                  }
+                } catch (err) {
+                  console.error("Payment verification error:", err);
+                  showNotification(
+                    "Something went wrong after payment.",
+                    "error"
+                  );
+                }
+              },
+              modal: {
+                ondismiss: function () {
+                  showNotification("Payment was cancelled by the user.", "error");
+                }
+              },
+              prefill: {
+                name: "<%= user.name %>",
+                email: "<%= user.email %>",
+                contact: "<%= user.phone %>",
+              },
+              theme: {
+                color: "#0d6efd",
+              },
+            };
+
+            const rzp = new Razorpay(options);
+            rzp.open();
+          }
         } catch (error) {
           console.error("Error placing order:", error);
-          // Extract and show a user-friendly error message
           const message =
             error?.response?.data?.error ||
             error?.response?.data?.message ||
@@ -1143,7 +1243,9 @@
         let subtotal = calculateSubtotal();
         const shipping = 0;
         const tax = 0;
-        const couponDiscount = selectedCoupon ? selectedCoupon.discountAmount : 0;
+        const couponDiscount = selectedCoupon
+          ? selectedCoupon.discountAmount
+          : 0;
         return Math.max(0, subtotal + shipping + tax - couponDiscount);
       }
 

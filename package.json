@@ -38,6 +38,7 @@
     "passport": "^0.7.0",
     "passport-google-oauth20": "^2.0.0",
     "puppeteer": "^24.12.1",
+    "razorpay": "^2.9.6",
     "winston": "^3.17.0",
     "winston-daily-rotate-file": "^5.0.0"
   },

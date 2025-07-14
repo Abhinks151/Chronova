@@ -13,12 +13,20 @@ import { fileURLToPath } from "url";
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
-export const placeOrderService = async (userId, orderData, req) => {
+export const placeOrderService = async (
+  userId,
+  orderData,
+  req,
+  isVerifiedOnline
+) => {
   const fullAddress = await Address.findById(orderData.shippingAddress).lean();
 
   if (!fullAddress) throw new Error("Shipping address not found");
 
-  if (orderData.paymentMethod?.toLowerCase() === "online") {
+  if (
+    orderData.paymentMethod?.toLowerCase() === "online" &&
+    !isVerifiedOnline
+  ) {
     logger.warn(
       `User ${req.user.email} attempted to place an order with online payment method, which is not supported yet.`
     );

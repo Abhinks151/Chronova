@@ -13,9 +13,11 @@ import {
   cancelSingleItemController,
   cancelEntireOrderController,
   ViewInvoiceController,
+  verifyRazorpayPayment,
 } from "../../controllers/user/orderManagement.js"
 import { authenticateUser } from "../../middlewares/userAuthMiddleware.js"
 import { getAllActiveCoupons } from "../../controllers/adminDashboard/adminCoupionManagementController.js"
+import { createRazorpayOrder } from "../../controllers/user/razorpayController.js"
 
 const router = express.Router()
 
@@ -38,6 +40,10 @@ router.post("/orders/:orderId/return", authenticateUser, returnEntireOrderContro
 
 router.get("/orders/invoice/:orderId", authenticateUser, ViewInvoiceController)
 router.get("/orders/invoice/download/:orderId", authenticateUser, downloadInvoiceController)
+
+
+
+router.post("/verify-payment", authenticateUser, verifyRazorpayPayment);
 
 
 export default router

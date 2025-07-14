@@ -129,8 +129,7 @@ export const updateItemPaymentStatus = async (orderId, itemId, paymentStatus, ad
     }
 
     // Update item payment status
-    item.paymentStatus = paymentStatus
-    item.paymentStatusUpdatedAt = new Date()
+    item.status = paymentStatus
 
     // Handle specific payment status changes
     if (paymentStatus === "Refunded") {
@@ -215,7 +214,7 @@ export const getOrderPaymentStatus = async (orderId) => {
     }
   }
 }
-
+   
 // Helper function to validate payment status transition
 const validatePaymentStatusTransition = (currentStatus, newStatus) => {
   const invalidTransitions = {
