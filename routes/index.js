@@ -16,6 +16,7 @@ import adminOrderRouter from './adminDashboardRoutes/orderRoutes.js';
 import adminStockRouter from "./adminDashboardRoutes/adminStockManagementRoutes.js";
 import offerRouter from "./adminDashboardRoutes/adminOfferRoutes.js";
 import couponRouter from "./adminDashboardRoutes/adminCouponRoutes.js";
+import userRazorpayRoutes from "./user/userRazorpayRoutes.js";
 
 const indexRoutes = express.Router();
 
@@ -37,5 +38,7 @@ indexRoutes.use("/admin", adminStockRouter);
 indexRoutes.use('/admin', offerRouter);
 indexRoutes.use('/admin', couponRouter);
 
+
+indexRoutes.use('/api',userRazorpayRoutes)
 
 export default indexRoutes;

@@ -1,7 +1,7 @@
-import mongoose from "mongoose"
-import { customAlphabet } from "nanoid"
+import mongoose from "mongoose";
+import { customAlphabet } from "nanoid";
 
-const nanoid = customAlphabet("ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789", 10)
+const nanoid = customAlphabet("ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789", 10);
 
 const orderSchema = new mongoose.Schema(
   {
@@ -10,51 +10,31 @@ const orderSchema = new mongoose.Schema(
       ref: "User",
       required: true,
     },
+
     orderId: {
       type: String,
       required: true,
+      unique: true,
       trim: true,
       default: () => `CHRONO-${nanoid()}`,
     },
+
     shippingAddress: {
       addressName: {
         type: String,
         enum: ["Home", "Work", "Other"],
         required: true,
-        trim: true,
       },
-      fullName: {
-        type: String,
-        required: true,
-      },
-      phone: {
-        type: String,
-        required: true,
-      },
-      addressLine: {
-        type: String,
-        required: true,
-      },
-      city: {
-        type: String,
-        required: true,
-      },
-      state: {
-        type: String,
-        required: true,
-      },
-      country: {
-        type: String,
-        required: true,
-      },
-      pincode: {
-        type: String,
-        required: true,
-      },
-      landmark: {
-        type: String,
-      },
+      fullName: { type: String, required: true },
+      phone: { type: String, required: true },
+      addressLine: { type: String, required: true },
+      city: { type: String, required: true },
+      state: { type: String, required: true },
+      country: { type: String, required: true },
+      pincode: { type: String, required: true },
+      landmark: { type: String },
     },
+
     items: [
       {
         productId: {
@@ -62,23 +42,10 @@ const orderSchema = new mongoose.Schema(
           ref: "Products",
           required: true,
         },
-        productName: {
-          type: String,
-          required: true,
-        },
-        brand: {
-          type: String,
-          required: true,
-        },
-        quantity: {
-          type: Number,
-          required: true,
-          min: 1,
-        },
-        price: {
-          type: Number,
-          required: true,
-        },
+        productName: { type: String, required: true },
+        brand: { type: String, required: true },
+        quantity: { type: Number, required: true, min: 1 },
+        price: { type: Number, required: true },
         category: [
           {
             type: mongoose.Schema.Types.ObjectId,
@@ -86,14 +53,8 @@ const orderSchema = new mongoose.Schema(
           },
         ],
         image: {
-          url: {
-            type: String,
-            required: true,
-          },
-          public_id: {
-            type: String,
-            required: true,
-          },
+          url: { type: String, required: true },
+          public_id: { type: String, required: true },
         },
         status: {
           type: String,
@@ -108,77 +69,113 @@ const orderSchema = new mongoose.Schema(
           ],
           default: "Placed",
         },
-        cancelReason: {
-          type: String,
-        },
-        returnReason: {
-          type: String,
-        },
-        returnRejectionReason: {
-          type: String,
-        },
-        returnRequestedAt: {
-          type: Date,
-        },
-        returnProcessedAt: {
-          type: Date,
-        },
+        cancelReason: String,
+        returnReason: String,
+        returnRejectionReason: String,
+        returnRequestedAt: Date,
+        returnProcessedAt: Date,
         returnProcessedBy: {
           type: String,
           enum: ["Admin", "System"],
         },
+        paymentStatus: {
+          type: String,
+          enum: ["Pending", "Paid", "Failed", "Refunded", "Cancelled"],
+          default: "Pending",
+        },
+        paymentStatusUpdatedAt: Date,
       },
     ],
+
     paymentMethod: {
       type: String,
       enum: ["COD", "ONLINE"],
       required: true,
     },
+
     paymentStatus: {
       type: String,
       enum: ["Pending", "Paid", "Failed", "Refunded", "Partially Refunded"],
       default: "Pending",
     },
+
     paymentDetails: {
-      transactionId: {
-        type: String,
-      },
-      paymentDate: {
-        type: Date,
-      },
-      paymentProvider: {
-        type: String,
-      },
+      transactionId: String,
+      razorpay_order_id: String,
+      razorpay_payment_id: String,
+      razorpay_signature: String,
+      paymentDate: Date,
+      paymentProvider: { type: String, default: "Razorpay" },
     },
+
+    paymentHistory: [
+      {
+        status: String,
+        previousStatus: String,
+        changedBy: {
+          type: mongoose.Schema.Types.ObjectId,
+          ref: "User",
+        },
+        changedAt: Date,
+        changeType: {
+          type: String,
+          enum: ["order", "item", "bulk_item"],
+        },
+        itemId: {
+          type: mongoose.Schema.Types.ObjectId,
+          ref: "Products",
+        },
+        itemName: String,
+        source: {
+          type: String,
+          enum: ["Admin", "Webhook", "System"],
+        },
+      },
+    ],
+
     coupon: {
-      code: {
+      code: String,
+      discountAmount: { type: Number, default: 0 },
+      type: {
         type: String,
+        enum: ["REGULAR", "REFERRAL"],
+        default: "REGULAR",
       },
-      discountAmount: {
-        type: Number,
-        default: 0,
+      appliedBy: {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: "User",
+      },
+      referredBy: {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: "User",
       },
     },
+
     subtotal: {
       type: Number,
       required: true,
     },
+
     discount: {
       type: Number,
       default: 0,
     },
+
     totalAmount: {
       type: Number,
       required: true,
     },
+
     refundedAmount: {
       type: Number,
       default: 0,
     },
+
     isPaid: {
       type: Boolean,
       default: false,
     },
+
     orderStatus: {
       type: String,
       enum: [
@@ -195,6 +192,7 @@ const orderSchema = new mongoose.Schema(
       ],
       default: "Placed",
     },
+
     cancellation: {
       cancelledAt: Date,
       cancelledBy: {
@@ -203,11 +201,10 @@ const orderSchema = new mongoose.Schema(
       },
       reason: String,
     },
+
     returnInfo: {
       returnedAt: Date,
-      reason: {
-        type: String,
-      },
+      reason: String,
       approved: {
         type: Boolean,
         default: false,
@@ -225,6 +222,7 @@ const orderSchema = new mongoose.Schema(
         default: 0,
       },
     },
+
     invoiceGenerated: {
       type: Boolean,
       default: false,
@@ -232,9 +230,8 @@ const orderSchema = new mongoose.Schema(
   },
   {
     timestamps: true,
-  },
-)
+  }
+);
 
-orderSchema.index({ orderId: 1 }, { unique: true })
-
-export const Order = mongoose.models.Order || mongoose.model("Order", orderSchema)
+export const Order =
+  mongoose.models.Order || mongoose.model("Order", orderSchema);

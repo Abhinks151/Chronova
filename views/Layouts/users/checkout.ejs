@@ -28,7 +28,6 @@
           <form id="addressForm">
             <!-- Hidden field for address ID (only used during edit) -->
             <input type="hidden" id="addressId" name="addressId" />
-
             <div class="form-row">
               <div class="form-group">
                 <label for="addressName">Address Type *</label>
@@ -50,7 +49,6 @@
                 />
               </div>
             </div>
-
             <div class="form-row">
               <div class="form-group">
                 <label for="phone">Phone Number *</label>
@@ -74,7 +72,6 @@
                 />
               </div>
             </div>
-
             <div class="form-group">
               <label for="addressLine">Address Line *</label>
               <textarea
@@ -84,7 +81,6 @@
                 required
               ></textarea>
             </div>
-
             <div class="form-row">
               <div class="form-group">
                 <label for="city">City *</label>
@@ -107,7 +103,6 @@
                 />
               </div>
             </div>
-
             <div class="form-group">
               <label for="country">Country *</label>
               <input
@@ -118,7 +113,6 @@
                 required
               />
             </div>
-
             <div class="form-group">
               <label for="landmark">Landmark</label>
               <input
@@ -148,6 +142,57 @@
             <span class="btn-spinner" style="display: none">
               <div class="loading"></div>
             </span>
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Coupon Modal -->
+    <div class="modal-overlay" id="couponModal">
+      <div class="modal">
+        <div class="modal-header">
+          <h2>Select Coupon</h2>
+          <button class="modal-close" onclick="closeCouponModal()">
+            &times;
+          </button>
+        </div>
+        <div class="modal-body">
+          <!-- Coupon Loading -->
+          <div id="couponLoading" class="coupon-loading">
+            <div class="spinner"></div>
+            <span>Loading coupons...</span>
+          </div>
+
+          <!-- Coupon List -->
+          <div id="couponList" class="coupon-list" style="display: none">
+            <!-- Coupons will be loaded here -->
+          </div>
+
+          <!-- Empty Coupon State -->
+          <div id="emptyCoupons" class="coupon-empty" style="display: none">
+            <div class="coupon-empty-icon">
+              <i class="fas fa-ticket-alt"></i>
+            </div>
+            <h4>No coupons available</h4>
+            <p>There are no active coupons for your cart amount</p>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button
+            type="button"
+            class="btn btn-secondary"
+            onclick="closeCouponModal()"
+          >
+            Cancel
+          </button>
+          <button
+            type="button"
+            class="btn btn-primary"
+            id="applyCouponBtn"
+            onclick="applyCoupon()"
+            disabled
+          >
+            Apply Coupon
           </button>
         </div>
       </div>
@@ -245,6 +290,45 @@
               </div>
             </div>
 
+            <!-- Coupon Section -->
+            <div class="coupon-section">
+              <div class="coupon-section-header">
+                <h3 class="section-title">Apply Coupon</h3>
+                <button class="select-coupon-btn" onclick="openCouponModal()">
+                  <i class="fas fa-ticket-alt"></i>
+                  Select Coupon
+                </button>
+              </div>
+
+              <!-- Selected Coupon Display -->
+              <div
+                id="selectedCouponDisplay"
+                class="selected-coupon"
+                style="display: none"
+              >
+                <div class="coupon-info">
+                  <div class="coupon-code">
+                    <i class="fas fa-ticket-alt"></i>
+                    <span id="selectedCouponCode"></span>
+                  </div>
+                  <div class="coupon-discount">
+                    Save ₹<span id="selectedCouponDiscount">0</span>
+                  </div>
+                </div>
+                <button class="remove-coupon-btn" onclick="removeCoupon()">
+                  <i class="fas fa-times"></i>
+                </button>
+              </div>
+
+              <!-- No Coupon State -->
+              <div id="noCouponState" class="no-coupon-state">
+                <div class="no-coupon-icon">
+                  <i class="fas fa-ticket-alt"></i>
+                </div>
+                <p>No coupon applied</p>
+              </div>
+            </div>
+
             <!-- Payment Method -->
             <div class="payment-section">
               <h3 class="section-title">Payment Method</h3>
@@ -306,6 +390,16 @@
                 <span>Tax:</span>
                 <span id="tax">₹0.00</span>
               </div>
+              <div
+                class="summary-row coupon-discount-row"
+                id="couponDiscountRow"
+                style="display: none"
+              >
+                <span>Coupon Discount:</span>
+                <span id="couponDiscountAmount" class="discount-amount"
+                  >-₹0.00</span
+                >
+              </div>
               <div class="summary-total">
                 <span>Total:</span>
                 <span id="total">₹0.00</span>
@@ -324,649 +418,941 @@
       </div>
     </div>
 
+    <script src="https://checkout.razorpay.com/v1/checkout.js"></script>
     <script>
-      						// Global variables
-      			let checkoutData = null;
-      			let userAddresses = [];
-      			let selectedAddressId = null;
-      			let editingAddressId = null; // Track which address is being edited
-
-      			// Toast notification functions
-      			function showNotification(message, type = 'success') {
-      				const toast = document.getElementById('toast');
-      				const toastMessage = document.getElementById('toast-message');
-
-      				if (!toast || !toastMessage) return;
-
-      				toastMessage.textContent = message;
-      				toast.className = `toast toast-${type} show`;
-
-      				setTimeout(() => {
-      					hideToast();
-      				}, 4000);
-      			}
-
-      			function hideToast() {
-      				const toast = document.getElementById('toast');
-      				if (toast) {
-      					toast.classList.remove('show');
-      				}
-      			}
-
-      			function debounce(func, delay) {
-      				let timeout;
-      				return function (...args) {
-      					clearTimeout(timeout);
-      					timeout = setTimeout(() => func.apply(this, args), delay);
-      				};
-      			}
-
-      			const fetchPincodeDetails = debounce(async function () {
-      				const pincode = document.getElementById("pincode").value.trim();
-
-      				if (pincode.length === 6 && /^\d{6}$/.test(pincode)) {
-      					try {
-      						const res = await fetch(`https://api.postalpincode.in/pincode/${pincode}`);
-      						const data = await res.json();
-
-      						if (data[0].Status === "Success") {
-      							const info = data[0].PostOffice[0];
-      							document.getElementById("city").value = info.District;
-      							document.getElementById("state").value = info.State;
-      							document.getElementById("country").value = "India";
-      						} else {
-      							console.warn("Invalid pincode");
-      						}
-      					} catch (error) {
-      						console.error("Error fetching pincode info:", error);
-      					}
-      				}
-      			}, 600);
-
-      			function handlePincodeInput() {
-      				fetchPincodeDetails();
-      			}
-
-      			async function fetchCheckoutData() {
-      				try {
-      					const response = await axios.get('/user/checkout/data');
-      					return response.data.checkoutData;
-      				} catch (error) {
-      					console.error('Error fetching checkout data:', error);
-      					throw error;
-      				}
-      			}
-
-      			async function fetchUserAddresses() {
-      				try {
-      					const response = await axios.get('/user/profile/get-address');
-      					return response.data.addresses || [];
-      				} catch (error) {
-      					console.error('Error fetching addresses:', error);
-      					throw error;
-      				}
-      			}
-
-      			async function saveNewAddress(addressData) {
-      				try {
-      					const response = await axios.post('/user/profile/address/add', addressData);
-      					return response.data;
-      				} catch (error) {
-      					console.error('Error saving address:', error);
-      					throw error;
-      				}
-      			}
-
-      			async function updateExistingAddress(addressId, addressData) {
-      				try {
-      					const response = await axios.put(`/user/profile/address/edit/${addressId}`, addressData);
-      					return response.data;
-      				} catch (error) {
-      					console.error('Error updating address:', error);
-      					throw error;
-      				}
-      			}
-
-      			// Address Management Functions
-      			async function loadAddresses() {
-      				const addressLoading = document.getElementById('addressLoading');
-      				const addressGrid = document.getElementById('addressGrid');
-      				const emptyAddress = document.getElementById('emptyAddress');
-
-      				try {
-      					addressLoading.style.display = 'flex';
-      					addressGrid.style.display = 'none';
-      					emptyAddress.style.display = 'none';
-
-      					userAddresses = await fetchUserAddresses();
-
-      					if (userAddresses.length === 0) {
-      						emptyAddress.style.display = 'block';
-      						updatePlaceOrderButton();
-      						return;
-      					}
-
-      					renderAddresses();
-      					addressGrid.style.display = 'block';
-
-      					// Auto-select default address or first address
-      					const defaultAddress = userAddresses.find(addr => addr.isDefault);
-      					if (defaultAddress) {
-      						selectAddress(defaultAddress._id);
-      					} else if (userAddresses.length > 0) {
-      						selectAddress(userAddresses[0]._id);
-      					}
-
-      				} catch (error) {
-      					console.error('Error loading addresses:', error);
-      					showNotification('Failed to load addresses', 'error');
-      					emptyAddress.style.display = 'block';
-      				} finally {
-      					addressLoading.style.display = 'none';
-      				}
-      			}
-
-      			function renderAddresses() {
-      				const addressGrid = document.getElementById('addressGrid');
-
-      				const iconMap = {
-      					'Home': 'fas fa-home',
-      					'Work': 'fas fa-briefcase',
-      					'Other': 'fas fa-map-marker-alt'
-      				};
-
-      				const addressCards = userAddresses.map(address => {
-      					const isDefault = address.isDefault;
-
-      					return `
-      						<div class="address-card ${selectedAddressId === address._id ? 'selected' : ''}" data-address-id="${address._id}" onclick="selectAddress('${address._id}')">
-      							<div class="address-card-header">
-      								<div class="address-type">
-      									<i class="${iconMap[address.addressName] || 'fas fa-map-marker-alt'}"></i>
-      									<span>${address.addressName}</span>
-      								</div>
-      								<div class="address-card-actions">
-      									<button class="address-action-btn edit-btn" onclick="event.stopPropagation(); editAddress('${address._id}')">
-      										Edit
-      									</button>
-      								</div>
-      							</div>
-
-      							<div class="address-info">
-      								<div class="address-name">${address.fullName}</div>
-      								<div class="address-details">
-      									${address.addressLine}<br>
-      									${address.city}, ${address.state} - ${address.pincode}<br>
-      									${address.country}
-      									${address.landmark ? `<br><span class="landmark">Near: ${address.landmark}</span>` : ''}
-      								</div>
-      								<div class="address-phone">
-      									<i class="fas fa-phone"></i>
-      									${address.phone}
-      								</div>
-      							</div>
-
-      							<div class="address-radio">
-      								<input type="radio" name="selectedAddress" value="${address._id}" ${selectedAddressId === address._id ? 'checked' : ''}>
-      							</div>
-      						</div>
-      					`;
-      				}).join('');
-
-      				addressGrid.innerHTML = addressCards;
-      			}
-
-      			function selectAddress(addressId) {
-      				selectedAddressId = addressId;
-
-      				// Update visual selection
-      				document.querySelectorAll('.address-card').forEach(card => {
-      					card.classList.remove('selected');
-      				});
-
-      				const selectedCard = document.querySelector(`[data-address-id="${addressId}"]`);
-      				if (selectedCard) {
-      					selectedCard.classList.add('selected');
-      					const radio = selectedCard.querySelector('input[type="radio"]');
-      					if (radio) radio.checked = true;
-      				}
-
-      				updatePlaceOrderButton();
-      				// console.log('Address selected:', addressId);
-      			}
-
-      			async function makeDefaultAddress(addressId) {
-      				try {
-      					await setDefaultAddress(addressId);
-      					showNotification('Default address updated successfully', 'success');
-
-      					// Update local data
-      					userAddresses = userAddresses.map(addr => ({
-      						...addr,
-      						isDefault: addr._id === addressId
-      					}));
-
-      					renderAddresses();
-      					selectAddress(addressId);
-
-      				} catch (error) {
-      					showNotification('Failed to update default address', 'error');
-      				}
-      			}
-
-      			function editAddress(addressId) {
-      				// Find the address to edit
-      				const addressToEdit = userAddresses.find(addr => addr._id === addressId);
-      				if (!addressToEdit) {
-      					showNotification('Address not found', 'error');
-      					return;
-      				}
-
-      				// Set editing mode
-      				editingAddressId = addressId;
-
-      				// Populate the form with existing data
-      				populateAddressForm(addressToEdit);
-
-      				// Update modal title and button text
-      				updateModalForEditing(true);
-
-      				// Open the modal
-      				openAddressModal();
-      			}
-
-      			function populateAddressForm(address) {
-      				const form = document.getElementById('addressForm');
-      				if (!form) return;
-
-      				// Populate form fields
-      				const fields = {
-      					'addressName': address.addressName,
-      					'fullName': address.fullName,
-      					'phone': address.phone,
-      					'pincode': address.pincode,
-      					'addressLine': address.addressLine,
-      					'city': address.city,
-      					'state': address.state,
-      					'country': address.country,
-      					'landmark': address.landmark || ''
-      				};
-
-      				Object.keys(fields).forEach(fieldName => {
-      					const field = form.querySelector(`[name="${fieldName}"]`);
-      					if (field) {
-      						field.value = fields[fieldName];
-      					}
-      				});
-
-      				// Handle checkbox for default address
-      				const isDefaultCheckbox = form.querySelector('[name="isDefault"]');
-      				if (isDefaultCheckbox) {
-      					isDefaultCheckbox.checked = address.isDefault || false;
-      				}
-      			}
-
-      			function updateModalForEditing(isEditing) {
-      				const modalTitle = document.querySelector('#addressModal .modal-title');
-      				const saveBtn = document.getElementById('saveAddressBtn');
-      				const btnText = saveBtn.querySelector('.btn-text');
-
-      				if (isEditing) {
-      					if (modalTitle) modalTitle.textContent = 'Edit Address';
-      					if (btnText) btnText.textContent = 'Update Address';
-      				} else {
-      					if (modalTitle) modalTitle.textContent = 'Add New Address';
-      					if (btnText) btnText.textContent = 'Save Address';
-      				}
-      			}
-
-      			// Address Modal Functions
-      			function openAddressModal() {
-      				const modal = document.getElementById('addressModal');
-      				if (modal) {
-      					modal.classList.add('show');
-      					document.body.style.overflow = 'hidden';
-      				}
-      			}
-
-      			function closeModal() {
-      				const modal = document.getElementById('addressModal');
-      				if (modal) {
-      					modal.classList.remove('show');
-      					document.body.style.overflow = 'auto';
-
-      					// Reset form and editing state
-      					const form = document.getElementById('addressForm');
-      					if (form) form.reset();
-
-      					editingAddressId = null;
-      					updateModalForEditing(false);
-      				}
-      			}
-
-      			async function saveAddress() {
-      				const form = document.getElementById('addressForm');
-      				const saveBtn = document.getElementById('saveAddressBtn');
-      				const btnText = saveBtn.querySelector('.btn-text');
-      				const btnSpinner = saveBtn.querySelector('.btn-spinner');
-
-      				try {
-      					saveBtn.disabled = true;
-      					btnText.style.display = 'none';
-      					btnSpinner.style.display = 'inline-block';
-
-      					const formData = new FormData(form);
-      					const addressData = {
-      						addressName: formData.get('addressName'),
-      						fullName: formData.get('fullName'),
-      						phone: formData.get('phone'),
-      						pincode: formData.get('pincode'),
-      						addressLine: formData.get('addressLine'),
-      						city: formData.get('city'),
-      						state: formData.get('state'),
-      						country: formData.get('country'),
-      						landmark: formData.get('landmark'),
-      						isDefault: formData.get('isDefault') === 'on'
-      					};
-
-      					let response;
-      					let successMessage;
-
-      					if (editingAddressId) {
-      						// Update existing address
-      						response = await updateExistingAddress(editingAddressId, addressData);
-      						successMessage = 'Address updated successfully';
-      					} else {
-      						// Create new address
-      						response = await saveNewAddress(addressData);
-      						successMessage = 'Address saved successfully';
-      					}
-
-      					showNotification(successMessage, 'success');
-      					closeModal();
-
-      					// Reload addresses
-      					await loadAddresses();
-
-      					// Auto-select the updated/new address
-      					if (response.address && response.address._id) {
-      						selectAddress(response.address._id);
-      					} else if (editingAddressId) {
-      						selectAddress(editingAddressId);
-      					}
-
-      				} catch (error) {
-      					const errorMessage = editingAddressId ? 'Failed to update address' : 'Failed to save address';
-      					showNotification(errorMessage, 'error');
-      				} finally {
-      					saveBtn.disabled = false;
-      					btnText.style.display = 'inline';
-      					btnSpinner.style.display = 'none';
-      				}
-      			}
-
-      			// Checkout rendering functions
-      			function renderOrderItems(cart) {
-      				const orderItemsList = document.getElementById('orderItemsList');
-      				const emptyCart = document.getElementById('emptyCart');
-      				const itemCount = document.getElementById('itemCount');
-
-      				if (!cart || !cart.items || cart.items.length === 0) {
-      					orderItemsList.style.display = 'none';
-      					emptyCart.style.display = 'block';
-      					itemCount.textContent = '0';
-      					updateSummary([]);
-      					updatePlaceOrderButton();
-      					return;
-      				}
-
-      				emptyCart.style.display = 'none';
-      				orderItemsList.style.display = 'block';
-      				itemCount.textContent = cart.items.length;
-
-      				orderItemsList.innerHTML = cart.items.map(item => {
-      					const product = item.productId;
-      					const imageUrl = product.images?.[0]?.url || '/images/placeholder-product.jpg';
-
-      					return `
-      						<div class="order-item">
-      							<img src="${imageUrl}" alt="${product.productName}" class="product-image"
-      								 onerror="this.src='/images/placeholder-product.jpg'">
-
-      							<div class="product-details">
-      								<h3 class="product-name">${product.productName}</h3>
-      								<p class="product-brand">${product.brand || 'ChronoVa'}</p>
-      								<p class="product-price">₹${item.offer.offerPrice}</p>
-      							</div>
-
-      							<div class="quantity-info">
-      								<span class="quantity-label">Qty:</span>
-      								<span class="quantity-value">${item.quantity}</span>
-      							</div>
-
-      							<div class="item-total">
-      								<span class="item-total-label">Total:</span>
-      								<span class="item-total-value">₹${(item.offer.offerPrice * item.quantity).toLocaleString()}</span>
-      							</div>
-      						</div>
-      					`;
-      				}).join('');
-
-      				updateSummary(cart.items);
-      				updatePlaceOrderButton();
-      			}
-
-      			function updateSummary(items) {
-      				const subtotalEl = document.getElementById('subtotal');
-      				const shippingEl = document.getElementById('shipping');
-      				const taxEl = document.getElementById('tax');
-      				const totalEl = document.getElementById('total');
-
-      				let subtotal = 0;
-      				items.forEach(item => {
-      					subtotal += item.offer.offerPrice * item.quantity;
-      				});
-
-      				// const shipping = subtotal > 500 ? 0 : 50; // Free shipping over ₹500
-      				// const tax = Math.round(subtotal * 0.18); // 18% GST
-      				const shipping = 0;
-      				const tax = 0;
-      				const total = subtotal + shipping + tax;
-
-      				subtotalEl.textContent = `₹${subtotal.toLocaleString()}`;
-      				shippingEl.textContent = shipping === 0 ? 'Free' : `₹${shipping.toLocaleString()}`;
-      				taxEl.textContent = `₹${tax.toLocaleString()}`;
-      				totalEl.textContent = `₹${total.toLocaleString()}`;
-      			}
-
-      			function updatePlaceOrderButton() {
-      				const placeOrderBtn = document.getElementById('placeOrderBtn');
-      				const hasItems = checkoutData && checkoutData.items && checkoutData.items.length > 0;
-      				const hasAddress = selectedAddressId !== null;
-
-      				placeOrderBtn.disabled = !hasItems || !hasAddress;
-
-      				if (!hasItems) {
-      					placeOrderBtn.textContent = 'Cart is Empty';
-      				} else if (!hasAddress) {
-      					placeOrderBtn.textContent = 'Select Address';
-      				} else {
-      					placeOrderBtn.textContent = 'Place Order';
-      				}
-      			}
-
-      async function placeOrder() {
-      	if (!checkoutData || !checkoutData.items || checkoutData.items.length === 0) {
-      		showNotification('Your cart is empty', 'error');
-      		return;
-      	}
-
-      	if (!selectedAddressId) {
-      		showNotification('Please select a shipping address', 'error');
-      		return;
-      	}
-
-      	const selectedPaymentMethod = document.querySelector('input[name="paymentMethod"]:checked').value;
-      	const placeOrderBtn = document.getElementById('placeOrderBtn');
-      	const originalText = placeOrderBtn.textContent;
-
-      	try {
-      		placeOrderBtn.disabled = true;
-      		placeOrderBtn.textContent = 'Placing Order...';
-      		const total = calculateTotal();
-      		const discountPercentage = calculateDiscount();
-					const discount = total*(discountPercentage/100);
-
-      		const orderData = {
-      			items: checkoutData.items,
-      			shippingAddress: selectedAddressId,
-      			paymentMethod: selectedPaymentMethod,
-						total,
-						discount
-      		};
-
-      		// console.log(orderData);
-
-      		const response = await axios.post('/user/order/place', orderData);
-
-      		showNotification(response.data.message || 'Order placed successfully!', 'success');
-
-      		const orderId = response.data?.data?.orderId;
-      		// console.log(orderId);
-      			setTimeout(() => {
-      				window.location.href = `/user/order/conform?orderId=${orderId}`;
-      			}, 2000);
-
-
-      	} catch (error) {
-      		console.error('Error placing order:', error);
-
-      		// Extract and show a user-friendly error message
-      		const message =
-      			error?.response?.data?.error ||
-      			error?.response?.data?.message ||
-      			error?.message ||
-      			'Failed to place order. Please try again.';
-
-      		showNotification(message, 'error');
-
-      	} finally {
-      		placeOrderBtn.disabled = false;
-      		placeOrderBtn.textContent = originalText;
-      	}
+      let checkoutData = null;
+      let userAddresses = [];
+      let selectedAddressId = null;
+      let editingAddressId = null;
+      let availableCoupons = [];
+      let selectedCoupon = null;
+      let selectedCouponId = null;
+
+      // Toast notification functions
+      function showNotification(message, type = "success") {
+        const toast = document.getElementById("toast");
+        const toastMessage = document.getElementById("toast-message");
+        if (!toast || !toastMessage) return;
+        toastMessage.textContent = message;
+        toast.className = `toast toast-${type} show`;
+        setTimeout(() => {
+          hideToast();
+        }, 4000);
       }
 
+      function hideToast() {
+        const toast = document.getElementById("toast");
+        if (toast) {
+          toast.classList.remove("show");
+        }
+      }
 
-      			function calculateTotal() {
-      				if (!checkoutData || !checkoutData.items) return 0;
-      				// console.log(checkoutData)
-      				let subtotal = 0;
-      				checkoutData.items.forEach(item => {
-      					subtotal += item.offer.offerPrice	 * item.quantity;
-      				});
+      function debounce(func, delay) {
+        let timeout;
+        return function (...args) {
+          clearTimeout(timeout);
+          timeout = setTimeout(() => func.apply(this, args), delay);
+        };
+      }
 
-      				// const shipping = subtotal > 500 ? 0 : 50;
-      				// const tax = Math.round(subtotal * 0.18);
-      				const shipping = 0;
-      				const tax = 0;
-      				return subtotal + shipping + tax;
-      			}
+      const fetchPincodeDetails = debounce(async function () {
+        const pincode = document.getElementById("pincode").value.trim();
+        if (pincode.length === 6 && /^\d{6}$/.test(pincode)) {
+          try {
+            const res = await fetch(
+              `https://api.postalpincode.in/pincode/${pincode}`
+            );
+            const data = await res.json();
+            if (data[0].Status === "Success") {
+              const info = data[0].PostOffice[0];
+              document.getElementById("city").value = info.District;
+              document.getElementById("state").value = info.State;
+              document.getElementById("country").value = "India";
+            } else {
+              console.warn("Invalid pincode");
+            }
+          } catch (error) {
+            console.error("Error fetching pincode info:", error);
+          }
+        }
+      }, 600);
 
-      			function calculateDiscount(){
-      				if (!checkoutData || !checkoutData.items) return 0;
+      function handlePincodeInput() {
+        fetchPincodeDetails();
+      }
 
-      				let discount = 0;
-      				checkoutData.items.forEach(item => {
-      					discount += item.offer.discount;
-      				});
-      				return discount;
-      			}
+      async function fetchCheckoutData() {
+        try {
+          const response = await axios.get("/user/checkout/data");
+          return response.data.checkoutData;
+        } catch (error) {
+          console.error("Error fetching checkout data:", error);
+          throw error;
+        }
+      }
 
-      			// Main checkout loader
-      			async function loadCheckout() {
-      				const loadingState = document.getElementById('loadingState');
-      				const orderItemsList = document.getElementById('orderItemsList');
-      				const emptyCart = document.getElementById('emptyCart');
+      async function fetchUserAddresses() {
+        try {
+          const response = await axios.get("/user/profile/get-address");
+          return response.data.addresses || [];
+        } catch (error) {
+          console.error("Error fetching addresses:", error);
+          throw error;
+        }
+      }
 
-      				try {
-      					loadingState.style.display = 'none';
-      					orderItemsList.style.display = 'none';
-      					emptyCart.style.display = 'none';
+      async function fetchCoupons() {
+        try {
+          const response = await axios.get("/user/checkout/coupon/data");
+          return response.data.data || [];
+        } catch (error) {
+          console.error("Error fetching coupons:", error);
+          throw error;
+        }
+      }
 
-      					// Load checkout data and addresses in parallel
-      					const [checkoutDataResult] = await Promise.all([
-      						fetchCheckoutData(),
-      						loadAddresses()
-      					]);
+      async function saveNewAddress(addressData) {
+        try {
+          const response = await axios.post(
+            "/user/profile/address/add",
+            addressData
+          );
+          return response.data;
+        } catch (error) {
+          console.error("Error saving address:", error);
+          throw error;
+        }
+      }
 
-      					checkoutData = checkoutDataResult;
-      					renderOrderItems(checkoutData);
+      async function updateExistingAddress(addressId, addressData) {
+        try {
+          const response = await axios.put(
+            `/user/profile/address/edit/${addressId}`,
+            addressData
+          );
+          return response.data;
+        } catch (error) {
+          console.error("Error updating address:", error);
+          throw error;
+        }
+      }
 
-      				} catch (error) {
-      					console.error('Error loading checkout:', error);
-      					showNotification('Failed to load checkout data', 'error');
-      					emptyCart.style.display = 'block';
-      					document.getElementById('itemCount').textContent = '0';
-      					updatePlaceOrderButton();
-      				} finally {
-      					loadingState.style.display = 'none';
-      				}
-      			}
+      // Coupon Management Functions
+      async function loadCoupons() {
+        const couponLoading = document.getElementById("couponLoading");
+        const couponList = document.getElementById("couponList");
+        const emptyCoupons = document.getElementById("emptyCoupons");
 
-      			// Event Listeners
-      			document.addEventListener('DOMContentLoaded', function () {
-      				loadCheckout();
+        try {
+          couponLoading.style.display = "flex";
+          couponList.style.display = "none";
+          emptyCoupons.style.display = "none";
 
-      				// Payment method change listener
-      				const paymentOptions = document.querySelectorAll('input[name="paymentMethod"]');
-      				paymentOptions.forEach(option => {
-      					option.addEventListener('change', function() {
-      						console.log('Payment method changed to:', this.value);
-      					});
-      				});
+          availableCoupons = await fetchCoupons();
 
-      				// Modal close on outside click
-      				const addressModal = document.getElementById('addressModal');
-      				if (addressModal) {
-      					addressModal.addEventListener('click', function(e) {
-      						if (e.target === this) {
-      							closeModal();
-      						}
-      					});
-      				}
+          // Filter coupons based on cart amount and active status
+          const cartSubtotal = calculateSubtotal();
+          const validCoupons = availableCoupons.filter(
+            (coupon) =>
+              coupon.isActive &&
+              !coupon.isDeleted &&
+              cartSubtotal >= coupon.minimumCartAmount &&
+              new Date(coupon.expiryTime) > new Date()
+          );
 
-      				// Keyboard shortcuts
-      				document.addEventListener('keydown', function(e) {
-      					if (e.key === 'Escape') {
-      						closeModal();
-      					}
-      				});
-      			});
+          if (validCoupons.length === 0) {
+            emptyCoupons.style.display = "block";
+            return;
+          }
 
-      			// Global axios error handler
-      			axios.interceptors.response.use(
-      				response => response,
-      				error => {
-      					if (error.response?.status === 401) {
-      						showNotification('Please login to continue', 'error');
-      						setTimeout(() => {
-      							window.location.href = '/login';
-      						}, 2000);
-      					} else if (error.response?.status === 500) {
-      						showNotification('Server error. Please try again later.', 'error');
-      					}
-      					return Promise.reject(error);
-      				}
-      			);
+          renderCoupons(validCoupons);
+          couponList.style.display = "block";
+        } catch (error) {
+          console.error("Error loading coupons:", error);
+          showNotification("Failed to load coupons", "error");
+          emptyCoupons.style.display = "block";
+        } finally {
+          couponLoading.style.display = "none";
+        }
+      }
 
-      			// Make functions available globally for HTML onclick handlers
-      			window.openAddressModal = openAddressModal;
-      			window.closeModal = closeModal;
-      			window.saveAddress = saveAddress;
-      			window.placeOrder = placeOrder;
-      			window.selectAddress = selectAddress;
-      			window.makeDefaultAddress = makeDefaultAddress;
-      			window.editAddress = editAddress;
+      function renderCoupons(coupons) {
+        const couponList = document.getElementById("couponList");
+
+        const couponCards = coupons
+          .map((coupon) => {
+            const isSelected = selectedCouponId === coupon._id;
+            const expiryDate = new Date(coupon.expiryTime).toLocaleDateString();
+
+            return `
+            <div class="coupon-card ${isSelected ? "selected" : ""}"
+                 data-coupon-id="${coupon._id}"
+                 onclick="selectCouponInModal('${coupon._id}')">
+              <div class="coupon-header">
+                <div class="coupon-code-display">
+                  <i class="fas fa-ticket-alt"></i>
+                  <span class="coupon-code-text">${coupon.coupon}</span>
+                </div>
+                <div class="coupon-radio">
+                  <input type="radio" name="selectedCoupon" value="${
+                    coupon._id
+                  }" ${isSelected ? "checked" : ""}>
+                </div>
+              </div>
+              <div class="coupon-details">
+                <div class="coupon-discount-info">
+                  <span class="discount-label">Save</span>
+                  <span class="discount-value">₹${coupon.discountAmount}</span>
+                </div>
+                <div class="coupon-conditions">
+                  <div class="condition-item">
+                    <i class="fas fa-shopping-cart"></i>
+                    <span>Min. order ₹${coupon.minimumCartAmount}</span>
+                  </div>
+                  <div class="condition-item">
+                    <i class="fas fa-calendar"></i>
+                    <span>Valid till ${expiryDate}</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+          `;
+          })
+          .join("");
+
+        couponList.innerHTML = couponCards;
+      }
+
+      function selectCouponInModal(couponId) {
+        selectedCouponId = couponId;
+
+        // Update visual selection
+        document.querySelectorAll(".coupon-card").forEach((card) => {
+          card.classList.remove("selected");
+        });
+
+        const selectedCard = document.querySelector(
+          `[data-coupon-id="${couponId}"]`
+        );
+        if (selectedCard) {
+          selectedCard.classList.add("selected");
+          const radio = selectedCard.querySelector('input[type="radio"]');
+          if (radio) radio.checked = true;
+        }
+
+        // Enable apply button
+        const applyCouponBtn = document.getElementById("applyCouponBtn");
+        applyCouponBtn.disabled = false;
+      }
+
+      function openCouponModal() {
+        const modal = document.getElementById("couponModal");
+        if (modal) {
+          modal.classList.add("show");
+          document.body.style.overflow = "hidden";
+          loadCoupons();
+        }
+      }
+
+      function closeCouponModal() {
+        const modal = document.getElementById("couponModal");
+        if (modal) {
+          modal.classList.remove("show");
+          document.body.style.overflow = "auto";
+          selectedCouponId = null;
+
+          // Reset apply button
+          const applyCouponBtn = document.getElementById("applyCouponBtn");
+          applyCouponBtn.disabled = true;
+        }
+      }
+
+      function applyCoupon() {
+        if (!selectedCouponId) {
+          showNotification("Please select a coupon", "error");
+          return;
+        }
+
+        const coupon = availableCoupons.find((c) => c._id === selectedCouponId);
+        if (!coupon) {
+          showNotification("Coupon not found", "error");
+          return;
+        }
+
+        // Check cart amount again
+        const cartSubtotal = calculateSubtotal();
+        if (cartSubtotal < coupon.minimumCartAmount) {
+          showNotification(
+            `Minimum order amount should be ₹${coupon.minimumCartAmount}`,
+            "error"
+          );
+          return;
+        }
+
+        selectedCoupon = {
+          id: coupon._id,
+          code: coupon.coupon,
+          discountAmount: coupon.discountAmount,
+        };
+
+        updateCouponDisplay();
+        updateSummary(checkoutData.items);
+        closeCouponModal();
+        showNotification("Coupon applied successfully!", "success");
+      }
+
+      function removeCoupon() {
+        selectedCoupon = null;
+        selectedCouponId = null;
+        updateCouponDisplay();
+        updateSummary(checkoutData.items);
+        showNotification("Coupon removed", "success");
+      }
+
+      function updateCouponDisplay() {
+        const selectedCouponDisplay = document.getElementById(
+          "selectedCouponDisplay"
+        );
+        const noCouponState = document.getElementById("noCouponState");
+        const selectedCouponCode =
+          document.getElementById("selectedCouponCode");
+        const selectedCouponDiscount = document.getElementById(
+          "selectedCouponDiscount"
+        );
+
+        if (selectedCoupon) {
+          selectedCouponCode.textContent = selectedCoupon.code;
+          selectedCouponDiscount.textContent = selectedCoupon.discountAmount;
+          selectedCouponDisplay.style.display = "flex";
+          noCouponState.style.display = "none";
+        } else {
+          selectedCouponDisplay.style.display = "none";
+          noCouponState.style.display = "block";
+        }
+      }
+
+      // Address Management Functions (keeping your existing code)
+      async function loadAddresses() {
+        const addressLoading = document.getElementById("addressLoading");
+        const addressGrid = document.getElementById("addressGrid");
+        const emptyAddress = document.getElementById("emptyAddress");
+        try {
+          addressLoading.style.display = "flex";
+          addressGrid.style.display = "none";
+          emptyAddress.style.display = "none";
+          userAddresses = await fetchUserAddresses();
+          if (userAddresses.length === 0) {
+            emptyAddress.style.display = "block";
+            updatePlaceOrderButton();
+            return;
+          }
+          renderAddresses();
+          addressGrid.style.display = "block";
+          // Auto-select default address or first address
+          const defaultAddress = userAddresses.find((addr) => addr.isDefault);
+          if (defaultAddress) {
+            selectAddress(defaultAddress._id);
+          } else if (userAddresses.length > 0) {
+            selectAddress(userAddresses[0]._id);
+          }
+        } catch (error) {
+          console.error("Error loading addresses:", error);
+          showNotification("Failed to load addresses", "error");
+          emptyAddress.style.display = "block";
+        } finally {
+          addressLoading.style.display = "none";
+        }
+      }
+
+      function renderAddresses() {
+        const addressGrid = document.getElementById("addressGrid");
+        const iconMap = {
+          Home: "fas fa-home",
+          Work: "fas fa-briefcase",
+          Other: "fas fa-map-marker-alt",
+        };
+        const addressCards = userAddresses
+          .map((address) => {
+            const isDefault = address.isDefault;
+            return `
+              <div class="address-card ${
+                selectedAddressId === address._id ? "selected" : ""
+              }" data-address-id="${address._id}" onclick="selectAddress('${
+              address._id
+            }')">
+                <div class="address-card-header">
+                  <div class="address-type">
+                    <i class="${
+                      iconMap[address.addressName] || "fas fa-map-marker-alt"
+                    }"></i>
+                    <span>${address.addressName}</span>
+                  </div>
+                  <div class="address-card-actions">
+                    <button class="address-action-btn edit-btn" onclick="event.stopPropagation(); editAddress('${
+                      address._id
+                    }')">
+                      Edit
+                    </button>
+                  </div>
+                </div>
+                <div class="address-info">
+                  <div class="address-name">${address.fullName}</div>
+                  <div class="address-details">
+                    ${address.addressLine}<br>
+                    ${address.city}, ${address.state} - ${address.pincode}<br>
+                    ${address.country}
+                    ${
+                      address.landmark
+                        ? `<br><span class="landmark">Near: ${address.landmark}</span>`
+                        : ""
+                    }
+                  </div>
+                  <div class="address-phone">
+                    <i class="fas fa-phone"></i>
+                    ${address.phone}
+                  </div>
+                </div>
+                <div class="address-radio">
+                  <input type="radio" name="selectedAddress" value="${
+                    address._id
+                  }" ${selectedAddressId === address._id ? "checked" : ""}>
+                </div>
+              </div>
+            `;
+          })
+          .join("");
+        addressGrid.innerHTML = addressCards;
+      }
+
+      function selectAddress(addressId) {
+        selectedAddressId = addressId;
+        // Update visual selection
+        document.querySelectorAll(".address-card").forEach((card) => {
+          card.classList.remove("selected");
+        });
+        const selectedCard = document.querySelector(
+          `[data-address-id="${addressId}"]`
+        );
+        if (selectedCard) {
+          selectedCard.classList.add("selected");
+          const radio = selectedCard.querySelector('input[type="radio"]');
+          if (radio) radio.checked = true;
+        }
+        updatePlaceOrderButton();
+      }
+
+      async function makeDefaultAddress(addressId) {
+        try {
+          await setDefaultAddress(addressId);
+          showNotification("Default address updated successfully", "success");
+          // Update local data
+          userAddresses = userAddresses.map((addr) => ({
+            ...addr,
+            isDefault: addr._id === addressId,
+          }));
+          renderAddresses();
+          selectAddress(addressId);
+        } catch (error) {
+          showNotification("Failed to update default address", "error");
+        }
+      }
+
+      function editAddress(addressId) {
+        // Find the address to edit
+        const addressToEdit = userAddresses.find(
+          (addr) => addr._id === addressId
+        );
+        if (!addressToEdit) {
+          showNotification("Address not found", "error");
+          return;
+        }
+        // Set editing mode
+        editingAddressId = addressId;
+        // Populate the form with existing data
+        populateAddressForm(addressToEdit);
+        // Update modal title and button text
+        updateModalForEditing(true);
+        // Open the modal
+        openAddressModal();
+      }
+
+      function populateAddressForm(address) {
+        const form = document.getElementById("addressForm");
+        if (!form) return;
+        // Populate form fields
+        const fields = {
+          addressName: address.addressName,
+          fullName: address.fullName,
+          phone: address.phone,
+          pincode: address.pincode,
+          addressLine: address.addressLine,
+          city: address.city,
+          state: address.state,
+          country: address.country,
+          landmark: address.landmark || "",
+        };
+        Object.keys(fields).forEach((fieldName) => {
+          const field = form.querySelector(`[name="${fieldName}"]`);
+          if (field) {
+            field.value = fields[fieldName];
+          }
+        });
+        // Handle checkbox for default address
+        const isDefaultCheckbox = form.querySelector('[name="isDefault"]');
+        if (isDefaultCheckbox) {
+          isDefaultCheckbox.checked = address.isDefault || false;
+        }
+      }
+
+      function updateModalForEditing(isEditing) {
+        const modalTitle = document.querySelector("#addressModal .modal-title");
+        const saveBtn = document.getElementById("saveAddressBtn");
+        const btnText = saveBtn.querySelector(".btn-text");
+        if (isEditing) {
+          if (modalTitle) modalTitle.textContent = "Edit Address";
+          if (btnText) btnText.textContent = "Update Address";
+        } else {
+          if (modalTitle) modalTitle.textContent = "Add New Address";
+          if (btnText) btnText.textContent = "Save Address";
+        }
+      }
+
+      // Address Modal Functions
+      function openAddressModal() {
+        const modal = document.getElementById("addressModal");
+        if (modal) {
+          modal.classList.add("show");
+          document.body.style.overflow = "hidden";
+        }
+      }
+
+      function closeModal() {
+        const modal = document.getElementById("addressModal");
+        if (modal) {
+          modal.classList.remove("show");
+          document.body.style.overflow = "auto";
+          // Reset form and editing state
+          const form = document.getElementById("addressForm");
+          if (form) form.reset();
+          editingAddressId = null;
+          updateModalForEditing(false);
+        }
+      }
+
+      async function saveAddress() {
+        const form = document.getElementById("addressForm");
+        const saveBtn = document.getElementById("saveAddressBtn");
+        const btnText = saveBtn.querySelector(".btn-text");
+        const btnSpinner = saveBtn.querySelector(".btn-spinner");
+        try {
+          saveBtn.disabled = true;
+          btnText.style.display = "none";
+          btnSpinner.style.display = "inline-block";
+          const formData = new FormData(form);
+          const addressData = {
+            addressName: formData.get("addressName"),
+            fullName: formData.get("fullName"),
+            phone: formData.get("phone"),
+            pincode: formData.get("pincode"),
+            addressLine: formData.get("addressLine"),
+            city: formData.get("city"),
+            state: formData.get("state"),
+            country: formData.get("country"),
+            landmark: formData.get("landmark"),
+            isDefault: formData.get("isDefault") === "on",
+          };
+          let response;
+          let successMessage;
+          if (editingAddressId) {
+            // Update existing address
+            response = await updateExistingAddress(
+              editingAddressId,
+              addressData
+            );
+            successMessage = "Address updated successfully";
+          } else {
+            // Create new address
+            response = await saveNewAddress(addressData);
+            successMessage = "Address saved successfully";
+          }
+          showNotification(successMessage, "success");
+          closeModal();
+          // Reload addresses
+          await loadAddresses();
+          // Auto-select the updated/new address
+          if (response.address && response.address._id) {
+            selectAddress(response.address._id);
+          } else if (editingAddressId) {
+            selectAddress(editingAddressId);
+          }
+        } catch (error) {
+          const errorMessage = editingAddressId
+            ? "Failed to update address"
+            : "Failed to save address";
+          showNotification(errorMessage, "error");
+        } finally {
+          saveBtn.disabled = false;
+          btnText.style.display = "inline";
+          btnSpinner.style.display = "none";
+        }
+      }
+
+      // Checkout rendering functions
+      function renderOrderItems(cart) {
+        const orderItemsList = document.getElementById("orderItemsList");
+        const emptyCart = document.getElementById("emptyCart");
+        const itemCount = document.getElementById("itemCount");
+        if (!cart || !cart.items || cart.items.length === 0) {
+          orderItemsList.style.display = "none";
+          emptyCart.style.display = "block";
+          itemCount.textContent = "0";
+          updateSummary([]);
+          updatePlaceOrderButton();
+          return;
+        }
+        emptyCart.style.display = "none";
+        orderItemsList.style.display = "block";
+        itemCount.textContent = cart.items.length;
+        orderItemsList.innerHTML = cart.items
+          .map((item) => {
+            const product = item.productId;
+            const imageUrl =
+              product.images?.[0]?.url || "/images/placeholder-product.jpg";
+            return `
+              <div class="order-item">
+                <img src="${imageUrl}" alt="${
+              product.productName
+            }" class="product-image"
+                     onerror="this.src='/images/placeholder-product.jpg'">
+                <div class="product-details">
+                  <h3 class="product-name">${product.productName}</h3>
+                  <p class="product-brand">${product.brand || "ChronoVa"}</p>
+                  <p class="product-price">₹${item.offer.offerPrice}</p>
+                </div>
+                <div class="quantity-info">
+                  <span class="quantity-label">Qty:</span>
+                  <span class="quantity-value">${item.quantity}</span>
+                </div>
+                <div class="item-total">
+                  <span class="item-total-label">Total:</span>
+                  <span class="item-total-value">₹${(
+                    item.offer.offerPrice * item.quantity
+                  ).toLocaleString()}</span>
+                </div>
+              </div>
+            `;
+          })
+          .join("");
+        updateSummary(cart.items);
+        updatePlaceOrderButton();
+      }
+
+      function calculateSubtotal() {
+        if (!checkoutData || !checkoutData.items) return 0;
+        let subtotal = 0;
+        checkoutData.items.forEach((item) => {
+          subtotal += item.offer.offerPrice * item.quantity;
+        });
+        return subtotal;
+      }
+
+      function updateSummary(items) {
+        const subtotalEl = document.getElementById("subtotal");
+        const shippingEl = document.getElementById("shipping");
+        const taxEl = document.getElementById("tax");
+        const totalEl = document.getElementById("total");
+        const couponDiscountRow = document.getElementById("couponDiscountRow");
+        const couponDiscountAmount = document.getElementById(
+          "couponDiscountAmount"
+        );
+
+        let subtotal = calculateSubtotal();
+        const shipping = 0;
+        const tax = 0;
+
+        // Calculate coupon discount
+        let couponDiscount = 0;
+        if (selectedCoupon) {
+          couponDiscount = selectedCoupon.discountAmount;
+          couponDiscountRow.style.display = "flex";
+          couponDiscountAmount.textContent = `-₹${couponDiscount.toLocaleString()}`;
+        } else {
+          couponDiscountRow.style.display = "none";
+        }
+
+        const total = Math.max(0, subtotal + shipping + tax - couponDiscount);
+
+        subtotalEl.textContent = `₹${subtotal.toLocaleString()}`;
+        shippingEl.textContent =
+          shipping === 0 ? "Free" : `₹${shipping.toLocaleString()}`;
+        taxEl.textContent = `₹${tax.toLocaleString()}`;
+        totalEl.textContent = `₹${total.toLocaleString()}`;
+      }
+
+      function updatePlaceOrderButton() {
+        const placeOrderBtn = document.getElementById("placeOrderBtn");
+        const hasItems =
+          checkoutData && checkoutData.items && checkoutData.items.length > 0;
+        const hasAddress = selectedAddressId !== null;
+        placeOrderBtn.disabled = !hasItems || !hasAddress;
+        if (!hasItems) {
+          placeOrderBtn.textContent = "Cart is Empty";
+        } else if (!hasAddress) {
+          placeOrderBtn.textContent = "Select Address";
+        } else {
+          placeOrderBtn.textContent = "Place Order";
+        }
+      }
+
+      async function placeOrder() {
+        if (
+          !checkoutData ||
+          !checkoutData.items ||
+          checkoutData.items.length === 0
+        ) {
+          showNotification("Your cart is empty", "error");
+          return;
+        }
+        if (!selectedAddressId) {
+          showNotification("Please select a shipping address", "error");
+          return;
+        }
+
+        const selectedPaymentMethod = document.querySelector(
+          'input[name="paymentMethod"]:checked'
+        ).value;
+
+        const placeOrderBtn = document.getElementById("placeOrderBtn");
+        const originalText = placeOrderBtn.textContent;
+
+        try {
+          placeOrderBtn.disabled = true;
+          placeOrderBtn.textContent = "Placing Order...";
+
+          const total = calculateTotal();
+          const discountPercentage = calculateDiscount();
+          const discount = total * (discountPercentage / 100);
+
+          const orderData = {
+            items: checkoutData.items,
+            shippingAddress: selectedAddressId,
+            paymentMethod: selectedPaymentMethod,
+            total,
+            discount,
+          };
+
+          if (selectedCoupon) {
+            orderData.coupon = {
+              code: selectedCoupon.code,
+              discountAmount: selectedCoupon.discountAmount,
+            };
+          }
+
+          if (selectedPaymentMethod === "cod") {
+            // 🧾 COD Flow (use existing backend logic)
+            const response = await axios.post("/user/order/place", orderData);
+            showNotification(
+              response.data.message || "Order placed successfully!",
+              "success"
+            );
+            const orderId = response.data?.data?.orderId;
+            setTimeout(() => {
+              window.location.href = `/user/order/conform?orderId=${orderId}`;
+            }, 2000);
+          } else {
+            // 💳 ONLINE Flow: Create Razorpay Order
+            const razorRes = await axios.post("/api/create-razorpay-order", {
+              amount: total,
+              receipt: `receipt_${Date.now()}`,
+            });
+
+            window.__orderData = orderData;
+
+            const { order } = razorRes.data;
+
+            const options = {
+              key: "<%= razorpayKey %>",
+              amount: order.amount,
+              currency: order.currency,
+              name: "Chronova",
+              description: "Order Payment",
+              order_id: order.id,
+              handler: async function (response) {
+                try {
+                  const verifyRes = await axios.post("/user/verify-payment", {
+                    razorpay_order_id: response.razorpay_order_id,
+                    razorpay_payment_id: response.razorpay_payment_id,
+                    razorpay_signature: response.razorpay_signature,
+                    orderData,
+                  });
+
+                  if (verifyRes.data.success) {
+                    const orderId = verifyRes.data?.orderId;
+                    showNotification(
+                      "Payment successful and order placed!",
+                      "success"
+                    );
+                    setTimeout(() => {
+                      window.location.href = `/user/order/conform?orderId=${orderId}`;
+                    }, 2000);
+                  } else {
+                    showNotification("Payment verification failed", "error");
+                  }
+                } catch (err) {
+                  console.error("Payment verification error:", err);
+                  showNotification(
+                    "Something went wrong after payment.",
+                    "error"
+                  );
+                }
+              },
+              modal: {
+                ondismiss: function () {
+                  showNotification("Payment was cancelled by the user.", "error");
+                }
+              },
+              prefill: {
+                name: "<%= user.name %>",
+                email: "<%= user.email %>",
+                contact: "<%= user.phone %>",
+              },
+              theme: {
+                color: "#0d6efd",
+              },
+            };
+
+            const rzp = new Razorpay(options);
+            rzp.open();
+          }
+        } catch (error) {
+          console.error("Error placing order:", error);
+          const message =
+            error?.response?.data?.error ||
+            error?.response?.data?.message ||
+            error?.message ||
+            "Failed to place order. Please try again.";
+          showNotification(message, "error");
+        } finally {
+          placeOrderBtn.disabled = false;
+          placeOrderBtn.textContent = originalText;
+        }
+      }
+
+      function calculateTotal() {
+        if (!checkoutData || !checkoutData.items) return 0;
+        let subtotal = calculateSubtotal();
+        const shipping = 0;
+        const tax = 0;
+        const couponDiscount = selectedCoupon
+          ? selectedCoupon.discountAmount
+          : 0;
+        return Math.max(0, subtotal + shipping + tax - couponDiscount);
+      }
+
+      function calculateDiscount() {
+        if (!checkoutData || !checkoutData.items) return 0;
+        let discount = 0;
+        checkoutData.items.forEach((item) => {
+          discount += item.offer.discount;
+        });
+        return discount;
+      }
+
+      // Main checkout loader
+      async function loadCheckout() {
+        const loadingState = document.getElementById("loadingState");
+        const orderItemsList = document.getElementById("orderItemsList");
+        const emptyCart = document.getElementById("emptyCart");
+        try {
+          loadingState.style.display = "none";
+          orderItemsList.style.display = "none";
+          emptyCart.style.display = "none";
+          // Load checkout data and addresses in parallel
+          const [checkoutDataResult] = await Promise.all([
+            fetchCheckoutData(),
+            loadAddresses(),
+          ]);
+          checkoutData = checkoutDataResult;
+          renderOrderItems(checkoutData);
+          updateCouponDisplay(); // Initialize coupon display
+        } catch (error) {
+          console.error("Error loading checkout:", error);
+          showNotification("Failed to load checkout data", "error");
+          emptyCart.style.display = "block";
+          document.getElementById("itemCount").textContent = "0";
+          updatePlaceOrderButton();
+        } finally {
+          loadingState.style.display = "none";
+        }
+      }
+
+      // Event Listeners
+      document.addEventListener("DOMContentLoaded", function () {
+        loadCheckout();
+        // Payment method change listener
+        const paymentOptions = document.querySelectorAll(
+          'input[name="paymentMethod"]'
+        );
+        paymentOptions.forEach((option) => {
+          option.addEventListener("change", function () {
+            console.log("Payment method changed to:", this.value);
+          });
+        });
+        // Modal close on outside click
+        const addressModal = document.getElementById("addressModal");
+        if (addressModal) {
+          addressModal.addEventListener("click", function (e) {
+            if (e.target === this) {
+              closeModal();
+            }
+          });
+        }
+        const couponModal = document.getElementById("couponModal");
+        if (couponModal) {
+          couponModal.addEventListener("click", function (e) {
+            if (e.target === this) {
+              closeCouponModal();
+            }
+          });
+        }
+        // Keyboard shortcuts
+        document.addEventListener("keydown", function (e) {
+          if (e.key === "Escape") {
+            closeModal();
+            closeCouponModal();
+          }
+        });
+      });
+
+      // Global axios error handler
+      axios.interceptors.response.use(
+        (response) => response,
+        (error) => {
+          if (error.response?.status === 401) {
+            showNotification("Please login to continue", "error");
+            setTimeout(() => {
+              window.location.href = "/login";
+            }, 2000);
+          } else if (error.response?.status === 500) {
+            showNotification("Server error. Please try again later.", "error");
+          }
+          return Promise.reject(error);
+        }
+      );
+
+      // Make functions available globally for HTML onclick handlers
+      window.openAddressModal = openAddressModal;
+      window.closeModal = closeModal;
+      window.saveAddress = saveAddress;
+      window.placeOrder = placeOrder;
+      window.selectAddress = selectAddress;
+      window.makeDefaultAddress = makeDefaultAddress;
+      window.editAddress = editAddress;
+      window.openCouponModal = openCouponModal;
+      window.closeCouponModal = closeCouponModal;
+      window.applyCoupon = applyCoupon;
+      window.removeCoupon = removeCoupon;
+      window.selectCouponInModal = selectCouponInModal;
     </script>
   </body>
 </html>

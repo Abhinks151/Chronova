@@ -8,17 +8,25 @@ import path from "path";
 import ejs from "ejs";
 import { logStockChange } from "../../utils/logStockRegistry.js";
 import { logger } from "../../config/logger.js";
-import { fileURLToPath } from 'url';
+import { fileURLToPath } from "url";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
-export const placeOrderService = async (userId, orderData, req) => {
+export const placeOrderService = async (
+  userId,
+  orderData,
+  req,
+  isVerifiedOnline
+) => {
   const fullAddress = await Address.findById(orderData.shippingAddress).lean();
 
   if (!fullAddress) throw new Error("Shipping address not found");
 
-  if (orderData.paymentMethod?.toLowerCase() === "online") {
+  if (
+    orderData.paymentMethod?.toLowerCase() === "online" &&
+    !isVerifiedOnline
+  ) {
     logger.warn(
       `User ${req.user.email} attempted to place an order with online payment method, which is not supported yet.`
     );
@@ -111,6 +119,7 @@ export const placeOrderService = async (userId, orderData, req) => {
     discount,
     totalAmount,
     paymentMethod: orderData.paymentMethod.toUpperCase(),
+    coupon: orderData.coupon,
   });
 
   await newOrder.save();
@@ -145,7 +154,6 @@ export const placeOrderService = async (userId, orderData, req) => {
     { userId },
     { $pull: { items: { productId: { $in: productIds } } } }
   );
-
   return {
     orderId: newOrder.orderId,
     message: "Order placed successfully",
@@ -336,7 +344,10 @@ export const generateInvoiceService = async (userId, orderId) => {
   order.invoiceGenerated = true;
   order.save();
 
-  const templatePath = path.join(__dirname, "../../views/Layouts/PDFs/userOrderInvoice.ejs");
+  const templatePath = path.join(
+    __dirname,
+    "../../views/Layouts/PDFs/userOrderInvoice.ejs"
+  );
   const html = await ejs.renderFile(templatePath, { order });
 
   const browser = await puppeteer.launch();

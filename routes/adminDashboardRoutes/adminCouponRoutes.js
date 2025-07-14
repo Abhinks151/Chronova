@@ -1,12 +1,21 @@
 import express from "express";
 import { authenticateAdmin } from "../../middlewares/adminAuthMiddleware.js";
-import { getCouponManagemntPage } from "../../controllers/adminDashboard/adminCoupionManagementController.js";
+import {
+  addCoupon,
+  deleteCoupon,
+  editCoupon,
+  getCouponManagementPage,
+  getCouponManagementPageData,
+  toggleCouponStatus,
+} from "../../controllers/adminDashboard/adminCoupionManagementController.js";
 
+const couponRouter = express.Router();
 
-const couponRouter = express.Router()
-
-
-couponRouter.get('/coupon',authenticateAdmin, getCouponManagemntPage);
-
+couponRouter.get("/coupon", authenticateAdmin, getCouponManagementPage);
+couponRouter.get("/coupon/data", authenticateAdmin, getCouponManagementPageData);
+couponRouter.post("/coupon/add", authenticateAdmin, addCoupon);
+couponRouter.put("/coupon/edit/:id", authenticateAdmin, editCoupon);
+couponRouter.patch("/coupon/toggle/:id", authenticateAdmin, toggleCouponStatus);
+couponRouter.patch("/coupon/delete/:id", authenticateAdmin, deleteCoupon);
 
 export default couponRouter;

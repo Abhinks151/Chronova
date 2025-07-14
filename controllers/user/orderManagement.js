@@ -12,10 +12,64 @@ import {
 import httpStatusCode from "../../utils/httpStatusCode.js";
 import { logStockChange } from "../../utils/logStockRegistry.js";
 import { returnReason } from "../../utils/returnReason.js";
+import crypto from "crypto";
+import dotenv from "dotenv";
+
+dotenv.config();
+
+
+export const verifyRazorpayPayment = async (req, res) => {
+  try {
+    const {
+      razorpay_order_id,
+      razorpay_payment_id,
+      razorpay_signature,
+      orderData,
+    } = req.body;
+
+    const hmac = crypto.createHmac("sha256", process.env.RAZORPAY_SECRET_KEY);
+    hmac.update(razorpay_order_id + "|" + razorpay_payment_id);
+    const generatedSignature = hmac.digest("hex");
+
+    if (generatedSignature !== razorpay_signature) {
+      return res
+        .status(httpStatusCode.BAD_REQUEST.code)
+        .json({ success: false, message: "Invalid payment signature" });
+    }
+
+    const userId = req.user._id || req.user.id;
+    const order = await placeOrderService(userId, orderData, req,true);
+
+    await Order.updateOne(
+      { orderId: order.orderId },
+      {
+        paymentStatus: "Paid",
+        paymentDetails: {
+          transactionId: razorpay_payment_id,
+          paymentDate: new Date(),
+          paymentProvider: "Razorpay",
+        },
+        isPaid: true,
+      }
+    );
+
+    return res.status(httpStatusCode.OK.code).json({
+      success: true,
+      message: "Payment verified and order placed",
+      orderId: order.orderId,
+    });
+  } catch (err) {
+    console.error("Error verifying Razorpay payment:", err);
+    return res.status(httpStatusCode.INTERNAL_SERVER_ERROR.code).json({ success: false, message: err.message });
+  }
+};
 
 export const getCheckoutPage = (req, res) => {
   try {
-    res.render("Layouts/users/checkout");
+    res.render("Layouts/users/checkout", {
+      razorpayKey: process.env.RAZORPAY_KEY_ID,
+      user: req.user,
+    });
   } catch (error) {
     console.error("Error rendering checkout page:", error);
     res.status(httpStatusCode.INTERNAL_SERVER_ERROR.code).json({
@@ -444,6 +498,8 @@ export const downloadInvoiceController = async (req, res) => {
     res.send(pdfBuffer);
   } catch (err) {
     console.error(err);
-    res.status(500).send("Error generating invoice");
+    res
+      .status(httpStatusCode.INTERNAL_SERVER_ERROR.code)
+      .send("Error generating invoice");
   }
 };
