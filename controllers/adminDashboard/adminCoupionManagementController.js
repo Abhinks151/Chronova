@@ -202,13 +202,15 @@ export const deleteCoupon = async (req, res) => {
 
 export const getAllActiveCoupons = async (req, res) => {
   try {
-    const data = await getAllActiveCouponsService();
+    const userId = req.user.id || req.user._id;
+    const data = await getAllActiveCouponsService(userId);
     res.status(httpStatusCOde.OK.code).json({
       success: true,
       data,
     });
   } catch (error) {
     logger.error(error);
+    console.log(error);
     res.status(httpStatusCOde.INTERNAL_SERVER_ERROR.code).json({
       success: false,
       message: error.message || "Something went wrong",

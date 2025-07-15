@@ -1,5 +1,6 @@
 import { Coupon } from "../../models/coupon.js";
 import { logger } from "../../config/logger.js";
+import mongoose from "mongoose";
 
 export const getCouponManagemntPageDataService = async (
   filterConditions = {},
@@ -168,8 +169,17 @@ export const deleteCouponService = async (couponId) => {
   return coupon;
 };
 
+export const getAllActiveCouponsService = async (userId) => {
+  // console.log(userId)
+  const now = new Date();
+  const id = new mongoose.Types.ObjectId(userId)
 
-export const getAllActiveCouponsService = async () => {
-  const data = await Coupon.find({ isActive: true, isDeleted: false });
+  const data = await Coupon.find({
+    isActive: true,
+    isDeleted: false,
+    expiryTime: { $gt: now },
+    $or: [{ userId: null }, { userId: id }],
+  });
+  // console.log("data:" , data)
   return data;
-}
+};

@@ -21,6 +21,10 @@ import { createRazorpayOrder } from "../../controllers/user/razorpayController.j
 
 const router = express.Router()
 
+//Coupon routes
+
+
+
 // Checkout routes
 router.get("/checkout", authenticateUser, getCheckoutPage)
 router.get("/checkout/data", authenticateUser, getCheckoutPageData)
