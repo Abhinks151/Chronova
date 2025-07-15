@@ -1,9 +1,7 @@
 import mongoose from "mongoose";
-import { customAlphabet } from "nanoid"
+import { customAlphabet } from "nanoid";
 
-const nanoid = customAlphabet("ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789", 6)
-
-
+const nanoid = customAlphabet("ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789", 6);
 
 const applicableForSchema = new mongoose.Schema(
   {
@@ -47,7 +45,12 @@ const couponSchema = new mongoose.Schema(
     },
     applicableFor: {
       type: applicableForSchema,
-      default: () => ({}) 
+      default: () => ({}),
+    },
+    userId: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "User",
+      default: null,
     },
     isActive: {
       type: Boolean,

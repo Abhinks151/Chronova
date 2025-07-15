@@ -121,7 +121,21 @@
             />
             <span class="error-message" id="confirmPassword-error"></span>
           </div>
-
+         
+          <!-- Confirm Password -->
+          <div class="form-group">
+            <label for="referral">Referal Code (optional)</label>
+            <input
+              type="text"
+              id="referral"
+              name="referal"
+              class="form-input"
+              placeholder="Enter refral code (optional)"
+              required
+            />
+            <span class="error-message" id="refferral-error"></span>
+          </div>
+          
           <!-- General Error -->
           <div class="error-message" id="general-error" role="alert"></div>
 
@@ -163,7 +177,8 @@
           lastname: document.getElementById('lastname'),
           email: document.getElementById('email'),
           password: document.getElementById('password'),
-          confirmPassword: document.getElementById('confirmPassword')
+          confirmPassword: document.getElementById('confirmPassword'),
+          refferalCode:document.getElementById('referral')
         };
 
         const errorElements = {
@@ -172,7 +187,8 @@
           email: document.getElementById('email-error'),
           password: document.getElementById('password-error'),
           confirmPassword: document.getElementById('confirmPassword-error'),
-          general: document.getElementById('general-error')
+          general: document.getElementById('general-error'),
+          refferalCode:document.getElementById('refferral-error')
         };
 
         Object.entries(inputs).forEach(([field, input]) => {
@@ -193,7 +209,8 @@
               lastname: inputs.lastname.value.trim(),
               email: inputs.email.value.trim(),
               password: inputs.password.value,
-              confirmPassword: inputs.confirmPassword.value
+              confirmPassword: inputs.confirmPassword.value,
+              referralCode:inputs.refferalCode.value
             };
 
             const response = await axios.post('/user/register', data, {
@@ -221,6 +238,7 @@
               }
             }
           } catch (err) {
+            console.log(err)
             const errorData = err?.response?.data?.errors;
             if (errorData) {
               displayErrors(errorData);

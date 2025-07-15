@@ -44,7 +44,9 @@ export const loginUserService = async (email, password) => {
     const token = generateToken(user._id);
     user.lastLogin = new Date();
     await user.save();
-    console.log(user);
+
+    // console.log(user);
+    
     return {
       success: true,
       token,

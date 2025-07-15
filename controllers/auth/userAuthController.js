@@ -70,14 +70,14 @@ export const postUserRegister = async (req, res) => {
       errors.array().forEach(err => {
         formattedErrors[err.path] = err.msg;
       });
-      console.log('Stored session email:', req.session.emailForVerification);
+      // console.log('Stored session email:', req.session.emailForVerification);
 
       return res.status(httpStatusCode.BAD_REQUEST.code).json({
         success: false,
         errors: formattedErrors
       });
     }
-
+    // console.log(req.body);
     const response = await registerUser(req, req.body);
     return res.status(response.status).json(response.body);
 
@@ -283,9 +283,9 @@ export const postUserLogin = async (req, res) => {
     const { email, password } = req.body;
 
     
-    console.log('Login attempt with email:', email);
-    console.log('Validation errors:', errors.array());
-    console.log(password);
+    // console.log('Login attempt with email:', email);
+    // console.log('Validation errors:', errors.array());
+    // console.log(password);
 
 
     if (!errors.isEmpty()) {
@@ -359,7 +359,6 @@ export const userLogout = async (req, res) => {
   res.status(httpStatusCode.OK.code).redirect('/user/login');
 };
 
-// Optional: Show verification page
 // export const showVerificationPage = async (req, res) => {
 //   const { email } = req.query;
 //   const renderData = createRenderData('Verify Account', {}, { email: email || '' }, '');

@@ -1,387 +1,399 @@
 <!DOCTYPE html>
 <html lang="en">
-	<head>
-		<meta charset="UTF-8" />
-		<meta name="viewport" content="width=device-width, initial-scale=1.0" />
-		<title>Profile - Chronova</title>
-		<link
-			rel="stylesheet"
-			href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css"
-		/>
-		<link
-			rel="stylesheet"
-			href="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.5.12/cropper.min.css"
-		/>
-		<link rel="stylesheet" href="/styles/user/user-profile.css" />
-		<link rel="stylesheet" href="/styles/user/user-profile-sidebar.css" />
-	</head>
-	<body>
-		<div id="toast" class="toast">
-			<i id="toast-icon" class="fas fa-check-circle"></i>
-			<span id="toast-message">This is a toast</span>
-		</div>
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Profile - Chronova</title>
+    <link
+      rel="stylesheet"
+      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css"
+    />
+    <link
+      rel="stylesheet"
+      href="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.5.12/cropper.min.css"
+    />
+    <link rel="stylesheet" href="/styles/user/user-profile.css" />
+    <link rel="stylesheet" href="/styles/user/user-profile-sidebar.css" />
+  </head>
+  <body>
+    <div id="toast" class="toast">
+      <i id="toast-icon" class="fas fa-check-circle"></i>
+      <span id="toast-message">This is a toast</span>
+    </div>
 
-		<!-- Avatar Change Modal -->
-		<div id="avatarModal" class="avatar-modal">
-			<div class="avatar-modal-content">
-				<div class="avatar-modal-header">
-					<h3>Change Profile Picture</h3>
-					<button class="avatar-modal-close" onclick="Profile.closeAvatarModal()">
-						<i class="fas fa-times"></i>
-					</button>
-				</div>
-				<div class="avatar-modal-body">
-					<div class="avatar-upload-section">
-						<input type="file" id="avatarInput" accept="image/*" style="display: none;" />
-						<button class="avatar-upload-btn" onclick="document.getElementById('avatarInput').click()">
-							<i class="fas fa-upload"></i>
-							Choose Image
-						</button>
-						<p class="avatar-upload-help">
-							Upload JPG, PNG or GIF. Max size: 5MB. Recommended: 400x400px
-						</p>
-					</div>
-					<div class="avatar-crop-section" id="cropSection" style="display: none;">
-						<div class="crop-container">
-							<img id="cropImage" />
-						</div>
-						<div class="crop-controls">
-							<button class="crop-btn" onclick="Profile.rotateCrop(-90)">
-								<i class="fas fa-undo"></i>
-								Rotate Left
-							</button>
-							<button class="crop-btn" onclick="Profile.rotateCrop(90)">
-								<i class="fas fa-redo"></i>
-								Rotate Right
-							</button>
-							<button class="crop-btn" onclick="Profile.resetCrop()">
-								<i class="fas fa-refresh"></i>
-								Reset
-							</button>
-						</div>
-					</div>
-				</div>
-				<div class="avatar-modal-footer">
-					<button class="avatar-btn-cancel" onclick="Profile.closeAvatarModal()">
-						Cancel
-					</button>
-					<button class="avatar-btn-save" id="saveAvatarBtn" onclick="Profile.saveAvatar()" disabled>
-						<i class="fas fa-save"></i>
-						Save Avatar
-					</button>
-				</div>
-			</div>
-		</div>
+    <!-- Avatar Change Modal -->
+    <div id="avatarModal" class="avatar-modal">
+      <div class="avatar-modal-content">
+        <div class="avatar-modal-header">
+          <h3>Change Profile Picture</h3>
+          <button
+            class="avatar-modal-close"
+            onclick="Profile.closeAvatarModal()"
+          >
+            <i class="fas fa-times"></i>
+          </button>
+        </div>
+        <div class="avatar-modal-body">
+          <div class="avatar-upload-section">
+            <input
+              type="file"
+              id="avatarInput"
+              accept="image/*"
+              style="display: none"
+            />
+            <button
+              class="avatar-upload-btn"
+              onclick="document.getElementById('avatarInput').click()"
+            >
+              <i class="fas fa-upload"></i>
+              Choose Image
+            </button>
+            <p class="avatar-upload-help">
+              Upload JPG, PNG or GIF. Max size: 5MB. Recommended: 400x400px
+            </p>
+          </div>
+          <div
+            class="avatar-crop-section"
+            id="cropSection"
+            style="display: none"
+          >
+            <div class="crop-container">
+              <img id="cropImage" />
+            </div>
+            <div class="crop-controls">
+              <button class="crop-btn" onclick="Profile.rotateCrop(-90)">
+                <i class="fas fa-undo"></i>
+                Rotate Left
+              </button>
+              <button class="crop-btn" onclick="Profile.rotateCrop(90)">
+                <i class="fas fa-redo"></i>
+                Rotate Right
+              </button>
+              <button class="crop-btn" onclick="Profile.resetCrop()">
+                <i class="fas fa-refresh"></i>
+                Reset
+              </button>
+            </div>
+          </div>
+        </div>
+        <div class="avatar-modal-footer">
+          <button
+            class="avatar-btn-cancel"
+            onclick="Profile.closeAvatarModal()"
+          >
+            Cancel
+          </button>
+          <button
+            class="avatar-btn-save"
+            id="saveAvatarBtn"
+            onclick="Profile.saveAvatar()"
+            disabled
+          >
+            <i class="fas fa-save"></i>
+            Save Avatar
+          </button>
+        </div>
+      </div>
+    </div>
 
-		<div class="main-container">
-			<%- include('../../partials/user-profile-sidebar') %>
+    <div class="main-container">
+      <%- include('../../partials/user-profile-sidebar') %>
 
-			<main class="main-content">
-				<div class="profile-header">
-					<h1 class="profile-title">My Profile</h1>
-					<p class="profile-subtitle">
-						Manage your account information and preferences
-					</p>
+      <main class="main-content">
+        <div class="profile-header">
+          <h1 class="profile-title">My Profile</h1>
+          <p class="profile-subtitle">
+            Manage your account information and preferences
+          </p>
 
-					<div class="profile-avatar-section">
-						<div class="avatar-container">
-							<% if (user && user.avatar) { %>
-							<img
-								src="<%= user.avatar.url %>"
-								alt="Profile Avatar"
-								class="profile-avatar"
-								id="profileAvatarImg"
-							/>
-							<% } else if (user) { %>
-							<div class="default-avatar" id="profileAvatarImg">
-								<%= user.firstname ?
-								user.firstname.charAt(0).toUpperCase() :
-								(user.firstname ?
-								user.firstname.charAt(0).toUpperCase() : 'U') %>
-							</div>
-							<% } else { %>
-							<div class="default-avatar" id="profileAvatarImg">U</div>
-							<% } %>
-							
-							<!-- Avatar change button -->
-							<button class="avatar-change-btn" onclick="Profile.openAvatarModal()" title="Change Avatar">
-								<i class="fas fa-camera"></i>
-							</button>
-						</div>
-						<div class="avatar-info">
-							<h2>
-								<%= user.firstname || `${user.firstname || ''}
-								${user.lastname || ''}`.trim() || 'User' %>
-							</h2>
-							<p><%= user.email %></p>
-							<div
-								class="status-badge <%= user.isBlocked ? 'blocked' : (!user.isVerified ? 'unverified' : '') %>"
-							>
-								<i class="fas fa-circle"></i>
-								<% if (user.isBlocked) { %> Account Blocked <% }
-								else if (!user.isVerified) { %> Unverified <% }
-								else { %> Active Account <% } %>
-							</div>
-						</div>
-					</div>
+          <div class="profile-avatar-section">
+            <div class="avatar-container">
+              <% if (user && user.avatar) { %>
+              <img
+                src="<%= user.avatar.url %>"
+                alt="Profile Avatar"
+                class="profile-avatar"
+                id="profileAvatarImg"
+              />
+              <% } else if (user) { %>
+              <div class="default-avatar" id="profileAvatarImg">
+                <%= user.firstname ? user.firstname.charAt(0).toUpperCase() :
+                (user.firstname ? user.firstname.charAt(0).toUpperCase() : 'U')
+                %>
+              </div>
+              <% } else { %>
+              <div class="default-avatar" id="profileAvatarImg">U</div>
+              <% } %>
 
-					<div class="stats-grid">
-						<div class="stat-card">
-							<div class="stat-icon account">
-								<i class="fas fa-calendar-alt"></i>
-							</div>
-							<div class="stat-value">
-								<%= new
-								Date(user.createdAt).toLocaleDateString('en-IN',
-								{ year: 'numeric', month: 'short', day:
-								'numeric' }) %>
-							</div>
+              <!-- Avatar change button -->
+              <button
+                class="avatar-change-btn"
+                onclick="Profile.openAvatarModal()"
+                title="Change Avatar"
+              >
+                <i class="fas fa-camera"></i>
+              </button>
+            </div>
+            <div class="avatar-info">
+              <h2>
+                <%= user.firstname || `${user.firstname || ''} ${user.lastname
+                || ''}`.trim() || 'User' %>
+              </h2>
+              <p><%= user.email %></p>
+              <div
+                class="status-badge <%= user.isBlocked ? 'blocked' : (!user.isVerified ? 'unverified' : '') %>"
+              >
+                <i class="fas fa-circle"></i>
+                <% if (user.isBlocked) { %> Account Blocked <% } else if
+                (!user.isVerified) { %> Unverified <% } else { %> Active Account
+                <% } %>
+              </div>
+            </div>
+          </div>
 
-							<div class="stat-label">Member Since</div>
-						</div>
-						<div class="stat-card">
-							<div class="stat-icon addresses">
-								<i class="fas fa-map-marker-alt"></i>
-							</div>
-							<div class="stat-value">
-								<%= user.address ? user.address.length : 0 %>
-							</div>
-							<div class="stat-label">Saved Addresses</div>
-						</div>
-						<div class="stat-card">
-							<div class="stat-icon orders">
-								<i class="fas fa-clock"></i>
-							</div>
-							<div class="stat-value">
-								<%= (user.lastLogin ? new Date(user.lastLogin) :
-								new
-								Date(user.createdAt)).toLocaleDateString('en-IN',
-								{ year: 'numeric', month: 'short', day:
-								'numeric' }) %>
-							</div>
+          <div class="stats-grid">
+            <div class="stat-card">
+              <div class="stat-icon account">
+                <i class="fas fa-calendar-alt"></i>
+              </div>
+              <div class="stat-value">
+                <%= new Date(user.createdAt).toLocaleDateString('en-IN', { year:
+                'numeric', month: 'short', day: 'numeric' }) %>
+              </div>
 
-							<div class="stat-label">Last Login</div>
-						</div>
-					</div>
-				</div>
+              <div class="stat-label">Member Since</div>
+            </div>
+            <div class="stat-card">
+              <div class="stat-icon addresses">
+                <i class="fas fa-map-marker-alt"></i>
+              </div>
+              <div class="stat-value">
+                <%= user.address ? user.address.length : 0 %>
+              </div>
+              <div class="stat-label">Saved Addresses</div>
+            </div>
+            <div class="stat-card">
+              <div class="stat-icon orders">
+                <i class="fas fa-clock"></i>
+              </div>
+              <div class="stat-value">
+                <%= (user.lastLogin ? new Date(user.lastLogin) : new
+                Date(user.createdAt)).toLocaleDateString('en-IN', { year:
+                'numeric', month: 'short', day: 'numeric' }) %>
+              </div>
 
-				<div class="form-section">
-					<div class="section-header">
-						<h2 class="section-title">Basic Information</h2>
-						<button
-							class="edit-btn"
-							onclick="Profile.toggleEdit('basic')"
-						>
-							<i class="fas fa-edit"></i>
-							Edit
-						</button>
-					</div>
-					<form id="basicForm" class="form-grid">
-						<div class="form-group">
-							<label class="form-label">First Name</label>
-							<input
-								type="text"
-								class="form-input"
-								id="firstname"
-								name="firstname"
-								value="<%= user.firstname || '' %>"
-								readonly
-							/>
-							<div
-								class="error-message"
-								id="firstname-error"
-							></div>
-						</div>
+              <div class="stat-label">Last Login</div>
+            </div>
+          </div>
+        </div>
 
-						<div class="form-group">
-							<label class="form-label">Last Name</label>
-							<input
-								type="text"
-								class="form-input"
-								id="lastname"
-								name="lastname"
-								placeholder="Add last name..."
-								value="<%= user.lastname || '' %>"
-								readonly
-							/>
-							<div
-								class="error-message"
-								id="lastname-error"
-							></div>
-						</div>
-						<div class="form-group">
-							<label class="form-label">Email Address</label>
-							<input
-								type="email"
-								class="form-input"
-								id="email"
-								name="email"
-								value="<%= user.email %>"
-								readonly
-							/>
-						</div>
-						<div class="form-group">
-							<label class="form-label">Phone Number</label>
-							<input
-								type="tel"
-								class="form-input"
-								id="phone"
-								name="phone"
-								placeholder="Add phone number..."
-								value="<%= user.phone || '' %>"
-								readonly
-							/>
-							<div class="error-message" id="phone-error"></div>
-						</div>
-						<div class="form-group">
-							<label class="form-label">Account Type</label>
-							<input
-								type="text"
-								id="accountType"
-								class="form-input"
-								value="<%= user.isGoogleUser ? 'Google Account' : 'Regular Account' %>"
-								readonly
-							/>
-						</div>
-					</form>
-				</div>
+        <div class="form-section">
+          <div class="section-header">
+            <h2 class="section-title">Basic Information</h2>
+            <button class="edit-btn" onclick="Profile.toggleEdit('basic')">
+              <i class="fas fa-edit"></i>
+              Edit
+            </button>
+          </div>
+          <form id="basicForm" class="form-grid">
+            <div class="form-group">
+              <label class="form-label">First Name</label>
+              <input
+                type="text"
+                class="form-input"
+                id="firstname"
+                name="firstname"
+                value="<%= user.firstname || '' %>"
+                readonly
+              />
+              <div class="error-message" id="firstname-error"></div>
+            </div>
 
-				<div class="form-section">
-					<div class="section-header">
-						<h2 class="section-title">Saved Addresses</h2>
-						<button
-							class="edit-btn"
-							onclick="window.location.href='/user/profile/address'"
-						>
-							<i class="fas fa-plus"></i>
-							Manage Addresses
-						</button>
-					</div>
-					<div class="address-list">
-						<% if (user.address && user.address.length > 0) { %> <%
-						user.address.forEach(address => { %>
-						<div
-							class="address-card <%= address.isDefault ? 'default-address' : '' %>"
-						>
-							<div class="address-header">
-								<div class="address-name">
-									<%= address.addressName || 'Address' %>
-								</div>
-								<% if (address.isDefault) { %>
-								<span class="default-badge">Default</span>
-								<% } %>
-							</div>
+            <div class="form-group">
+              <label class="form-label">Last Name</label>
+              <input
+                type="text"
+                class="form-input"
+                id="lastname"
+                name="lastname"
+                placeholder="Add last name..."
+                value="<%= user.lastname || '' %>"
+                readonly
+              />
+              <div class="error-message" id="lastname-error"></div>
+            </div>
+            <div class="form-group">
+              <label class="form-label">Email Address</label>
+              <input
+                type="email"
+                class="form-input"
+                id="email"
+                name="email"
+                value="<%= user.email %>"
+                readonly
+              />
+            </div>
+            <div class="form-group">
+              <label class="form-label">Phone Number</label>
+              <input
+                type="tel"
+                class="form-input"
+                id="phone"
+                name="phone"
+                placeholder="Add phone number..."
+                value="<%= user.phone || '' %>"
+                readonly
+              />
+              <div class="error-message" id="phone-error"></div>
+            </div>
+            <div class="form-group">
+              <label class="form-label">Account Type</label>
+              <input
+                type="text"
+                id="accountType"
+                class="form-input"
+                value="<%= user.isGoogleUser ? 'Google Account' : 'Regular Account' %>"
+                readonly
+              />
+            </div>
+          </form>
+        </div>
 
-							<div class="address-details">
-								<p class="address-name-full">
-									<%= address.fullName %>
-								</p>
-								<p class="address-line">
-									<%= address.addressLine %>
-								</p>
-								<% if (address.landmark) { %>
-								<p class="address-landmark">
-									Near: <%= address.landmark %>
-								</p>
-								<% } %>
-								<p class="address-location">
-									<%= address.city %>, <%= address.state %>
-									<%= address.pincode %>
-								</p>
-								<p class="address-country">
-									<%= address.country %>
-								</p>
-								<p class="address-phone">
-									Phone: <%= address.phone %>
-								</p>
-								<p class="address-created">
-									Added: <%= new
-									Date(address.createdAt).toLocaleDateString('en-IN',
-									{ year: 'numeric', month: 'short', day:
-									'numeric' }) %>
-								</p>
-							</div>
-						</div>
-						<% }) %> <% } else { %>
-						<div class="empty-state">
-							<div class="empty-icon">📍</div>
-							<h3>No addresses saved yet</h3>
-							<p>Add your first address to get started</p>
-							<a
-								href="/user/profile/address"
-								class="btn-set-default"
-								>Add Address</a
-							>
-						</div>
-						<% } %>
-					</div>
-				</div>
+        <div class="form-section">
+          <div class="section-header">
+            <h2 class="section-title">Saved Addresses</h2>
+            <button
+              class="edit-btn"
+              onclick="window.location.href='/user/profile/address'"
+            >
+              <i class="fas fa-plus"></i>
+              Manage Addresses
+            </button>
+          </div>
+          <div class="address-list">
+            <% if (user.address && user.address.length > 0) { %> <%
+            user.address.forEach(address => { %>
+            <div
+              class="address-card <%= address.isDefault ? 'default-address' : '' %>"
+            >
+              <div class="address-header">
+                <div class="address-name">
+                  <%= address.addressName || 'Address' %>
+                </div>
+                <% if (address.isDefault) { %>
+                <span class="default-badge">Default</span>
+                <% } %>
+              </div>
 
-				<div class="form-section">
-					<div class="section-header">
-						<h2 class="section-title">Account Security</h2>
-					</div>
-					<div class="security-grid">
-						<div class="form-group">
-							<label class="form-label">Account Status</label>
-							<input
-								type="text"
-								class="form-input"
-								value="<%= user.isBlocked ? 'Blocked' : 'Active' %>"
-								readonly
-							/>
-						</div>
-						<div class="form-group">
-							<label class="form-label">Email Verification</label>
-							<input
-								type="text"
-								class="form-input"
-								value="<%= user.isVerified ? 'Verified' : 'Not Verified' %>"
-								readonly
-							/>
-						</div>
-						<div class="form-group">
-							<label class="form-label">Login Method</label>
-							<input
-								type="text"
-								class="form-input"
-								value="<%= user.isGoogleUser ? 'Google' : 'Email & Password' %>"
-								readonly
-							/>
-						</div>
-						<div class="security-actions">
-							<button
-								class="security-btn"
-								onclick="Profile.sentEmailChangeLink()"
-							>
-								<i class="fas fa-lock"></i>
-								Reset password
-							</button>
-							<% if (!user.isVerified) { %>
-							<button
-								class="security-btn"
-								onclick="Profile.resendVerification()"
-							>
-								<i class="fas fa-envelope-open"></i>
-								Resend Verification
-							</button>
-							<% } %>
-						</div>
-						<div class="form-group">
-							<button
-								class="security-btn"
-								onclick="window.location.href='/user/profile/change-email'"
-							>
-								<i class="fas fa-envelope"></i>
-								Change email
-							</button>
-						</div>
-					</div>
-				</div>
-			</main>
-		</div>
-		<script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
-		<script src="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.5.12/cropper.min.js"></script>
-		<script src="/scripts/user/user-profile.js"></script>
-	</body>
+              <div class="address-details">
+                <p class="address-name-full"><%= address.fullName %></p>
+                <p class="address-line"><%= address.addressLine %></p>
+                <% if (address.landmark) { %>
+                <p class="address-landmark">Near: <%= address.landmark %></p>
+                <% } %>
+                <p class="address-location">
+                  <%= address.city %>, <%= address.state %> <%= address.pincode
+                  %>
+                </p>
+                <p class="address-country"><%= address.country %></p>
+                <p class="address-phone">Phone: <%= address.phone %></p>
+                <p class="address-created">
+                  Added: <%= new
+                  Date(address.createdAt).toLocaleDateString('en-IN', { year:
+                  'numeric', month: 'short', day: 'numeric' }) %>
+                </p>
+              </div>
+            </div>
+            <% }) %> <% } else { %>
+            <div class="empty-state">
+              <div class="empty-icon">📍</div>
+              <h3>No addresses saved yet</h3>
+              <p>Add your first address to get started</p>
+              <a href="/user/profile/address" class="btn-set-default"
+                >Add Address</a
+              >
+            </div>
+            <% } %>
+          </div>
+        </div>
+
+        <div class="form-section">
+          <div class="section-header">
+            <h2 class="section-title">Account Security</h2>
+          </div>
+          <div class="security-grid">
+            <div class="form-group">
+              <label class="form-label">Account Status</label>
+              <input
+                type="text"
+                class="form-input"
+                value="<%= user.isBlocked ? 'Blocked' : 'Active' %>"
+                readonly
+              />
+            </div>
+            <div class="form-group">
+              <label class="form-label">Email Verification</label>
+              <input
+                type="text"
+                class="form-input"
+                value="<%= user.isVerified ? 'Verified' : 'Not Verified' %>"
+                readonly
+              />
+            </div>
+            <div class="form-group">
+              <label class="form-label">Login Method</label>
+              <input
+                type="text"
+                class="form-input"
+                value="<%= user.isGoogleUser ? 'Google' : 'Email & Password' %>"
+                readonly
+              />
+            </div>
+            <div class="form-group">
+              <label class="form-label">Referal Code</label>
+              <input
+                type="text"
+                class="form-input"
+                value="<%= user.referralCode%>"
+                readonly
+								style=" cursor: text;"
+              />
+            </div>
+            <div class="security-actions">
+              <label class="form-label" style="margin-bottom: 10px"></label>
+              <button
+                class="security-btn"
+                onclick="Profile.sentEmailChangeLink()"
+              >
+                <i class="fas fa-lock"></i>
+                Reset password
+              </button>
+              <% if (!user.isVerified) { %>
+              <button
+                class="security-btn"
+                onclick="Profile.resendVerification()"
+              >
+                <i class="fas fa-envelope-open"></i>
+                Resend Verification
+              </button>
+              <% } %>
+            </div>
+            <div class="form-group">
+              <label class="form-label" style="margin-bottom: 25px;"></label>
+              <button
+                class="security-btn"
+                onclick="window.location.href='/user/profile/change-email'"
+              >
+                <i class="fas fa-envelope"></i>
+                Change email
+              </button>
+            </div>
+          </div>
+        </div>
+      </main>
+    </div>
+    <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.5.12/cropper.min.js"></script>
+    <script src="/scripts/user/user-profile.js"></script>
+  </body>
 </html>
