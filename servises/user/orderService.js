@@ -9,6 +9,7 @@ import ejs from "ejs";
 import { logStockChange } from "../../utils/logStockRegistry.js";
 import { logger } from "../../config/logger.js";
 import { fileURLToPath } from "url";
+import { Coupon } from "../../models/coupon.js";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -108,6 +109,33 @@ export const placeOrderService = async (
   if (result.modifiedCount !== orderData.items.length) {
     throw new Error("Stock update failed for one or more items");
   }
+
+  if (orderData.coupon) {
+    const coupon = await Coupon.findOne({
+      coupon: orderData.coupon.code,
+      isActive: true,
+      isDeleted: false,
+      expiryTime: { $gte: new Date() },
+    });
+    if (!coupon) {
+      throw new Error("Invalid coupon code");
+    }
+
+    if (coupon.applicableFor.usedBy.includes(req.user.id || req.user._id)) {
+      throw new Error("You have already used this coupon");
+    }
+
+    if (coupon.applicableFor.usageCount >= coupon.applicableFor.limit) {
+      throw new Error("Coupon usage limit exceeded");
+    }
+
+    // coupon.applicableFor.usedBy = req.user.id || req.user._id;
+    coupon.applicableFor.usedBy.push(req.user.id || req.user._id);
+    coupon.applicableFor.usageCount += 1;
+    await coupon.save();
+  }
+
+  // console.log(orderData.coupon);
 
   //discount
   const discount = orderData.discount || 0;

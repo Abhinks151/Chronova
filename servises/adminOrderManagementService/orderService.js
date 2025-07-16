@@ -129,7 +129,8 @@ export const updateItemPaymentStatus = async (orderId, itemId, paymentStatus, ad
     }
 
     // Update item payment status
-    item.status = paymentStatus
+    item.paymentStatus = paymentStatus;
+    item.paymentStatusUpdatedAt = new Date();
 
     // Handle specific payment status changes
     if (paymentStatus === "Refunded") {

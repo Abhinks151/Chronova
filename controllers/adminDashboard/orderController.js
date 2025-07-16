@@ -251,6 +251,7 @@ export const updateItemStatus = async (req, res) => {
 export const approveReturn = async (req, res) => {
   try {
     const { orderId, itemId } = req.params;
+    // console.log("Incoming orderId:", orderId, "| itemId:", itemId);
 
     if (!orderId || !itemId) {
       return res.status(400).json({ error: "Order ID and Item ID are required" });
@@ -590,7 +591,7 @@ export const updateItemPaymentStatus = async (req, res) => {
   try {
     const { orderId, itemId } = req.params
     const { paymentStatus } = req.body
-    const adminId = req.user?.id || "admin" // Adjust based on your auth structure
+    const adminId = req.admin?._id || "admin"
 
     // Validate payment status
     const validStatuses = ["Pending", "Paid", "Failed", "Refunded", "Cancelled"]
