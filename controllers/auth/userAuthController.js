@@ -186,7 +186,7 @@ export const postForgotPassword = async (req, res) => {
 
     const email = req.body.email;
     console.log(email)
-    const result = await forgotPassword(email);
+    await forgotPassword(email);
 
     return res.status(500).render('Layouts/userLogin', {
       title: 'Login',

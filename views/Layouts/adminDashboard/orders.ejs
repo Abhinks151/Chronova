@@ -337,7 +337,7 @@
                     ${generateAddressSection(order)}
                     ${generateOrderStatusSection(order)}
                     ${generatePaymentInfoSection(order)}
-                    ${returnRequests.length > 0 ? generateReturnRequestsSection(returnRequests) : ""}
+                    ${returnRequests.length > 0 ? generateReturnRequestsSection(order._id,returnRequests) : ""}
                     ${generateOrderItemsSection(order)}
                     ${generateOrderSummarySection(order)}
                     ${generateTimelineSection(order)}
@@ -473,7 +473,7 @@
         }
 
         // Generate return requests section
-        function generateReturnRequestsSection(returnRequests) {
+        function generateReturnRequestsSection(orderId,returnRequests) {
             return `
                 <div class="detail-section" id="returnRequestsSection">
                     <h3>🔄 Pending Return Requests (${returnRequests.length})</h3>
@@ -490,10 +490,10 @@
                                     <p><strong>Return Reason:</strong> ${item.returnReason || "N/A"}</p>
                                     <p><strong>Requested On:</strong> ${item.returnRequestedAt ? new Date(item.returnRequestedAt).toLocaleDateString() : "N/A"}</p>
                                     <div class="return-actions">
-                                        <button class="btn-approve" onclick="showApproveReturnConfirmation('${item.orderId}', '${item._id}', '${item.productName}', ${item.price * item.quantity})">
+                                        <button class="btn-approve" onclick="showApproveReturnConfirmation('${orderId}', '${item._id}', '${item.productName}', ${item.price * item.quantity})">
                                             ✅ Approve & Refund
                                         </button>
-                                        <button class="btn-reject" onclick="showRejectReturnConfirmation('${item.orderId}', '${item._id}', '${item.productName}')">
+                                        <button class="btn-reject" onclick="showRejectReturnConfirmation('${orderId}', '${item._id}', '${item.productName}')">
                                             ❌ Reject Request
                                         </button>
                                     </div>
@@ -873,7 +873,8 @@
                 // Refresh the modal with updated data
                 setTimeout(() => {
                     viewOrderDetails(orderId);
-                }, 1000);
+                }, 500);
+			    window.onreload = true;
             } catch (error) {
                 console.error("Error updating item payment status:", error);
                 const errorMessage = error.response?.data?.error || "Error updating item payment status";

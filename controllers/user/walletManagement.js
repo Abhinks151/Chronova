@@ -1,12 +1,12 @@
 import { getFilteredWalletHistoryService, getWalletHistoryService } from "../../servises/user/walletService.js";
-
+import httpStatusCOde from '../../utils/httpStatusCode.js';
 
 export const getWalletPage = (req, res) => {
   try {
     res.render('Layouts/users/wallet');
   } catch (error) {
     console.error("Error in getWalletPage:", error);
-    res.status(500).json({ message: "Internal Server Error" });
+    res.status(httpStatusCOde.INTERNAL_SERVER_ERROR.code).json({ message: "Internal Server Error" });
   }
 }
 
@@ -15,7 +15,7 @@ export const getWalletHistory = async (req, res) => {
     const userId = req.user._id || req.user.id;
 
     if(!userId) {
-      return res.status(400).json({
+      return res.status(httpStatusCOde.BAD_REQUEST.code).json({
         message: "User ID is required",
         success: false,
         data: null
@@ -25,7 +25,7 @@ export const getWalletHistory = async (req, res) => {
     const data = await getWalletHistoryService(userId);
 
     if (!data) {
-      return res.status(404).json({
+      return res.status(httpStatusCOde.NOT_FOUND.code).json({
         message: "Wallet not found for the given user ID",
         success: false,
         data: null
@@ -38,7 +38,7 @@ export const getWalletHistory = async (req, res) => {
     })
   } catch (error) {
     console.error("Error in getWalletHistory:", error);
-    res.status(500).json({ message: "Internal Server Error" });
+    res.status(httpStatusCOde.INTERNAL_SERVER_ERROR.code).json({ message: "Internal Server Error" });
 
   }
 }
@@ -50,7 +50,7 @@ export const getFilteredWalletHistory = async (req, res) => {
     const { page = 1, limit = 10, search = '', type = '', sort = 'desc' } = req.query;
 
     if (!userId) {
-      return res.status(400).json({
+      return res.status(httpStatusCOde.BAD_REQUEST.code).json({
         message: "User ID is required",
         success: false,
         data: null
@@ -67,13 +67,13 @@ export const getFilteredWalletHistory = async (req, res) => {
 
     const data = await getFilteredWalletHistoryService(userId, filters);
 
-    res.status(200).json({
+    res.status(httpStatusCOde.OK.code).json({
       message: "Filtered wallet transactions fetched successfully",
       success: true,
       data
     });
   } catch (error) {
     console.error("Error in getFilteredWalletHistory:", error);
-    res.status(500).json({ message: "Internal Server Error" });
+    res.status(httpStatusCOde.INTERNAL_SERVER_ERROR.code).json({ message: "Internal Server Error" });
   }
 };
