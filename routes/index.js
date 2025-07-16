@@ -7,6 +7,7 @@ import userAccountRoutes from "./user/userAccountRoutes.js";
 import userLandingRoutes from "./user/userLandingRoutes.js";
 import userOrderRoutes from "./user/userOrderRoutes.js";
 import userWalletRoutes from "./user/userWalletRoutes.js";
+import userRazorpayRoutes from "./user/userRazorpayRoutes.js";
 
 import adminAuthRoutes from "./auth/adminAuthRoutes.js";
 import adminUserManagementRouter from "./adminDashboardRoutes/adminUserManagementRoute.js";
@@ -16,7 +17,7 @@ import adminOrderRouter from './adminDashboardRoutes/orderRoutes.js';
 import adminStockRouter from "./adminDashboardRoutes/adminStockManagementRoutes.js";
 import offerRouter from "./adminDashboardRoutes/adminOfferRoutes.js";
 import couponRouter from "./adminDashboardRoutes/adminCouponRoutes.js";
-import userRazorpayRoutes from "./user/userRazorpayRoutes.js";
+import salesRouter from "./adminDashboardRoutes/adminSalesRoutes.js";
 
 const indexRoutes = express.Router();
 
@@ -37,6 +38,7 @@ indexRoutes.use("/admin", adminOrderRouter);
 indexRoutes.use("/admin", adminStockRouter);
 indexRoutes.use('/admin', offerRouter);
 indexRoutes.use('/admin', couponRouter);
+indexRoutes.use('/admin', salesRouter);
 
 
 indexRoutes.use('/api',userRazorpayRoutes)
