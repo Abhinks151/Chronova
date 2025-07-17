@@ -5,8 +5,6 @@ import {
   getSingleOrderService,
   orderListByUserId,
   placeOrderService,
-  returnOrderItemService,
-  returnEntireOrderService,
   generateInvoiceService,
 } from "../../servises/user/orderService.js";
 import httpStatusCode from "../../utils/httpStatusCode.js";
@@ -38,7 +36,7 @@ export const verifyRazorpayPayment = async (req, res) => {
     }
 
     const userId = req.user._id || req.user.id;
-    const order = await placeOrderService(userId, orderData, req,true);
+    const order = await placeOrderService(userId, orderData, req, true);
 
     await Order.updateOne(
       { orderId: order.orderId },
@@ -361,16 +359,18 @@ export const returnOrderItemController = async (req, res) => {
     }
 
     const order = await Order.findOne({ userId, orderId });
-    if (!order)
+    if (!order) {
       return res
         .status(404)
         .json({ success: false, message: "Order not found." });
+    }
 
     const item = order.items.id(itemId);
-    if (!item)
+    if (!item) {
       return res
         .status(404)
         .json({ success: false, message: "Item not found." });
+    }
 
     if (item.status !== "Delivered") {
       return res.status(400).json({

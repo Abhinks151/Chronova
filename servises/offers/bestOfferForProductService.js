@@ -4,7 +4,7 @@ import { CategoryOffer } from "../../models/categoryOffer.js";
 
 export const findBestPriceForProduct = async (productId) => {
   if (!productId) {
-    throw new Error("Product Id is required");
+    throw new Error("Product ID is required");
   }
 
   const product = await Products.findById(productId).select(
@@ -15,28 +15,34 @@ export const findBestPriceForProduct = async (productId) => {
     throw new Error("Product not found");
   }
 
-  const productOffers = await ProductOffer.find({
-    products: productId,
-    isActive: true,
-    isDeleted: false,
-    startDate: { $lte: new Date() },
-    endDate: { $gte: new Date() },
-  });
+  const now = new Date();
 
-  const categoryOffers = await CategoryOffer.find({
-    categories: { $in: product.category },
-    isActive: true,
-    isDeleted: false,
-    startDate: { $lte: new Date() },
-    endDate: { $gte: new Date() },
-  });
+  const [productOffers, categoryOffers] = await Promise.all([
+    ProductOffer.find({
+      products: productId,
+      isActive: true,
+      isDeleted: false,
+      startDate: { $lte: now },
+      endDate: { $gte: now },
+    }),
+    CategoryOffer.find({
+      categories: { $in: product.category },
+      isActive: true,
+      isDeleted: false,
+      startDate: { $lte: now },
+      endDate: { $gte: now },
+    }),
+  ]);
 
   const totalOffers = [...productOffers, ...categoryOffers];
 
-  let bestOffer = totalOffers[0];
+  let bestOffer = null;
 
   for (const offer of totalOffers) {
-    if (offer.discountPercentage > bestOffer.discountPercentage) {
+    if (
+      !bestOffer ||
+      offer.discountPercentage > bestOffer.discountPercentage
+    ) {
       bestOffer = offer;
     }
   }
@@ -44,17 +50,20 @@ export const findBestPriceForProduct = async (productId) => {
   let offerPrice;
   let discount;
 
-  if (totalOffers.length > 0 && bestOffer?.discountPercentage) {
-    offerPrice = Math.round(
-      product.price * (1 - bestOffer.discountPercentage / 100)
-    );
+  if (bestOffer?.discountPercentage) {
     discount = bestOffer.discountPercentage;
-  } else {
+    offerPrice = Math.round(product.price * (1 - discount / 100));
+  } else if (product.salePrice && product.salePrice < product.price) {
     offerPrice = product.salePrice;
     discount = Math.round(
       ((product.price - product.salePrice) / product.price) * 100
     );
+  } else {
+    offerPrice = product.price;
+    discount = 0;
   }
 
+
+  // console.log("Best offer price:", offerPrice); 
   return { offerPrice, discount };
 };

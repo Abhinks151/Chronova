@@ -251,6 +251,7 @@ export const updateItemStatus = async (req, res) => {
 export const approveReturn = async (req, res) => {
   try {
     const { orderId, itemId } = req.params;
+    
     // console.log("Incoming orderId:", orderId, "| itemId:", itemId);
 
     if (!orderId || !itemId) {
@@ -297,11 +298,14 @@ export const approveReturn = async (req, res) => {
     }
     order.returnInfo.approvedReturns += 1;
 
-    await updateOrderStatusBasedOnItems(order); 
+    await updateOrderStatusBasedOnItems(order);
 
     await order.save();
 
-    const refundAmount = item.price * item.quantity;
+
+    // console.log(item.price, item.discount, item.quantity,item.finalPrice);
+
+    const refundAmount = item.finalPrice * item.quantity;
     let wallet = await Wallet.findOne({ userId: order.userId._id });
 
     const transaction = {
@@ -332,7 +336,7 @@ export const approveReturn = async (req, res) => {
       order.paymentStatus = "Partially Refunded";
     }
 
-    await order.save(); 
+    await order.save();
 
     return res.json({
       message: `Return approved successfully! ₹${refundAmount.toLocaleString("en-IN")} refunded to customer's wallet.`,

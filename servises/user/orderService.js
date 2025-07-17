@@ -11,6 +11,10 @@ import { logger } from "../../config/logger.js";
 import { fileURLToPath } from "url";
 import { Coupon } from "../../models/coupon.js";
 
+import mongoose from 'mongoose';
+
+
+
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
@@ -20,180 +24,210 @@ export const placeOrderService = async (
   req,
   isVerifiedOnline
 ) => {
-  const fullAddress = await Address.findById(orderData.shippingAddress).lean();
+  const session = await mongoose.startSession();
 
-  if (!fullAddress) throw new Error("Shipping address not found");
+  try {
+    await session.startTransaction();
 
-  if (
-    orderData.paymentMethod?.toLowerCase() === "online" &&
-    !isVerifiedOnline
-  ) {
-    logger.warn(
-      `User ${req.user.email} attempted to place an order with online payment method, which is not supported yet.`
-    );
-    throw new Error("Online payment is not supported yet");
-  }
 
-  const productIds = orderData.items.map(
-    (item) => item.productId?._id?.toString() || item.productId?.toString()
-  );
+    // console.log("Order Data:", orderData);
+    // console.log("Order Items:", orderData.items);
+    // console.log("Product ID:", orderData.items[0].productId);
 
-  const products = await Products.find({
-    _id: { $in: productIds },
-    isDeleted: false,
-    isBlocked: false,
-  }).lean();
 
-  if (!products.length) throw new Error("No valid products found");
 
-  const items = [];
 
-  for (const item of orderData.items) {
-    const productId =
-      item.productId?._id?.toString() || item.productId?.toString();
-    const product = products.find((p) => p._id.toString() === productId);
+    const fullAddress = await Address.findById(orderData.shippingAddress)
+      .session(session)
+      .lean();
 
-    if (!product) throw new Error("Product not found or blocked/deleted");
+    if (!fullAddress) throw new Error("Shipping address not found");
 
-    if (product.stockQuantity < item.quantity) {
-      throw new Error(
-        `${product.productName} has only ${product.stockQuantity} items left`
+    if (
+      orderData.paymentMethod?.toLowerCase() === "online" &&
+      !isVerifiedOnline
+    ) {
+      logger.warn(
+        `User ${req.user.email} attempted to place an order with online payment method, which is not supported yet.`
       );
+      throw new Error("Online payment is not supported yet");
     }
 
-    const validCategoryCount = await Category.countDocuments({
-      _id: { $in: product.category },
-      isBlocked: false,
+    const productIds = orderData.items.map(
+      (item) => item.productId?._id?.toString() || item.productId?.toString()
+    );
+
+    const products = await Products.find({
+      _id: { $in: productIds },
       isDeleted: false,
+      isBlocked: false,
+    })
+      .lean()
+      .session(session);
+
+    if (!products.length) throw new Error("No valid products found");
+
+    const items = [];
+
+    for (const item of orderData.items) {
+      const productId =
+        item.productId?._id?.toString() || item.productId?.toString();
+      const product = products.find((p) => p._id.toString() === productId);
+
+      if (!product) throw new Error("Product not found or blocked/deleted");
+
+      if (product.stockQuantity < item.quantity) {
+        throw new Error(
+          `${product.productName} has only ${product.stockQuantity} items left`
+        );
+      }
+
+      const validCategoryCount = await Category.countDocuments({
+        _id: { $in: product.category },
+        isBlocked: false,
+        isDeleted: false,
+      }).session(session);
+
+      if (validCategoryCount !== product.category.length) {
+        throw new Error(
+          `${product.productName} has blocked or deleted category`
+        );
+      }
+
+      for (let i = 0; i < item.quantity; i++) {
+        items.push({
+          productId: product._id,
+          productName: product.productName,
+          brand: product.brand,
+          quantity: 1,
+          price: product.finalPrice || product.salePrice || product.price,
+          category: product.category,
+          image: {
+            url: product.images?.[0]?.url || "",
+            public_id: product.images?.[0]?.public_id || "",
+          },
+          status: "Placed",
+          discount:item.offer.discount,
+          finalPrice:item.offer.offerPrice
+        });
+      }
+    }
+
+    const subtotal = items.reduce(
+      (acc, curr) => acc + curr.price * curr.quantity,
+      0
+    );
+    const totalAmount = orderData.total || subtotal;
+
+    const bulkOps = orderData.items.map((item) => ({
+      updateOne: {
+        filter: {
+          _id: item.productId?._id || item.productId,
+          stockQuantity: { $gte: item.quantity },
+        },
+        update: { $inc: { stockQuantity: -item.quantity } },
+      },
+    }));
+
+    const result = await Products.bulkWrite(bulkOps, { session });
+
+    if (result.modifiedCount !== orderData.items.length) {
+      throw new Error("Stock update failed for one or more items");
+    }
+
+    if (orderData.coupon) {
+      const coupon = await Coupon.findOne({
+        coupon: orderData.coupon.code,
+        isActive: true,
+        isDeleted: false,
+        expiryTime: { $gte: new Date() },
+      }).session(session);
+
+      if (!coupon) throw new Error("Invalid coupon code");
+
+      if (coupon.applicableFor.usedBy.includes(req.user.id || req.user._id)) {
+        throw new Error("You have already used this coupon");
+      }
+
+      if (coupon.applicableFor.usageCount >= coupon.applicableFor.limit) {
+        throw new Error("Coupon usage limit exceeded");
+      }
+
+      coupon.applicableFor.usedBy.push(req.user.id || req.user._id);
+      coupon.applicableFor.usageCount += 1;
+      await coupon.save({ session });
+    }
+
+    const discount = orderData.discount || 0;
+    const newOrder = new Order({
+      userId,
+      shippingAddress: fullAddress,
+      items,
+      subtotal,
+      discount,
+      totalAmount,
+      paymentMethod: orderData.paymentMethod.toUpperCase(),
+      coupon: orderData.coupon,
     });
 
-    if (validCategoryCount !== product.category.length) {
-      throw new Error(`${product.productName} has blocked or deleted category`);
+    await newOrder.save({ session });
+
+    const groupedItems = {};
+    for (const item of orderData.items) {
+      const pid =
+        item.productId?._id?.toString() || item.productId?.toString();
+      groupedItems[pid] = (groupedItems[pid] || 0) + item.quantity;
     }
 
-    for (let i = 0; i < item.quantity; i++) {
-      items.push({
-        productId: product._id,
-        productName: product.productName,
-        brand: product.brand,
-        quantity: 1,
-        price: product.finalPrice || product.salePrice || product.price,
-        category: product.category,
-        image: {
-          url: product.images?.[0]?.url || "",
-          public_id: product.images?.[0]?.public_id || "",
-        },
-        status: "Placed",
+    for (const [productId, quantity] of Object.entries(groupedItems)) {
+      const updatedProduct = await Products.findById(productId)
+        .session(session)
+        .lean();
+
+      const newStock = Number(updatedProduct?.stockQuantity);
+      if (isNaN(newStock)) {
+        console.error(`Invalid stock quantity for product ${productId}`);
+        continue;
+      }
+
+      await logStockChange({
+        productId,
+        action: "stock_out",
+        quantity,
+        reason: "Order Placed",
+        updatedBy: "system",
+        userId,
+        newStock,
       });
     }
-  }
 
-  const subtotal = items.reduce(
-    (acc, curr) => acc + curr.price * curr.quantity,
-    0
-  );
-  const totalAmount = orderData.total || subtotal;
+    await Cart.updateOne(
+      { userId },
+      { $pull: { items: { productId: { $in: productIds } } } },
+      { session }
+    );
 
-  const bulkOps = orderData.items.map((item) => ({
-    updateOne: {
-      filter: {
-        _id: item.productId?._id || item.productId,
-        stockQuantity: { $gte: item.quantity },
+    await session.commitTransaction();
+    return {
+      orderId: newOrder.orderId,
+      message: "Order placed successfully",
+      orderDetails: {
+        shippingAddress: fullAddress,
+        items: newOrder.items,
+        subtotal,
+        totalAmount,
+        paymentMethod: newOrder.paymentMethod,
       },
-      update: { $inc: { stockQuantity: -item.quantity } },
-    },
-  }));
-
-  const result = await Products.bulkWrite(bulkOps);
-
-  if (result.modifiedCount !== orderData.items.length) {
-    throw new Error("Stock update failed for one or more items");
+    };
+  } catch (error) {
+    await session.abortTransaction();
+    throw error;
+  } finally {
+    session.endSession();
   }
-
-  if (orderData.coupon) {
-    const coupon = await Coupon.findOne({
-      coupon: orderData.coupon.code,
-      isActive: true,
-      isDeleted: false,
-      expiryTime: { $gte: new Date() },
-    });
-    if (!coupon) {
-      throw new Error("Invalid coupon code");
-    }
-
-    if (coupon.applicableFor.usedBy.includes(req.user.id || req.user._id)) {
-      throw new Error("You have already used this coupon");
-    }
-
-    if (coupon.applicableFor.usageCount >= coupon.applicableFor.limit) {
-      throw new Error("Coupon usage limit exceeded");
-    }
-
-    // coupon.applicableFor.usedBy = req.user.id || req.user._id;
-    coupon.applicableFor.usedBy.push(req.user.id || req.user._id);
-    coupon.applicableFor.usageCount += 1;
-    await coupon.save();
-  }
-
-  // console.log(orderData.coupon);
-
-  //discount
-  const discount = orderData.discount || 0;
-  const newOrder = new Order({
-    userId,
-    shippingAddress: fullAddress,
-    items,
-    subtotal,
-    discount,
-    totalAmount,
-    paymentMethod: orderData.paymentMethod.toUpperCase(),
-    coupon: orderData.coupon,
-  });
-
-  await newOrder.save();
-
-  const groupedItems = {};
-  for (const item of orderData.items) {
-    const pid = item.productId?._id?.toString() || item.productId?.toString();
-    groupedItems[pid] = (groupedItems[pid] || 0) + item.quantity;
-  }
-
-  for (const [productId, quantity] of Object.entries(groupedItems)) {
-    const updatedProduct = await Products.findById(productId);
-    const newStock = Number(updatedProduct?.stockQuantity);
-
-    if (isNaN(newStock)) {
-      console.error(`Invalid stock quantity for product ${productId}`);
-      continue;
-    }
-
-    await logStockChange({
-      productId,
-      action: "stock_out",
-      quantity,
-      reason: "Order Placed",
-      updatedBy: "system",
-      userId,
-      newStock,
-    });
-  }
-
-  await Cart.updateOne(
-    { userId },
-    { $pull: { items: { productId: { $in: productIds } } } }
-  );
-  return {
-    orderId: newOrder.orderId,
-    message: "Order placed successfully",
-    orderDetails: {
-      shippingAddress: fullAddress,
-      items: newOrder.items,
-      subtotal,
-      totalAmount,
-      paymentMethod: newOrder.paymentMethod,
-    },
-  };
 };
+
+
 
 export const orderListByUserId = async (userId) => {
   try {
