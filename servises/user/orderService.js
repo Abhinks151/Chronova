@@ -29,6 +29,14 @@ export const placeOrderService = async (
   try {
     await session.startTransaction();
 
+
+    // console.log("Order Data:", orderData);
+    // console.log("Order Items:", orderData.items);
+    // console.log("Product ID:", orderData.items[0].productId);
+
+
+
+
     const fullAddress = await Address.findById(orderData.shippingAddress)
       .session(session)
       .lean();
@@ -99,6 +107,8 @@ export const placeOrderService = async (
             public_id: product.images?.[0]?.public_id || "",
           },
           status: "Placed",
+          discount:item.offer.discount,
+          finalPrice:item.offer.offerPrice
         });
       }
     }
