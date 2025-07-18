@@ -10,7 +10,6 @@ body {
     Ubuntu, Cantarell, sans-serif;
   background-color: #f8f9fa;
   color: #333;
-  line-height: 1.6;
 }
 
 /* Admin Container */
@@ -19,64 +18,6 @@ body {
   min-height: 100vh;
 }
 
-/* Sidebar Styles */
-.sidebar {
-  width: 260px;
-  background: linear-gradient(180deg, #2c3e50 0%, #34495e 100%);
-  color: white;
-  position: fixed;
-  height: 100vh;
-  overflow-y: auto;
-  z-index: 1000;
-}
-
-.sidebar-header {
-  padding: 20px;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
-}
-
-.sidebar-header h2 {
-  font-size: 24px;
-  font-weight: 600;
-  color: white;
-}
-
-.sidebar-nav {
-  padding: 20px 0;
-}
-
-.nav-item {
-  display: flex;
-  align-items: center;
-  padding: 12px 20px;
-  color: rgba(255, 255, 255, 0.8);
-  text-decoration: none;
-  transition: all 0.3s ease;
-  border-left: 3px solid transparent;
-}
-
-.nav-item:hover {
-  background-color: rgba(255, 255, 255, 0.1);
-  color: white;
-  border-left-color: #3498db;
-}
-
-.nav-item.active {
-  background-color: rgba(52, 152, 219, 0.2);
-  color: white;
-  border-left-color: #3498db;
-}
-
-.nav-item i {
-  width: 20px;
-  margin-right: 12px;
-  font-size: 16px;
-}
-
-.nav-item span {
-  font-size: 14px;
-  font-weight: 500;
-}
 
 /* Main Content */
 .main-content {

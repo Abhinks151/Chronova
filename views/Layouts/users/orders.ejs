@@ -609,16 +609,17 @@
                   ...response,
                   orderId: order.orderId,
                 });
+                console.log("working");
 
                 if (verifyRes.data.success) {
-                  showNotification("Payment successful!", "success");
+                  showToast("Payment successful!", "success");
                   window.location.href = `/user/order/conform?orderId=${order.orderId}`;
                 } else {
-                  showNotification("Payment verification failed!", "error");
+                  showToast("Payment verification failed!", "error");
                 }
               } catch (err) {
                 console.error("Verification error:", err);
-                showNotification(
+                showToast(
                   "Something went wrong during verification.",
                   "error"
                 );
@@ -634,7 +635,7 @@
             },
             modal: {
               ondismiss: function () {
-                showNotification("Payment was not completed.", "info");
+                showToast("Payment was not completed.", "error");
               },
             },
           };
@@ -643,7 +644,7 @@
           rzp.open();
         } catch (err) {
           console.error("Retry error:", err);
-          showNotification(
+          showToast(
             "Unable to initiate retry. Try again later.",
             "error"
           );
