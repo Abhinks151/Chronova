@@ -3,69 +3,77 @@ import puppeteer from "puppeteer";
 import ExcelJS from "exceljs";
 
 export const getSalesReportService = async (req) => {
-  let { period, startDate, endDate, status, page = 1, limit = 2 } = req.query;
-
-  let filter = {};
-  const now = new Date();
+  const { period, startDate, endDate, status, page = 1, limit = 10 } = req.query // Changed default limit to 10
+  const filter = {}
+  const now = new Date()
 
   if (startDate && endDate) {
-    const start = new Date(startDate);
-    const end = new Date(endDate);
-    start.setUTCHours(0, 0, 0, 0);
-    end.setUTCHours(23, 59, 59, 999);
-    filter.createdAt = { $gte: start, $lte: end };
+    const start = new Date(startDate)
+    const end = new Date(endDate)
+    start.setUTCHours(0, 0, 0, 0)
+    end.setUTCHours(23, 59, 59, 999)
+    filter.createdAt = { $gte: start, $lte: end }
   } else if (period) {
-    let startPeriod;
+    let startPeriod
     switch (period) {
+      case "all":
+        break
+      case "today":
+        startPeriod = new Date(now)
+        startPeriod.setUTCHours(0, 0, 0, 0)
+        now.setUTCHours(23, 59, 59, 999)
+        filter.createdAt = { $gte: startPeriod, $lte: now }
+        break
       case "weekly":
-        startPeriod = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
-        break;
+        startPeriod = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000)
+        startPeriod.setUTCHours(0, 0, 0, 0)
+        now.setUTCHours(23, 59, 59, 999)
+        filter.createdAt = { $gte: startPeriod, $lte: now }
+        break
       case "monthly":
-        startPeriod = new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000);
-        break;
+        startPeriod = new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000)
+        startPeriod.setUTCHours(0, 0, 0, 0)
+        now.setUTCHours(23, 59, 59, 999)
+        filter.createdAt = { $gte: startPeriod, $lte: now }
+        break
       case "annual":
-        startPeriod = new Date(now.getTime() - 365 * 24 * 60 * 60 * 1000);
-        break;
+        startPeriod = new Date(now.getTime() - 365 * 24 * 60 * 60 * 1000)
+        startPeriod.setUTCHours(0, 0, 0, 0)
+        now.setUTCHours(23, 59, 59, 999)
+        filter.createdAt = { $gte: startPeriod, $lte: now }
+        break
       default:
-        startPeriod = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
+        break
     }
-    startPeriod.setUTCHours(0, 0, 0, 0);
-    now.setUTCHours(23, 59, 59, 999);
-    filter.createdAt = { $gte: startPeriod, $lte: now };
   }
-
   if (status) {
-    filter.orderStatus = status;
+    filter.orderStatus = status
   }
-
-  const totalItems = await Order.countDocuments(filter);
-
+  const totalItems = await Order.countDocuments(filter)
   const orders = await Order.find(filter)
     .sort({ createdAt: -1 })
     .skip((page - 1) * limit)
-    .limit(parseInt(limit));
-
-  const allFilteredOrders = await Order.find(filter);
-
+    .limit(Number.parseInt(limit))
+  const allFilteredOrders = await Order.find(filter)
   const summary = {
     totalOrders: allFilteredOrders.length,
     totalRevenue: allFilteredOrders.reduce((sum, order) => sum + order.totalAmount, 0),
     totalDiscount: allFilteredOrders.reduce((sum, order) => sum + order.discount, 0),
     totalRefunds: allFilteredOrders.reduce((sum, order) => sum + order.refundedAmount, 0),
-  };
-
+  }
   return {
     orders,
     summary,
     pagination: {
-      currentPage: parseInt(page),
+      currentPage: Number.parseInt(page),
       totalPages: Math.ceil(totalItems / limit),
       totalItems,
-      itemsPerPage: parseInt(limit),
+      itemsPerPage: Number.parseInt(limit),
     },
     filters: { period, startDate, endDate, status },
-  };
-};
+  }
+}
+
 
 
 
