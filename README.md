@@ -12,74 +12,123 @@ Chronova is a full-featured e-commerce platform built for selling watches, desig
 - **Auth:** Session-based Auth + Google OAuth (Passport.js)  
 - **Email/OTP:** Nodemailer  
 - **Image Hosting:** Cloudinary  
-- **Others:** Cropper.js, Pincode API, Winston (logging – WIP)
+- **Payment Gateway:** Razorpay  
+- **Logging:** Winston with Daily Rotate  
+- **PDF/Excel Report:** Puppeteer, ExcelJS  
+- **Others:** Cropper.js, Pincode API, MongoDB Transactions
 
 ---
 
 ## 🧩 Features
 
 ### 👤 User-Side
+
 - **Authentication**
   - Email OTP verification (signup, login, password reset)
   - Google OAuth login
   - Session-based login/logout
+
 - **Profile & Account**
   - Edit profile & email (with OTP verification)
   - Profile image upload (Cropper.js)
-  - Address management (with pincode auto-fill)
+  - Address management with pincode auto-fill
+  - Single default address logic
   - Wallet for refund tracking
+  - Referral code support during registration
+
 - **Shopping Experience**
-  - Product browsing (search, sort, filter)
-  - Detailed product pages with zoom and wishlist/cart integration
-  - Real-time cart quantity control (stock-bound, max 5)
-  - Wishlist with toggle UI and blocked/deleted product handling
+  - Product search, sort, filter (by name, brand, category)
+  - Wishlist (add/remove), cart (add/remove/update) with real-time sync
+  - Product zoom support
+  - Handles blocked/deleted products in UI
+  - Product/category offers (best offer auto-applied)
+  - Wishlist and cart mutual exclusivity
+
 - **Checkout & Orders**
-  - Address & payment method selection
-  - Order placement and confirmation flow
-  - View orders, cancel individual items or entire orders
-  - Return flow with wallet refund
+  - Address & payment method selection (COD / Razorpay)
+  - Razorpay integration with retry flow for failed transactions
+  - Secure payment verification via HMAC + fallback via webhook
+  - Coupon apply/remove with expiry and usage checks
+  - Order confirmation, failure, and retry flows
+  - Cancel individual items or entire order with reason
+  - Return flow post delivery with mandatory reason
+  - Refunds to wallet on approved returns/cancellations
+  - Order success/failure pages with redirection options
 
 ---
 
 ### 🛠️ Admin-Side
+
 - **User Management**
-  - View, block/unblock users
+  - View users, block/unblock accounts
+
 - **Category & Product Management**
   - Add, edit, delete, block categories/products
-  - Pagination, search, filter support
+  - Pagination, search, filtering
+  - Category and product uniqueness enforced
   - Multi-image upload with Cloudinary
+  - Edit forms with pre-filled data
+  - Offer management (category/product level)
+
 - **Order Management**
-  - Order listing with filters, pagination, search
-  - Per-product status updates
-  - Approve returns with wallet refunds
+  - Order listing with filters, pagination, and search
+  - View per-product order status
+  - Cancel/return handling and status updates
+  - Refund handling via wallet
+  - Razorpay payment status tracking
+  - Stock increment on cancel/return
+
 - **Inventory Control**
-  - View/update stock
-  - Stock history registry
+  - Product-wise stock update
+  - Stock registry tracking
   - Low/out-of-stock filters
+  - Prevent race conditions using MongoDB transactions
+
+- **Coupons & Offers**
+  - Create/delete coupons with validations
+  - Auto-apply the best offer (category vs product)
+  - Prevent coupon reuse, enforce expiry rules
+  - Track coupon usage per user
+
+- **Sales Report**
+  - Generate reports by day, week, month, or custom date range
+  - Show total sales, order count, discounts, coupon deductions
+  - PDF and Excel download supported
+  - Filter reports based on order status or date range
 
 ---
 
 ## 🔐 Security & Validation
-- Manual input validation
-- OTP & session expiration handling
-- Route protection (user/admin)
-- Robust status checks for deleted/blocked items
+
+- Manual input validation (server-side and client-side)
+- OTP and session expiration checks
+- Route protection for user/admin access
+- Razorpay signature verification for secure payments
+- Sanitize all coupon/address IDs and payment input
+- Price validation server-side (not trusting frontend)
+- Handles blocked/deleted categories and products properly
 
 ---
 
 ## 📦 Project Structure Highlights
-- Modular folder structure (`controllers`, `routes`, `services`, `models`)
-- Internal JS in EJS files, external CSS files
-- Reusable service logic across user/admin
+
+- Modular architecture (`controllers`, `routes`, `services`, `models`)
+- Internal JS in EJS, separate CSS files
+- Proper use of middleware, clean folder structure
+- MongoDB transactions used in critical flows (order, coupon, stock)
+- Centralized error handling with HTTP status codes
+- Reusable services shared across user/admin routes
 
 ---
 
 ## 📈 Development Status
 
 ✅ Core functionality completed  
-🛠️ Logging, analytics & review system in progress  
-🎯 **Next Goal:** Integrate a payment gateway (Razorpay / Stripe / PayPal)  
-🧪 Code continuously refactored for performance and clarity  
+✅ Razorpay payment flow with fallback implemented  
+✅ Offers, coupon logic, and transaction handling done  
+✅ Admin-side sales reporting & export  
+🧪 Ongoing: Wallet UI and analytics review system  
+🎯 **Next Goal:** Redesign order management pages and admin dashboard  
 
 ---
 
@@ -93,4 +142,5 @@ Aspiring Software Engineer | Full-stack Developer
 
 ## 📌 Note
 
-This project is intended for learning purposes so Contributions, suggestions, and constructive code reviews are welcome!
+This project is intended for learning purposes.  
+Contributions, suggestions, and constructive code reviews are welcome!
