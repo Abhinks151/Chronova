@@ -22,8 +22,13 @@ export const verifyRazorpayPayment = async (req, res) => {
       razorpay_order_id,
       razorpay_payment_id,
       razorpay_signature,
-      orderData,
+      orderId,
     } = req.body;
+
+    
+    if (!orderId || !razorpay_order_id || !razorpay_payment_id || !razorpay_signature) {
+      return res.status(400).json({ success: false, message: "Missing required fields" });
+    }
 
     const hmac = crypto.createHmac("sha256", process.env.RAZORPAY_SECRET_KEY);
     hmac.update(razorpay_order_id + "|" + razorpay_payment_id);
@@ -31,36 +36,39 @@ export const verifyRazorpayPayment = async (req, res) => {
 
     if (generatedSignature !== razorpay_signature) {
       return res
-        .status(httpStatusCode.BAD_REQUEST.code)
+        .status(400)
         .json({ success: false, message: "Invalid payment signature" });
     }
 
-    const userId = req.user._id || req.user.id;
-    const order = await placeOrderService(userId, orderData, req, true);
+    const order = await Order.findOne({ orderId });
 
-    await Order.updateOne(
-      { orderId: order.orderId },
-      {
-        paymentStatus: "Paid",
-        paymentDetails: {
-          transactionId: razorpay_payment_id,
-          paymentDate: new Date(),
-          paymentProvider: "Razorpay",
-        },
-        isPaid: true,
-      }
-    );
+    if (!order) {
+      return res.status(404).json({ success: false, message: "Order not found" });
+    }
 
-    return res.status(httpStatusCode.OK.code).json({
+    order.paymentStatus = "Paid";
+    order.isPaid = true;
+    order.paymentDetails = {
+      transactionId: razorpay_payment_id,
+      razorpay_order_id,
+      razorpay_signature,
+      paymentDate: new Date(),
+      paymentProvider: "Razorpay",
+    };
+
+    await order.save();
+
+    return res.status(200).json({
       success: true,
-      message: "Payment verified and order placed",
-      orderId: order.orderId,
+      message: "Payment verified and order updated",
+      orderId,
     });
   } catch (err) {
     console.error("Error verifying Razorpay payment:", err);
-    return res.status(httpStatusCode.INTERNAL_SERVER_ERROR.code).json({ success: false, message: err.message });
+    return res.status(500).json({ success: false, message: err.message });
   }
 };
+
 
 export const getCheckoutPage = (req, res) => {
   try {
@@ -108,11 +116,23 @@ export const getCheckoutPageData = async (req, res) => {
 export const placeOrder = async (req, res) => {
   try {
     const userId = req.user._id || req.user.id;
-    const data = await placeOrderService(userId, req.body, req);
+    const isVerifiedOnline = req.body?.isVerifiedOnline || false;
+
+    const orderData = {
+      ...req.body,
+      paymentStatus: isVerifiedOnline ? "Paid" : "Pending",
+      isPaid: isVerifiedOnline,
+    };
+
+    const order = await placeOrderService(userId, orderData, req, isVerifiedOnline);
+
     return res.status(httpStatusCode.OK.code).json({
       success: true,
       message: "Order placed successfully.",
-      data,
+      data: {
+        orderId: order.orderId,
+        razorpay_order_id: order.paymentDetails?.razorpay_order_id || null,
+      },
     });
   } catch (error) {
     console.log("Error placing order:", error);
@@ -123,6 +143,7 @@ export const placeOrder = async (req, res) => {
     });
   }
 };
+
 
 export const getConformPage = (req, res) => {
   try {
@@ -501,5 +522,62 @@ export const downloadInvoiceController = async (req, res) => {
     res
       .status(httpStatusCode.INTERNAL_SERVER_ERROR.code)
       .send("Error generating invoice");
+  }
+};
+
+
+import Razorpay from "razorpay";
+
+const razorpay = new Razorpay({
+  key_id: process.env.RAZORPAY_KEY_ID,
+  key_secret: process.env.RAZORPAY_SECRET_KEY,
+});
+
+
+export const retryPaymentController = async (req, res) => {
+  try {
+    const { orderId } = req.body;
+    const userId = req.user._id;
+
+    const order = await Order.findOne({ orderId, userId }).populate("userId");
+
+    if (!order) {
+      return res.status(404).json({ success: false, message: "Order not found" });
+    }
+
+    if (order.isPaid) {
+      return res.status(400).json({ success: false, message: "Order already paid" });
+    }
+
+    const razorpayOrder = await razorpay.orders.create({
+      amount: order.totalAmount * 100,
+      currency: "INR",
+      receipt: `retry_${Date.now()}`,
+    });
+
+    order.razorpay = {
+      orderId: razorpayOrder.id,
+      receipt: razorpayOrder.receipt,
+    };
+    await order.save();
+
+    res.status(200).json({
+      success: true,
+      order: {
+        orderId: order.orderId,
+        razorpayOrderId: razorpayOrder.id,
+        amount: razorpayOrder.amount,
+        currency: razorpayOrder.currency,
+      },
+      user: {
+        name: order.userId.name,
+        email: order.userId.email,
+        phone: order.userId.phone,
+      },
+      razorpayKey: process.env.RAZORPAY_KEY_ID,
+    });
+  } catch (err) {
+    console.error("Retry Payment Error:", err);
+    res.status(500).json({ success: false, message: "Something went wrong" });
   }
 };

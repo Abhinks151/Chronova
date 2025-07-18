@@ -14,6 +14,7 @@ import {
   cancelEntireOrderController,
   ViewInvoiceController,
   verifyRazorpayPayment,
+  retryPaymentController,
 } from "../../controllers/user/orderManagement.js"
 import { authenticateUser } from "../../middlewares/userAuthMiddleware.js"
 import { getAllActiveCoupons } from "../../controllers/adminDashboard/adminCoupionManagementController.js"
@@ -48,6 +49,8 @@ router.get("/orders/invoice/download/:orderId", authenticateUser, downloadInvoic
 
 
 router.post("/verify-payment", authenticateUser, verifyRazorpayPayment);
+router.post("/create-razorpay-order", authenticateUser, createRazorpayOrder);
+router.post("/retry-payment", authenticateUser, retryPaymentController);
 
 
 export default router

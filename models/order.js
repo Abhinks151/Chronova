@@ -109,7 +109,10 @@ const orderSchema = new mongoose.Schema(
       paymentDate: Date,
       paymentProvider: { type: String, default: "Razorpay" },
     },
-
+razorpay: {
+  orderId: String,
+  receipt: String,
+},
     paymentHistory: [
       {
         status: String,

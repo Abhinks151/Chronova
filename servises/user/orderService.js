@@ -29,29 +29,11 @@ export const placeOrderService = async (
   try {
     await session.startTransaction();
 
-
-    // console.log("Order Data:", orderData);
-    // console.log("Order Items:", orderData.items);
-    // console.log("Product ID:", orderData.items[0].productId);
-
-
-
-
     const fullAddress = await Address.findById(orderData.shippingAddress)
       .session(session)
       .lean();
 
     if (!fullAddress) throw new Error("Shipping address not found");
-
-    if (
-      orderData.paymentMethod?.toLowerCase() === "online" &&
-      !isVerifiedOnline
-    ) {
-      logger.warn(
-        `User ${req.user.email} attempted to place an order with online payment method, which is not supported yet.`
-      );
-      throw new Error("Online payment is not supported yet");
-    }
 
     const productIds = orderData.items.map(
       (item) => item.productId?._id?.toString() || item.productId?.toString()
@@ -107,8 +89,8 @@ export const placeOrderService = async (
             public_id: product.images?.[0]?.public_id || "",
           },
           status: "Placed",
-          discount:item.offer.discount,
-          finalPrice:item.offer.offerPrice
+          discount: item.offer.discount,
+          finalPrice: item.offer.offerPrice,
         });
       }
     }
@@ -159,6 +141,7 @@ export const placeOrderService = async (
     }
 
     const discount = orderData.discount || 0;
+
     const newOrder = new Order({
       userId,
       shippingAddress: fullAddress,
@@ -168,6 +151,16 @@ export const placeOrderService = async (
       totalAmount,
       paymentMethod: orderData.paymentMethod.toUpperCase(),
       coupon: orderData.coupon,
+      isPaid: isVerifiedOnline,
+      paymentStatus: isVerifiedOnline ? "Paid" : "Pending",
+      paymentDetails: isVerifiedOnline
+        ? {
+            paymentProvider: "Razorpay",
+            razorpay_payment_id: orderData.paymentDetails?.razorpay_payment_id,
+            razorpay_order_id: orderData.paymentDetails?.razorpay_order_id,
+            razorpay_signature: orderData.paymentDetails?.razorpay_signature,
+          }
+        : {},
     });
 
     await newOrder.save({ session });
@@ -226,6 +219,7 @@ export const placeOrderService = async (
     session.endSession();
   }
 };
+
 
 
 

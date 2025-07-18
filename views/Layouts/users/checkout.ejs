@@ -1113,6 +1113,7 @@
           showNotification("Your cart is empty", "error");
           return;
         }
+
         if (!selectedAddressId) {
           showNotification("Please select a shipping address", "error");
           return;
@@ -1148,25 +1149,31 @@
             };
           }
 
+          // Always place the order first
+          const orderPlaceRes = await axios.post(
+            "/user/order/place",
+            orderData
+          );
+          const placedOrderId = orderPlaceRes.data?.data?.orderId;
+
+          if (!placedOrderId) {
+            throw new Error("Order ID missing from server response");
+          }
+
           if (selectedPaymentMethod === "cod") {
-            // 🧾 COD Flow (use existing backend logic)
-            const response = await axios.post("/user/order/place", orderData);
             showNotification(
-              response.data.message || "Order placed successfully!",
+              orderPlaceRes.data.message || "Order placed successfully!",
               "success"
             );
-            const orderId = response.data?.data?.orderId;
             setTimeout(() => {
-              window.location.href = `/user/order/conform?orderId=${orderId}`;
+              window.location.href = `/user/order/conform?orderId=${placedOrderId}`;
             }, 2000);
           } else {
-            // 💳 ONLINE Flow: Create Razorpay Order
-            const razorRes = await axios.post("/api/create-razorpay-order", {
+            // Online Payment Flow
+            const razorRes = await axios.post("/user/create-razorpay-order", {
               amount: total,
               receipt: `receipt_${Date.now()}`,
             });
-
-            window.__orderData = orderData;
 
             const { order } = razorRes.data;
 
@@ -1183,17 +1190,16 @@
                     razorpay_order_id: response.razorpay_order_id,
                     razorpay_payment_id: response.razorpay_payment_id,
                     razorpay_signature: response.razorpay_signature,
-                    orderData,
+                    orderId: placedOrderId,
                   });
 
                   if (verifyRes.data.success) {
-                    const orderId = verifyRes.data?.orderId;
                     showNotification(
-                      "Payment successful and order placed!",
+                      "Payment successful and order confirmed!",
                       "success"
                     );
                     setTimeout(() => {
-                      window.location.href = `/user/order/conform?orderId=${orderId}`;
+                      window.location.href = `/user/order/conform?orderId=${placedOrderId}`;
                     }, 2000);
                   } else {
                     showNotification("Payment verification failed", "error");
@@ -1208,8 +1214,14 @@
               },
               modal: {
                 ondismiss: function () {
-                  showNotification("Payment was cancelled by the user.", "error");
-                }
+                  showNotification(
+                    "Payment was cancelled by the user.",
+                    "error"
+                  );
+                  setTimeout(() => {
+                    window.location.href = `/user/order/conform?orderId=${placedOrderId}`;
+                  }, 1500);
+                },
               },
               prefill: {
                 name: "<%= user.name %>",
