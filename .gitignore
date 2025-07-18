@@ -12,3 +12,4 @@ logs/
 *.gz
 
 test.js
+index.html

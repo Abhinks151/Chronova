@@ -3,617 +3,431 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Sales Report - Chronova Admin</title>
+    <title>Sales Report - Admin</title>
+    <link rel="stylesheet" href="/styles/dashboard.css">
     <link rel="stylesheet" href="/styles/admin-sales-report.css">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
-    <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <link rel="stylesheet" href="/styles/dashboard.css" />
+    
+    <link
+      rel="stylesheet"
+      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css"
+    />
+    <script src="https://cdn.jsdelivr.net/npm/axios@1.6.0/dist/axios.min.js"></script>
 </head>
 <body>
-    <div class="admin-container">
-        <!-- Sidebar -->
-        <div class="sidebar">
-            <div class="sidebar-header">
-                <h2>Chronova</h2>
+    <%- include('../../partials/sidebar') %>
+
+    <div class="container">
+        <header class="page-header">
+            <h1>Sales Report</h1>
+            <div class="header-actions">
+                <button class="btn btn-primary" onclick="downloadReport('pdf')">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-file-text"><path d="M15 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7Z"/><path d="M14 2v4a2 2 0 0 0 2 2h4"/><path d="M10 9H8"/><path d="M16 13H8"/><path d="M16 17H8"/></svg>
+                    Download PDF
+                </button>
+                <button class="btn btn-success" onclick="downloadReport('excel')">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-file-spreadsheet"><path d="M15 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7Z"/><path d="M14 2v4a2 2 0 0 0 2 2h4"/><path d="M8 21V13"/><path d="M16 21V13"/><path d="M4 13h16"/></svg>
+                    Download Excel
+                </button>
             </div>
-            <nav class="sidebar-nav">
-                <a href="/admin/dashboard" class="nav-item">
-                    <i class="fas fa-tachometer-alt"></i>
-                    <span>Dashboard</span>
-                </a>
-                <a href="/admin/users" class="nav-item">
-                    <i class="fas fa-users"></i>
-                    <span>Users</span>
-                </a>
-                <a href="/admin/products" class="nav-item">
-                    <i class="fas fa-box"></i>
-                    <span>Products</span>
-                </a>
-                <a href="/admin/category" class="nav-item">
-                    <i class="fas fa-tags"></i>
-                    <span>Category</span>
-                </a>
-                <a href="/admin/orders" class="nav-item">
-                    <i class="fas fa-shopping-cart"></i>
-                    <span>Orders</span>
-                </a>
-                <a href="/admin/stock-registry" class="nav-item">
-                    <i class="fas fa-warehouse"></i>
-                    <span>Stock Registry</span>
-                </a>
-                <a href="/admin/product-offers" class="nav-item">
-                    <i class="fas fa-percent"></i>
-                    <span>Product offer management</span>
-                </a>
-                <a href="/admin/category-offers" class="nav-item">
-                    <i class="fas fa-tag"></i>
-                    <span>Category offer management</span>
-                </a>
-                <a href="/admin/coupons" class="nav-item">
-                    <i class="fas fa-ticket-alt"></i>
-                    <span>Coupon management</span>
-                </a>
-                <a href="/admin/sales-report" class="nav-item active">
-                    <i class="fas fa-chart-line"></i>
-                    <span>Sales Report</span>
-                </a>
-                <a href="/admin/banners" class="nav-item">
-                    <i class="fas fa-image"></i>
-                    <span>Banner management</span>
-                </a>
-                <a href="/admin/settings" class="nav-item">
-                    <i class="fas fa-cog"></i>
-                    <span>Settings</span>
-                </a>
-                <a href="/admin/logout" class="nav-item">
-                    <i class="fas fa-sign-out-alt"></i>
-                    <span>Logout</span>
-                </a>
-            </nav>
+        </header>
+
+        <!-- Filter Section -->
+        <div class="filters-section">
+            <div class="filter-group">
+                <label for="periodFilter">Filter By:</label>
+                <select id="periodFilter" class="filter-select">
+                    <option value="all">All Time</option>
+                    <option value="today">Today</option>
+                    <option value="weekly">Last 7 Days</option>
+                    <option value="monthly">Last 30 Days</option>
+                    <option value="annual">Last 365 Days</option>
+                    <option value="custom">Custom Date Range</option>
+                </select>
+            </div>
+            <div class="filter-group" id="startDateGroup" style="display: none;">
+                <label for="startDate">Start Date:</label>
+                <input type="date" id="startDate" class="filter-input">
+            </div>
+            <div class="filter-group" id="endDateGroup" style="display: none;">
+                <label for="endDate">End Date:</label>
+                <input type="date" id="endDate" class="filter-input">
+            </div>
+            <div class="filter-group">
+                <label for="statusFilter">Status:</label>
+                <select id="statusFilter" class="filter-select">
+                    <option value="">All Status</option>
+                    <option value="Pending">Pending</option>
+                    <option value="Placed">Placed</option>
+                    <option value="Shipped">Shipped</option>
+                    <option value="Delivered">Delivered</option>
+                    <option value="Cancelled">Cancelled</option>
+                    <option value="Return Requested">Return Requested</option>
+                    <option value="Return Approved">Return Approved</option>
+                    <option value="Return Rejected">Return Rejected</option>
+                </select>
+            </div>
+            <div class="filter-buttons">
+                <button class="btn btn-primary" onclick="applyFilters()">Apply Filters</button>
+                <button class="btn btn-secondary" onclick="clearFilters()">Clear</button>
+            </div>
         </div>
 
-        <!-- Main Content -->
-        <div class="main-content">
-            <div class="content-header">
-                <h1>Sales Report</h1>
-                <div class="header-actions">
-                    <button id="downloadPdf" class="btn btn-primary">
-                        <i class="fas fa-file-pdf"></i>
-                        Download PDF
-                    </button>
-                    <button id="downloadExcel" class="btn btn-success">
-                        <i class="fas fa-file-excel"></i>
-                        Download Excel
-                    </button>
+        <!-- Summary Cards -->
+        <div class="summary-cards">
+            <div class="summary-card">
+                <div class="summary-icon orders">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-shopping-cart"><circle cx="8" cy="21" r="1"/><circle cx="19" cy="21" r="1"/><path d="M2.05 2.05h2l2.66 12.42a2 2 0 0 0 2 1.58h9.78a2 2 0 0 0 1.95-1.57l1.65-7.43H5.12"/></svg>
+                </div>
+                <div>
+                    <div class="summary-value" id="totalOrders">0</div>
+                    <div class="summary-label">Total Orders</div>
                 </div>
             </div>
-
-            <!-- Filters Section -->
-            <div class="filters-section">
-                <div class="filter-row">
-                    <div class="filter-group">
-                        <label>Filter By:</label>
-                        <select id="periodFilter" class="form-select">
-                            <option value="weekly">Weekly</option>
-                            <option value="monthly">Monthly</option>
-                            <option value="annual">Annual</option>
-                            <option value="custom">Custom Range</option>
-                        </select>
-                    </div>
-                    
-                    <div class="filter-group custom-date-range" style="display: none;">
-                        <label>Start Date:</label>
-                        <input type="date" id="startDate" class="form-input">
-                    </div>
-                    
-                    <div class="filter-group custom-date-range" style="display: none;">
-                        <label>End Date:</label>
-                        <input type="date" id="endDate" class="form-input">
-                    </div>
-                    
-                    <div class="filter-group">
-                        <label>Status:</label>
-                        <select id="statusFilter" class="form-select">
-                            <option value="">All Status</option>
-                            <option value="Placed">Placed</option>
-                            <option value="Cancelled">Cancelled</option>
-                            <option value="Return Approved">Return Approved</option>
-                            <option value="Delivered">Delivered</option>
-                        </select>
-                    </div>
-                    
-                    <button id="applyFilters" class="btn btn-primary">Apply Filters</button>
-                    <button id="clearFilters" class="btn btn-secondary">Clear</button>
+            <div class="summary-card">
+                <div class="summary-icon revenue">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-indian-rupee"><path d="M6 3h12"/><path d="M6 8h12"/><path d="m6 13 8.5 8"/><path d="M14 13H6c-2.5 0-5-2.5-5-5s2.5-5 5-5h12c2.5 0 5 2.5 5 5s-2.5 5-5 5H8"/></svg>
+                </div>
+                <div>
+                    <div class="summary-value" id="totalRevenue">₹0</div>
+                    <div class="summary-label">Total Revenue</div>
                 </div>
             </div>
-
-            <!-- Summary Cards -->
-            <div class="summary-cards">
-                <div class="summary-card">
-                    <div class="card-icon">
-                        <i class="fas fa-shopping-cart"></i>
-                    </div>
-                    <div class="card-content">
-                        <h3 id="totalOrders">0</h3>
-                        <p>Total Orders</p>
-                    </div>
+            <div class="summary-card">
+                <div class="summary-icon discount">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-percent"><line x1="19" x2="5" y1="5" y2="19"/><circle cx="6.5" cy="6.5" r="2.5"/><circle cx="17.5" cy="17.5" r="2.5"/></svg>
                 </div>
-                <div class="summary-card">
-                    <div class="card-icon">
-                        <i class="fas fa-rupee-sign"></i>
-                    </div>
-                    <div class="card-content">
-                        <h3 id="totalRevenue">₹0</h3>
-                        <p>Total Revenue</p>
-                    </div>
-                </div>
-                <div class="summary-card">
-                    <div class="card-icon">
-                        <i class="fas fa-percentage"></i>
-                    </div>
-                    <div class="card-content">
-                        <h3 id="totalDiscount">₹0</h3>
-                        <p>Total Discount</p>
-                    </div>
-                </div>
-                <div class="summary-card">
-                    <div class="card-icon">
-                        <i class="fas fa-undo"></i>
-                    </div>
-                    <div class="card-content">
-                        <h3 id="totalRefunds">₹0</h3>
-                        <p>Total Refunds</p>
-                    </div>
+                <div>
+                    <div class="summary-value" id="totalDiscount">₹0</div>
+                    <div class="summary-label">Total Discount</div>
                 </div>
             </div>
-
-            <!-- Sales Table -->
-            <div class="table-section">
-                <div class="table-header">
-                    <h3>Sales Data</h3>
-                    <div class="table-controls">
-                        <select id="itemsPerPage" class="form-select">
-                            <option value="10">10 per page</option>
-                            <option value="25">25 per page</option>
-                            <option value="50">50 per page</option>
-                            <option value="100">100 per page</option>
-                        </select>
-                    </div>
+            <div class="summary-card">
+                <div class="summary-icon refunds">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-undo-2"><path d="M9.14 14.24a5 5 0 0 0-4.73-4.73L3 10"/><path d="M21 12a9 9 0 0 0-9-9c-2.52 0-4.93 1-6.71 2.7L3 8"/><path d="M12 21a9 9 0 0 0 9-9c0-2.52-1-4.93-2.7-6.71L16 3"/></svg>
                 </div>
-                
-                <div class="table-container">
-                    <table class="sales-table">
-                        <thead>
-                            <tr>
-                                <th>Order ID</th>
-                                <th>Customer</th>
-                                <th>Date</th>
-                                <th>Items</th>
-                                <th>Payment Method</th>
-                                <th>Status</th>
-                                <th>Subtotal</th>
-                                <th>Discount</th>
-                                <th>Total</th>
-                                <th>Refunded</th>
-                            </tr>
-                        </thead>
-                        <tbody id="salesTableBody">
-                            <!-- Data will be populated by JavaScript -->
-                        </tbody>
-                    </table>
-                </div>
-                
-                <!-- Pagination -->
-                <div class="pagination-container">
-                    <div class="pagination-info">
-                        <span id="paginationInfo">Showing 0 to 0 of 0 entries</span>
-                    </div>
-                    <div class="pagination">
-                        <button id="prevPage" class="btn btn-outline" disabled>
-                            <i class="fas fa-chevron-left"></i>
-                        </button>
-                        <div id="pageNumbers" class="page-numbers">
-                            <!-- Page numbers will be generated by JavaScript -->
-                        </div>
-                        <button id="nextPage" class="btn btn-outline" disabled>
-                            <i class="fas fa-chevron-right"></i>
-                        </button>
-                    </div>
+                <div>
+                    <div class="summary-value" id="totalRefunds">₹0</div>
+                    <div class="summary-label">Total Refunds</div>
                 </div>
             </div>
+        </div>
 
-            <!-- Loading Spinner -->
-            <div id="loadingSpinner" class="loading-spinner" style="display: none;">
-                <div class="spinner"></div>
-                <p>Loading sales data...</p>
+        <!-- Sales Data Table -->
+        <div class="table-container">
+            <div class="table-header-controls">
+                <h3>Sales Data</h3>
+                <div class="items-per-page">
+                    <label for="itemsPerPage">Items per page:</label>
+                    <select id="itemsPerPage" class="items-per-page-select" onchange="applyFilters()">
+                        <option value="10">10</option>
+                        <option value="25">25</option>
+                        <option value="50">50</option>
+                        <option value="100">100</option>
+                    </select>
+                </div>
+            </div>
+            <table class="sales-table">
+                <thead>
+                    <tr>
+                        <th>Order ID</th>
+                        <th>Customer</th>
+                        <th>Date</th>
+                        <th>Items</th>
+                        <th>Payment Method</th>
+                        <th>Status</th>
+                        <th>Subtotal</th>
+                        <th>Discount</th>
+                        <th>Total</th>
+                        <th>Refunded</th>
+                    </tr>
+                </thead>
+                <tbody id="salesTableBody">
+                    <!-- Sales data will be loaded here -->
+                </tbody>
+            </table>
+        </div>
+
+        <!-- Pagination -->
+        <div class="pagination-container">
+            <div class="pagination-info" id="paginationInfo">
+                Showing 0 to 0 of 0 entries
+            </div>
+            <div class="pagination" id="paginationControls">
+                <!-- Pagination buttons will be loaded here -->
             </div>
         </div>
     </div>
 
-    <script>
-        // Global variables
-        let currentPage = 1;
-        let itemsPerPage = 10;
-        let totalItems = 0;
-        let salesData = [];
-        let filteredData = [];
+    <!-- Loading Spinner -->
+    <div id="loadingSpinner" class="loading-spinner">
+        <div class="spinner"></div>
+    </div>
 
-        // Initialize the page
-        document.addEventListener('DOMContentLoaded', function() {
-            initializePage();
-            setupEventListeners();
-            loadSalesData();
+    <script>
+        // Global state for filters and pagination
+        const currentFilters = {
+            period: "all",
+            startDate: "",
+            endDate: "",
+            status: "",
+            page: 1,
+            limit: 10,
+        };
+
+        document.addEventListener("DOMContentLoaded", () => {
+            initializeFiltersFromURL();
+            fetchSalesReportData();
+
+            document.getElementById("periodFilter").addEventListener("change", handlePeriodChange);
+            document.getElementById("itemsPerPage").addEventListener("change", applyFilters);
         });
 
-        function initializePage() {
-            // Set default dates
-            const today = new Date();
-            const weekAgo = new Date(today.getTime() - 7 * 24 * 60 * 60 * 1000);
-            
-            document.getElementById('endDate').value = today.toISOString().split('T')[0];
-            document.getElementById('startDate').value = weekAgo.toISOString().split('T')[0];
-        }
+        function initializeFiltersFromURL() {
+            const params = new URLSearchParams(window.location.search);
+            currentFilters.period = params.get("period") || "all";
+            currentFilters.startDate = params.get("startDate") || "";
+            currentFilters.endDate = params.get("endDate") || "";
+            currentFilters.status = params.get("status") || "";
+            currentFilters.page = parseInt(params.get("page")) || 1;
+            currentFilters.limit = parseInt(params.get("limit")) || 10;
 
-        function setupEventListeners() {
-            // Period filter change
-            document.getElementById('periodFilter').addEventListener('change', function() {
-                const customDateRange = document.querySelectorAll('.custom-date-range');
-                if (this.value === 'custom') {
-                    customDateRange.forEach(el => el.style.display = 'block');
-                } else {
-                    customDateRange.forEach(el => el.style.display = 'none');
-                    setDateRangeByPeriod(this.value);
-                }
-            });
+            // Set initial values to UI elements
+            document.getElementById("periodFilter").value = currentFilters.period;
+            document.getElementById("statusFilter").value = currentFilters.status;
+            document.getElementById("itemsPerPage").value = currentFilters.limit;
 
-            // Apply filters
-            document.getElementById('applyFilters').addEventListener('click', applyFilters);
-            
-            // Clear filters
-            document.getElementById('clearFilters').addEventListener('click', clearFilters);
-            
-            // Items per page change
-            document.getElementById('itemsPerPage').addEventListener('change', function() {
-                itemsPerPage = parseInt(this.value);
-                currentPage = 1;
-                renderTable();
-                renderPagination();
-            });
-
-            // Download buttons
-            document.getElementById('downloadPdf').addEventListener('click', downloadPDF);
-            document.getElementById('downloadExcel').addEventListener('click', downloadExcel);
-
-            // Pagination
-            document.getElementById('prevPage').addEventListener('click', () => {
-                if (currentPage > 1) {
-                    currentPage--;
-                    renderTable();
-                    renderPagination();
-                }
-            });
-
-            document.getElementById('nextPage').addEventListener('click', () => {
-                const totalPages = Math.ceil(totalItems / itemsPerPage);
-                if (currentPage < totalPages) {
-                    currentPage++;
-                    renderTable();
-                    renderPagination();
-                }
-            });
-
-            // Date validation
-            document.getElementById('startDate').addEventListener('change', validateDates);
-            document.getElementById('endDate').addEventListener('change', validateDates);
-        }
-
-        function setDateRangeByPeriod(period) {
-            const today = new Date();
-            const endDate = today.toISOString().split('T')[0];
-            let startDate;
-
-            switch(period) {
-                case 'weekly':
-                    startDate = new Date(today.getTime() - 7 * 24 * 60 * 60 * 1000);
-                    break;
-                case 'monthly':
-                    startDate = new Date(today.getTime() - 30 * 24 * 60 * 60 * 1000);
-                    break;
-                case 'annual':
-                    startDate = new Date(today.getTime() - 365 * 24 * 60 * 60 * 1000);
-                    break;
-                default:
-                    startDate = new Date(today.getTime() - 7 * 24 * 60 * 60 * 1000);
+            // Handle custom date range display
+            handlePeriodChange();
+            if (currentFilters.period === "custom") {
+                document.getElementById("startDate").value = currentFilters.startDate;
+                document.getElementById("endDate").value = currentFilters.endDate;
             }
-
-            document.getElementById('startDate').value = startDate.toISOString().split('T')[0];
-            document.getElementById('endDate').value = endDate;
         }
 
-        function validateDates() {
-            const startDate = new Date(document.getElementById('startDate').value);
-            const endDate = new Date(document.getElementById('endDate').value);
+        function handlePeriodChange() {
+            const period = document.getElementById("periodFilter").value;
+            const startDateGroup = document.getElementById("startDateGroup");
+            const endDateGroup = document.getElementById("endDateGroup");
 
-            if (startDate >= endDate) {
-                alert('End date must be greater than start date');
-                return false;
+            if (period === "custom") {
+                startDateGroup.style.display = "flex";
+                endDateGroup.style.display = "flex";
+            } else {
+                startDateGroup.style.display = "none";
+                endDateGroup.style.display = "none";
+                document.getElementById("startDate").value = "";
+                document.getElementById("endDate").value = "";
             }
-            return true;
         }
 
-        async function loadSalesData() {
+        async function fetchSalesReportData() {
+            showLoading();
             try {
-                showLoading(true);
-                const response = await axios.get('/admin/sales/report/data');
-                salesData = response.data.data || [];
-                filteredData = [...salesData];
-                totalItems = filteredData.length;
-                
-                updateSummaryCards();
-                renderTable();
-                renderPagination();
+                const params = new URLSearchParams();
+                params.append("period", currentFilters.period);
+                if (currentFilters.period === "custom") {
+                    params.append("startDate", currentFilters.startDate);
+                    params.append("endDate", currentFilters.endDate);
+                }
+                if (currentFilters.status) {
+                    params.append("status", currentFilters.status);
+                }
+                params.append("page", currentFilters.page);
+                params.append("limit", currentFilters.limit);
+
+                const response = await axios.get(`/admin/sales/report/data?${params.toString()}`);
+                console.log("Sales Report Data:", response.data);
+                const { data: orders, summary, pagination } = response.data;
+
+                updateSummaryCards(summary);
+                updateSalesTable(orders);
+                updatePagination(pagination);
+
             } catch (error) {
-                console.error('Error loading sales data:', error);
-                alert('Error loading sales data. Please try again.');
+                console.error("Error fetching sales report data:", error);
+                showToast("Failed to load sales report data.", "error");
             } finally {
-                showLoading(false);
+                hideLoading();
             }
         }
 
-        async function applyFilters() {
-            if (!validateDates()) return;
-
-            try {
-                showLoading(true);
-                
-                const filters = {
-                    period: document.getElementById('periodFilter').value,
-                    startDate: document.getElementById('startDate').value,
-                    endDate: document.getElementById('endDate').value,
-                    status: document.getElementById('statusFilter').value
-                };
-
-                const queryParams = new URLSearchParams();
-                Object.keys(filters).forEach(key => {
-                    if (filters[key]) queryParams.append(key, filters[key]);
-                });
-
-                const response = await axios.get(`/admin/sales/report/data?${queryParams.toString()}`);
-                filteredData = response.data.data || [];
-                totalItems = filteredData.length;
-                currentPage = 1;
-
-                updateSummaryCards();
-                renderTable();
-                renderPagination();
-                
-                // Update URL without page reload
-                window.history.pushState({}, '', `/admin/sales/report/data?${queryParams.toString()}`);
-            } catch (error) {
-                console.error('Error applying filters:', error);
-                alert('Error applying filters. Please try again.');
-            } finally {
-                showLoading(false);
-            }
+        function updateSummaryCards(summary) {
+            document.getElementById("totalOrders").textContent = summary.totalOrders.toLocaleString();
+            document.getElementById("totalRevenue").textContent = `₹${summary.totalRevenue.toLocaleString()}`;
+            document.getElementById("totalDiscount").textContent = `₹${summary.totalDiscount.toLocaleString()}`;
+            document.getElementById("totalRefunds").textContent = `₹${summary.totalRefunds.toLocaleString()}`;
         }
 
-        function clearFilters() {
-            document.getElementById('periodFilter').value = 'weekly';
-            document.getElementById('statusFilter').value = '';
-            document.querySelectorAll('.custom-date-range').forEach(el => el.style.display = 'none');
-            
-            setDateRangeByPeriod('weekly');
-            currentPage = 1;
-            
-            filteredData = [...salesData];
-            totalItems = filteredData.length;
-            
-            updateSummaryCards();
-            renderTable();
-            renderPagination();
-            
-            window.history.pushState({}, '', '/admin/sales-report');
-        }
+        function updateSalesTable(orders) {
+            const tableBody = document.getElementById("salesTableBody");
+            tableBody.innerHTML = ""; // Clear existing rows
 
-        function updateSummaryCards() {
-            const totalOrders = filteredData.length;
-            const totalRevenue = filteredData.reduce((sum, order) => sum + order.totalAmount, 0);
-            const totalDiscount = filteredData.reduce((sum, order) => sum + order.discount, 0);
-            const totalRefunds = filteredData.reduce((sum, order) => sum + order.refundedAmount, 0);
-
-            document.getElementById('totalOrders').textContent = totalOrders.toLocaleString();
-            document.getElementById('totalRevenue').textContent = `₹${totalRevenue.toLocaleString()}`;
-            document.getElementById('totalDiscount').textContent = `₹${totalDiscount.toLocaleString()}`;
-            document.getElementById('totalRefunds').textContent = `₹${totalRefunds.toLocaleString()}`;
-        }
-
-        function renderTable() {
-            const tbody = document.getElementById('salesTableBody');
-            const startIndex = (currentPage - 1) * itemsPerPage;
-            const endIndex = startIndex + itemsPerPage;
-            const pageData = filteredData.slice(startIndex, endIndex);
-
-            tbody.innerHTML = '';
-
-            if (pageData.length === 0) {
-                tbody.innerHTML = '<tr><td colspan="10" class="no-data">No sales data found</td></tr>';
+            if (orders.length === 0) {
+                tableBody.innerHTML = `<tr><td colspan="10" class="no-data">No sales data found for the selected filters.</td></tr>`;
                 return;
             }
 
-            pageData.forEach(order => {
-                const row = document.createElement('tr');
-                row.innerHTML = `
-                    <td class="order-id">${order.orderId}</td>
-                    <td class="customer-name">${order.shippingAddress.fullName}</td>
-                    <td class="order-date">${new Date(order.createdAt).toLocaleDateString()}</td>
-                    <td class="items-count">${order.items.length}</td>
-                    <td class="payment-method">
-                        <span class="payment-badge ${order.paymentMethod.toLowerCase()}">${order.paymentMethod}</span>
-                    </td>
-                    <td class="order-status">
-                        <span class="status-badge ${order.orderStatus.toLowerCase().replace(' ', '-')}">${order.orderStatus}</span>
-                    </td>
-                    <td class="amount">₹${order.subtotal.toLocaleString()}</td>
-                    <td class="discount">₹${order.discount.toLocaleString()}</td>
-                    <td class="total">₹${order.totalAmount.toLocaleString()}</td>
-                    <td class="refunded">₹${order.refundedAmount.toLocaleString()}</td>
+            orders.forEach(order => {
+                const row = `
+                    <tr>
+                        <td>#${order.orderId}</td>
+                        <td>${order.shippingAddress.fullName}</td>
+                        <td>${new Date(order.createdAt).toLocaleDateString()}</td>
+                        <td>${order.items.length}</td>
+                        <td>${order.paymentMethod}</td>
+                        <td>
+                            <span class="status-badge status-${order.orderStatus.toLowerCase().replace(/\s+/g, '-')}"
+                                >${order.orderStatus}</span
+                            ><br>
+                            <span class="payment-status ${order.paymentStatus.toLowerCase()}"
+                                >${order.paymentStatus}</span
+                            >
+                        </td>
+                        <td>₹${order.subtotal.toLocaleString()}</td>
+                        <td>₹${order.discount.toLocaleString()}</td>
+                        <td>₹${order.totalAmount.toLocaleString()}</td>
+                        <td>₹${order.refundedAmount.toLocaleString()}</td>
+                    </tr>
                 `;
-                tbody.appendChild(row);
+                tableBody.insertAdjacentHTML("beforeend", row);
             });
         }
 
-        function renderPagination() {
-            const totalPages = Math.ceil(totalItems / itemsPerPage);
-            const startItem = totalItems === 0 ? 0 : (currentPage - 1) * itemsPerPage + 1;
-            const endItem = Math.min(currentPage * itemsPerPage, totalItems);
+        function updatePagination(pagination) {
+            const paginationInfo = document.getElementById("paginationInfo");
+            const paginationControls = document.getElementById("paginationControls");
 
-            // Update pagination info
-            document.getElementById('paginationInfo').textContent = 
-                `Showing ${startItem} to ${endItem} of ${totalItems} entries`;
+            const startEntry = (pagination.currentPage - 1) * pagination.itemsPerPage + 1;
+            const endEntry = Math.min(pagination.currentPage * pagination.itemsPerPage, pagination.totalItems);
+            paginationInfo.textContent = `Showing ${startEntry} to ${endEntry} of ${pagination.totalItems} entries`;
 
-            // Update navigation buttons
-            document.getElementById('prevPage').disabled = currentPage === 1;
-            document.getElementById('nextPage').disabled = currentPage === totalPages || totalPages === 0;
+            paginationControls.innerHTML = ""; // Clear existing buttons
 
-            // Generate page numbers
-            const pageNumbers = document.getElementById('pageNumbers');
-            pageNumbers.innerHTML = '';
+            if (pagination.currentPage > 1) {
+                paginationControls.insertAdjacentHTML("beforeend", `<button class="pagination-btn" onclick="goToPage(${pagination.currentPage - 1})">Previous</button>`);
+            }
 
-            if (totalPages <= 7) {
-                for (let i = 1; i <= totalPages; i++) {
-                    createPageButton(i, pageNumbers);
-                }
-            } else {
-                createPageButton(1, pageNumbers);
-                
-                if (currentPage > 4) {
-                    pageNumbers.appendChild(createEllipsis());
-                }
+            // Display a range of pages around the current page
+            const maxPagesToShow = 5;
+            let startPage = Math.max(1, pagination.currentPage - Math.floor(maxPagesToShow / 2));
+            let endPage = Math.min(pagination.totalPages, startPage + maxPagesToShow - 1);
 
-                const start = Math.max(2, currentPage - 2);
-                const end = Math.min(totalPages - 1, currentPage + 2);
+            if (endPage - startPage + 1 < maxPagesToShow) {
+                startPage = Math.max(1, endPage - maxPagesToShow + 1);
+            }
 
-                for (let i = start; i <= end; i++) {
-                    createPageButton(i, pageNumbers);
-                }
+            for (let i = startPage; i <= endPage; i++) {
+                const activeClass = i === pagination.currentPage ? "active" : "";
+                paginationControls.insertAdjacentHTML("beforeend", `<button class="pagination-btn ${activeClass}" onclick="goToPage(${i})">${i}</button>`);
+            }
 
-                if (currentPage < totalPages - 3) {
-                    pageNumbers.appendChild(createEllipsis());
-                }
-
-                if (totalPages > 1) {
-                    createPageButton(totalPages, pageNumbers);
-                }
+            if (pagination.currentPage < pagination.totalPages) {
+                paginationControls.insertAdjacentHTML("beforeend", `<button class="pagination-btn" onclick="goToPage(${pagination.currentPage + 1})">Next</button>`);
             }
         }
 
-        function createPageButton(pageNum, container) {
-            const button = document.createElement('button');
-            button.className = `page-btn ${pageNum === currentPage ? 'active' : ''}`;
-            button.textContent = pageNum;
-            button.addEventListener('click', () => {
-                currentPage = pageNum;
-                renderTable();
-                renderPagination();
-            });
-            container.appendChild(button);
+        function applyFilters() {
+            currentFilters.period = document.getElementById("periodFilter").value;
+            currentFilters.startDate = document.getElementById("startDate").value;
+            currentFilters.endDate = document.getElementById("endDate").value;
+            currentFilters.status = document.getElementById("statusFilter").value;
+            currentFilters.limit = parseInt(document.getElementById("itemsPerPage").value);
+            currentFilters.page = 1; // Reset to first page on filter change
+
+            updateURLAndFetch();
         }
 
-        function createEllipsis() {
-            const span = document.createElement('span');
-            span.className = 'page-ellipsis';
-            span.textContent = '...';
-            return span;
+        function clearFilters() {
+            document.getElementById("periodFilter").value = "all";
+            document.getElementById("startDate").value = "";
+            document.getElementById("endDate").value = "";
+            document.getElementById("statusFilter").value = "";
+            document.getElementById("itemsPerPage").value = "10";
+            
+            currentFilters.period = "all";
+            currentFilters.startDate = "";
+            currentFilters.endDate = "";
+            currentFilters.status = "";
+            currentFilters.limit = 10;
+            currentFilters.page = 1;
+
+            handlePeriodChange(); // Hide custom date inputs
+            updateURLAndFetch();
         }
 
-        async function downloadPDF() {
-            try {
-                showLoading(true);
-                const filters = getCurrentFilters();
-                const queryParams = new URLSearchParams(filters);
-                
-                const response = await axios.get(`/admin/sales/report/download/pdf?${queryParams.toString()}`, {
-                    responseType: 'blob'
-                });
-                
-                const url = window.URL.createObjectURL(response.data);
-                const a = document.createElement('a');
-                a.href = url;
-                a.download = `sales-report-${new Date().toISOString().split('T')[0]}.pdf`;
-                document.body.appendChild(a);
-                a.click();
-                window.URL.revokeObjectURL(url);
-                document.body.removeChild(a);
-            } catch (error) {
-                console.error('Error downloading PDF:', error);
-                alert('Error downloading PDF. Please try again.');
-            } finally {
-                showLoading(false);
+        function goToPage(page) {
+            currentFilters.page = page;
+            updateURLAndFetch();
+        }
+
+        function updateURLAndFetch() {
+            const params = new URLSearchParams();
+            params.append("period", currentFilters.period);
+            if (currentFilters.period === "custom") {
+                if (currentFilters.startDate) params.append("startDate", currentFilters.startDate);
+                if (currentFilters.endDate) params.append("endDate", currentFilters.endDate);
+            }
+            if (currentFilters.status) params.append("status", currentFilters.status);
+            params.append("page", currentFilters.page);
+            params.append("limit", currentFilters.limit);
+
+            const newUrl = `${window.location.pathname}?${params.toString()}`;
+            window.history.pushState({ path: newUrl }, "", newUrl); // Update URL without full reload
+            fetchSalesReportData(); // Fetch data for the new state
+        }
+
+        function downloadReport(type) {
+            const params = new URLSearchParams();
+            params.append("period", currentFilters.period);
+            if (currentFilters.period === "custom") {
+                if (currentFilters.startDate) params.append("startDate", currentFilters.startDate);
+                if (currentFilters.endDate) params.append("endDate", currentFilters.endDate);
+            }
+            if (currentFilters.status) params.append("status", currentFilters.status);
+
+            if (type === 'pdf') {
+                window.location.href = `/admin/sales/report/download/pdf?${params.toString()}`;
+            } else if (type === 'excel') {
+                window.location.href = `/admin/sales/report/download/excel?${params.toString()}`;
             }
         }
 
-        async function downloadExcel() {
-            try {
-                showLoading(true);
-                const filters = getCurrentFilters();
-                const queryParams = new URLSearchParams(filters);
-                
-                const response = await axios.get(`/admin/sales/report/download/excel?${queryParams.toString()}`, {
-                    responseType: 'blob'
-                });
-                
-                if (!response.data) throw new Error('Failed to generate Excel');
-                
-                const url = window.URL.createObjectURL(response.data);
-                const a = document.createElement('a');
-                a.href = url;
-                a.download = `sales-report-${new Date().toISOString().split('T')[0]}.xlsx`;
-                document.body.appendChild(a);
-                a.click();
-                window.URL.revokeObjectURL(url);
-                document.body.removeChild(a);
-            } catch (error) {
-                console.error('Error downloading Excel:', error);
-                alert('Error downloading Excel. Please try again.');
-            } finally {
-                showLoading(false);
-            }
+        // Utility functions (re-using from previous context)
+        function showLoading() {
+            document.getElementById("loadingSpinner").style.display = "flex";
         }
 
-        function getCurrentFilters() {
-            return {
-                period: document.getElementById('periodFilter').value,
-                startDate: document.getElementById('startDate').value,
-                endDate: document.getElementById('endDate').value,
-                status: document.getElementById('statusFilter').value
+        function hideLoading() {
+            document.getElementById("loadingSpinner").style.display = "none";
+        }
+
+        function showToast(message, type = "info") {
+            const toast = document.createElement("div");
+            toast.className = `toast ${type}`;
+
+            const iconMap = {
+                success: "✓",
+                error: "✕",
+                warning: "⚠",
+                info: "ℹ",
             };
-        }
 
-        function showLoading(show) {
-            document.getElementById('loadingSpinner').style.display = show ? 'flex' : 'none';
-        }
+            toast.innerHTML = `
+                <span class="toast-icon">${iconMap[type] || "ℹ"}</span>
+                <span class="toast-message">${message}</span>
+            `;
 
-        // Initialize with URL parameters if present
-        window.addEventListener('load', function() {
-            const urlParams = new URLSearchParams(window.location.search);
-            
-            if (urlParams.has('period')) {
-                document.getElementById('periodFilter').value = urlParams.get('period');
-            }
-            if (urlParams.has('startDate')) {
-                document.getElementById('startDate').value = urlParams.get('startDate');
-            }
-            if (urlParams.has('endDate')) {
-                document.getElementById('endDate').value = urlParams.get('endDate');
-            }
-            if (urlParams.has('status')) {
-                document.getElementById('statusFilter').value = urlParams.get('status');
-            }
-            
-            if (urlParams.toString()) {
-                applyFilters();
-            }
-        });
+            document.getElementById("toastContainer").appendChild(toast);
+
+            setTimeout(() => {
+                if (toast.parentElement) {
+                    toast.remove();
+                }
+            }, 5000);
+        }
     </script>
+    <!-- Toast Container (ensure this element exists in your main layout or here) -->
+    <div id="toastContainer" class="toast-container"></div>
 </body>
 </html>
