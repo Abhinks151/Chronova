@@ -545,7 +545,7 @@
                                 <i class="fas fa-download"></i> Invoice
                             </button>
                             ${
-                              order.paymentMethod === "ONLINE" && !order.isPaid
+                              order.paymentMethod === "ONLINE" && !order.isPaid && order.orderSatatus === "Deleivered"
                                 ? `
                                 <button onclick="retryPayment('${order.orderId}')" class="btn btn-primary">
                                     Retry Payment

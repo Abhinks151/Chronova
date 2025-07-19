@@ -10,6 +10,7 @@ import {
   updateItemPaymentStatus,
   getOrderPaymentStatusController,
   rejectReturn,
+  getOrdersData,
 } from "../../controllers/adminDashboard/orderController.js"
 import { authenticateAdmin } from "../../middlewares/adminAuthMiddleware.js"
 
@@ -17,6 +18,7 @@ const adminOrderRouter = express.Router()
 
 
 adminOrderRouter.get("/orders/", authenticateAdmin, getOrders)
+adminOrderRouter.get("/orders/data", authenticateAdmin, getOrdersData)
 adminOrderRouter.get("/orders/:orderId", authenticateAdmin, getOrderDetails)
 adminOrderRouter.put("/orders/:orderId/status", authenticateAdmin, updateOrderStatus)
 adminOrderRouter.put("/orders/:orderId/items/:itemId/status", authenticateAdmin, updateItemStatus)

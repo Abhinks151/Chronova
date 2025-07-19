@@ -1,67 +1,115 @@
-// Sample dashboard data - replace this with your database queries
- const dashboardData = {
-    // Stats data
-    totalUsers: '40,689',
-    userGrowth: '8.5',
-    totalOrders: '10293',
-    orderGrowth: '1.3',
-    totalSales: '89,000',
-    salesDecline: '4.3',
-    
-    // Sales chart data
-    salesData: {
-        labels: ['5k', '10k', '15k', '20k', '25k', '30k', '35k', '40k', '45k', '50k', '55k', '60k'],
-        values: [20, 25, 45, 50, 35, 40, 55, 85, 40, 45, 55, 50, 65, 75, 60, 55, 50, 45, 25, 20, 45, 65, 55, 50, 45]
-    },
-    
-    // Orders table data
-    orders: [
-        {
-            id: '00001',
-            name: 'Christine Brooks',
-            address: '089 Kutch Green Apt. 448',
-            date: '04 Sep 2019',
-            type: 'Men',
-            status: 'Completed'
-        },
-        {
-            id: '00002',
-            name: 'Rosie Pearson',
-            address: '979 Immanuel Ferry Suite 526',
-            date: '28 May 2019',
-            type: 'Luxury',
-            status: 'Processing'
-        },
-        {
-            id: '00003',
-            name: 'Darrell Caldwell',
-            address: '8587 Frida Ports',
-            date: '23 Nov 2019',
-            type: 'Women',
-            status: 'Rejected'
-        }
-    ]
-};
+import { Order } from "../models/order.js";
+import { User } from "../models/userModels.js";
 
-// Dashboard controller function
-export const getDashboard = (req, res) => {
-    try {
-        // In a real application, you would fetch data from your database here
-        // Example:
-        // const users = await User.countDocuments();
-        // const orders = await Order.find().limit(10);
-        // const salesData = await getSalesData();
-        
-        res.render('Layouts/adminDashboard/adminDashboard', {
-            title: 'Dashboard - Chronova',
-            dashboardData: dashboardData
-        });
-    } catch (error) {
-        console.error('Dashboard error:', error);
-        res.status(500).render('error', {
-            title: 'Error',
-            message: 'Something went wrong loading the dashboard'
-        });
-    }
-};
+export const getDashboard = async (req, res) => {
+  try {
+    const now = new Date();
+    const startOfThisMonth = new Date(now.getFullYear(), now.getMonth(), 1);
+    const startOfLastMonth = new Date(now.getFullYear(), now.getMonth() - 1, 1);
 
+    // --- Total Users ---
+    const totalUsers = await User.countDocuments();
+    const usersThisMonth = await User.countDocuments({ createdAt: { $gte: startOfThisMonth } });
+    const usersLastMonth = await User.countDocuments({
+      createdAt: { $gte: startOfLastMonth, $lt: startOfThisMonth },
+    });
+    const userGrowth =
+      usersLastMonth === 0
+        ? 100
+        : (((usersThisMonth - usersLastMonth) / usersLastMonth) * 100).toFixed(1);
+
+    // --- Total Orders ---
+    const totalOrders = await Order.countDocuments();
+    const ordersThisMonth = await Order.countDocuments({ createdAt: { $gte: startOfThisMonth } });
+    const ordersLastMonth = await Order.countDocuments({
+      createdAt: { $gte: startOfLastMonth, $lt: startOfThisMonth },
+    });
+    const orderGrowth =
+      ordersLastMonth === 0
+        ? 100
+        : (((ordersThisMonth - ordersLastMonth) / ordersLastMonth) * 100).toFixed(1);
+
+    // --- Total Sales (Only Paid Orders) ---
+    const totalSalesAgg = await Order.aggregate([
+      { $match: { paymentStatus: "Paid" } },
+      { $group: { _id: null, total: { $sum: "$totalAmount" } } },
+    ]);
+    const totalSales = totalSalesAgg[0]?.total || 0;
+
+    const salesThisMonthAgg = await Order.aggregate([
+      {
+        $match: {
+          paymentStatus: "Paid",
+          createdAt: { $gte: startOfThisMonth },
+        },
+      },
+      { $group: { _id: null, total: { $sum: "$totalAmount" } } },
+    ]);
+    const salesLastMonthAgg = await Order.aggregate([
+      {
+        $match: {
+          paymentStatus: "Paid",
+          createdAt: { $gte: startOfLastMonth, $lt: startOfThisMonth },
+        },
+      },
+      { $group: { _id: null, total: { $sum: "$totalAmount" } } },
+    ]);
+    const salesThisMonth = salesThisMonthAgg[0]?.total || 0;
+    const salesLastMonth = salesLastMonthAgg[0]?.total || 0;
+    const salesDecline =
+      salesLastMonth === 0
+        ? 0
+        : (((salesLastMonth - salesThisMonth) / salesLastMonth) * 100).toFixed(1);
+
+    // --- Sales Chart Data (Recent 25 Paid Orders) ---
+    const recentSales = await Order.find({ paymentStatus: "Paid" })
+      .sort({ createdAt: -1 })
+      .limit(25)
+      .select("totalAmount createdAt")
+      .lean();
+
+    const salesChartData = {
+      labels: recentSales.map((_, i) => `${(i + 1) * 2}k`),
+      values: recentSales.map((order) => Math.floor(order.totalAmount / 1000)),
+    };
+
+    // --- Recent Orders Table (Last 10 Orders) ---
+    const recentOrders = await Order.find({})
+      .sort({ createdAt: -1 })
+      .limit(10)
+      .populate("userId")
+      .lean();
+
+    const orders = recentOrders.map((order) => ({
+      id: order.orderId,
+      name: order.userId?.firstname || "Guest",
+      address: order.shippingAddress?.addressLine || "No address",
+      date: order.createdAt.toLocaleDateString("en-GB"),
+      type: order.items[0]?.brand || "General",
+      status: order.orderStatus,
+    }));
+
+    // --- Final Data Assembly ---
+    const dashboardData = {
+      totalUsers: totalUsers.toLocaleString(),
+      userGrowth,
+      totalOrders: totalOrders.toLocaleString(),
+      orderGrowth,
+      totalSales: totalSales.toLocaleString(),
+      salesDecline,
+      salesData: salesChartData,
+      orders,
+    };
+
+    res.render("Layouts/adminDashboard/adminDashboard", {
+      title: "Dashboard - Chronova",
+      dashboardData,
+    });
+  } catch (error) {
+    console.error("Dashboard error:", error);
+    res.status(500).render("error", {
+      title: "Error",
+      message: "Something went wrong loading the dashboard",
+    });
+  }
+};
