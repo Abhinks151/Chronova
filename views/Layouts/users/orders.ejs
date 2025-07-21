@@ -309,7 +309,7 @@
     <div id="toast-container" class="toast-container"></div>
 
     <!-- Scripts -->
-     <script src="https://checkout.razorpay.com/v1/checkout.js"></script>
+    <script src="https://checkout.razorpay.com/v1/checkout.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/axios/1.6.0/axios.min.js"></script>
     <script>
       // Order Management Frontend Logic
@@ -545,7 +545,9 @@
                                 <i class="fas fa-download"></i> Invoice
                             </button>
                             ${
-                              order.paymentMethod === "ONLINE" && !order.isPaid && order.orderSatatus === "Deleivered"
+                              order.paymentMethod === "ONLINE" &&
+                              !order.isPaid &&
+                              order.orderSatatus === "Deleivered"
                                 ? `
                                 <button onclick="retryPayment('${order.orderId}')" class="btn btn-primary">
                                     Retry Payment
@@ -619,10 +621,7 @@
                 }
               } catch (err) {
                 console.error("Verification error:", err);
-                showToast(
-                  "Something went wrong during verification.",
-                  "error"
-                );
+                showToast("Something went wrong during verification.", "error");
               }
             },
             prefill: {
@@ -644,10 +643,7 @@
           rzp.open();
         } catch (err) {
           console.error("Retry error:", err);
-          showToast(
-            "Unable to initiate retry. Try again later.",
-            "error"
-          );
+          showToast("Unable to initiate retry. Try again later.", "error");
         }
       }
 
@@ -657,7 +653,7 @@
         const statusInfo = statusConfig[rawStatus] || statusConfig["Placed"];
         const canCancel = rawStatus === "Placed";
         const canReturn = rawStatus === "Delivered" && !item.returnReason;
-
+        // console.log(item);
         return `
                 <div class="product-item">
                     <div class="product-info">
@@ -678,7 +674,7 @@
                                 <span class="product-quantity"><i class="fas fa-cubes"></i> Qty: ${
                                   item.quantity
                                 }</span>
-                                <span class="product-price"><i class="fas fa-rupee-sign"></i> ₹${item.price?.toLocaleString()} each</span>
+                                <span class="product-price"><i class="fas fa-rupee-sign"></i> ₹${item.finalPrice?.toLocaleString()} each</span>
                             </div>
                             ${
                               item.returnReason
@@ -740,7 +736,7 @@
                             </span>
                         </div>
                         <div class="product-total">
-                            ₹${(item.price * item.quantity).toLocaleString()}
+                            ₹${(item.finalPrice * item.quantity).toLocaleString()}
                         </div>
                         <div class="item-actions">
                             ${
