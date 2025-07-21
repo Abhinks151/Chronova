@@ -547,9 +547,9 @@
                             ${
                               order.paymentMethod === "ONLINE" &&
                               !order.isPaid &&
-                              order.orderSatatus === "Deleivered"
+                              order.orderStatus === "Placed"
                                 ? `
-                                <button onclick="retryPayment('${order.orderId}')" class="btn btn-primary">
+                                <button onclick="retryPayment('${order.orderId}')" class="action-btn download-btn">
                                     Retry Payment
                                 </button>
                             `

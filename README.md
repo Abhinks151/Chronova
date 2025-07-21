@@ -1,6 +1,6 @@
 # Chronova – E-Commerce Watch Store
 
-Chronova is a full-featured e-commerce platform built for selling watches, designed with modular architecture, robust authentication, and dynamic user/admin functionality. Built using **Node.js**, **Express**, **MongoDB**, and **EJS**, it offers an end-to-end solution covering everything from product management to cart, checkout, and order processing.
+Chronova is a full-featured e-commerce platform for selling watches, crafted with scalable architecture, complete authentication flow, and robust admin/user-side functionalities. Built using **Node.js**, **Express**, **MongoDB**, and **EJS**, it delivers a seamless shopping experience from browsing to order completion.
 
 ---
 
@@ -13,9 +13,9 @@ Chronova is a full-featured e-commerce platform built for selling watches, desig
 - **Email/OTP:** Nodemailer  
 - **Image Hosting:** Cloudinary  
 - **Payment Gateway:** Razorpay  
-- **Logging:** Winston with Daily Rotate  
-- **PDF/Excel Report:** Puppeteer, ExcelJS  
-- **Others:** Cropper.js, Pincode API, MongoDB Transactions
+- **Logging:** Winston with Daily Rotate File  
+- **Reports:** Puppeteer (PDF), ExcelJS (Excel)  
+- **Extras:** Cropper.js, Pincode API, MongoDB Transactions
 
 ---
 
@@ -23,36 +23,36 @@ Chronova is a full-featured e-commerce platform built for selling watches, desig
 
 ### 👤 User-Side
 
-- **Authentication**
-  - Email OTP verification (signup, login, password reset)
-  - Google OAuth login
-  - Session-based login/logout
+- **Authentication & Security**
+  - OTP verification (signup, login, password reset)
+  - Google OAuth (Passport.js)
+  - Secure session management
+  - Razorpay payment verification (HMAC + Webhook fallback)
+  - Route protection & data sanitization
 
 - **Profile & Account**
-  - Edit profile & email (with OTP verification)
-  - Profile image upload (Cropper.js)
-  - Address management with pincode auto-fill
-  - Single default address logic
+  - Edit name, email (with verification), and profile image (Cropper.js)
+  - Manage multiple addresses with pincode auto-fill
+  - Set default address
+  - Email and password update with OTP verification
   - Wallet for refund tracking
-  - Referral code support during registration
+  - Referral code support on registration
 
 - **Shopping Experience**
-  - Product search, sort, filter (by name, brand, category)
-  - Wishlist (add/remove), cart (add/remove/update) with real-time sync
-  - Product zoom support
-  - Handles blocked/deleted products in UI
-  - Product/category offers (best offer auto-applied)
-  - Wishlist and cart mutual exclusivity
+  - Product search, filter, and sort
+  - Wishlist (add/remove), Cart (add/remove/update)
+  - Wishlist <-> Cart mutual exclusivity logic
+  - Product zoom on detail page
+  - Handles blocked/deleted products gracefully
+  - Category/Product-level offers (auto-applied best price)
 
 - **Checkout & Orders**
   - Address & payment method selection (COD / Razorpay)
-  - Razorpay integration with retry flow for failed transactions
-  - Secure payment verification via HMAC + fallback via webhook
-  - Coupon apply/remove with expiry and usage checks
-  - Order confirmation, failure, and retry flows
-  - Cancel individual items or entire order with reason
-  - Return flow post delivery with mandatory reason
-  - Refunds to wallet on approved returns/cancellations
+  - Payment retry logic after Razorpay failure
+  - Coupon apply/remove with validation
+  - Cancel order (full or item-wise) with reason
+  - Return flow post delivery with reason input
+  - Auto refund to wallet for valid returns/cancellations
   - Order success/failure pages with redirection options
 
 ---
@@ -60,75 +60,81 @@ Chronova is a full-featured e-commerce platform built for selling watches, desig
 ### 🛠️ Admin-Side
 
 - **User Management**
-  - View users, block/unblock accounts
+  - View, block/unblock users
 
-- **Category & Product Management**
-  - Add, edit, delete, block categories/products
-  - Pagination, search, filtering
-  - Category and product uniqueness enforced
-  - Multi-image upload with Cloudinary
-  - Edit forms with pre-filled data
-  - Offer management (category/product level)
+- **Category Management**
+  - Add/edit/delete categories with pagination & search
+  - Validation & duplication checks
+  - Convert constants to dynamic category collection
+  - Sync changes with product module
+
+- **Product Management**
+  - Add/edit/delete products
+  - Populate edit form with previous data
+  - Upload multiple images (Cloudinary)
+  - Handle blocked/deleted category gracefully
+  - Validate all input fields
+  - Product uniqueness enforced
 
 - **Order Management**
-  - Order listing with filters, pagination, and search
-  - View per-product order status
-  - Cancel/return handling and status updates
-  - Refund handling via wallet
+  - List all orders with filters & pagination
+  - View per-item order status
+  - Cancel/return handling + restock
   - Razorpay payment status tracking
-  - Stock increment on cancel/return
-
-- **Inventory Control**
-  - Product-wise stock update
-  - Stock registry tracking
-  - Low/out-of-stock filters
-  - Prevent race conditions using MongoDB transactions
+  - Admin-side status update and refund processing
+  - Session-based MongoDB transactions
 
 - **Coupons & Offers**
-  - Create/delete coupons with validations
-  - Auto-apply the best offer (category vs product)
-  - Prevent coupon reuse, enforce expiry rules
-  - Track coupon usage per user
+  - Create/delete coupons
+  - Apply coupons with expiration, reuse protection
+  - Category/Product-based offers
+  - Referral-based offers
+  - Auto-apply best discount logic
+  - Usage log tracking per user
 
 - **Sales Report**
-  - Generate reports by day, week, month, or custom date range
-  - Show total sales, order count, discounts, coupon deductions
-  - PDF and Excel download supported
-  - Filter reports based on order status or date range
+  - Filter reports by daily, weekly, monthly, or custom range
+  - Summary metrics (sales, discounts, coupon usage)
+  - Download PDF (Puppeteer) or Excel (ExcelJS)
+  - Query-based backend filtering
+  - Chart-based dashboard (Monthly, Yearly etc.)
+  - Top 10 brands/products/categories
 
 ---
 
 ## 🔐 Security & Validation
 
-- Manual input validation (server-side and client-side)
-- OTP and session expiration checks
-- Route protection for user/admin access
-- Razorpay signature verification for secure payments
-- Sanitize all coupon/address IDs and payment input
-- Price validation server-side (not trusting frontend)
-- Handles blocked/deleted categories and products properly
+- OTP/session expiry check
+- Proper status codes for every route
+- Backend validation for user/product/coupon
+- Coupon and address ID sanitization
+- Quantity and price validation against DB
+- Handle deleted/blocked data across all modules
+- Race condition prevention on stock updates using MongoDB transactions
 
 ---
 
 ## 📦 Project Structure Highlights
 
-- Modular architecture (`controllers`, `routes`, `services`, `models`)
-- Internal JS in EJS, separate CSS files
-- Proper use of middleware, clean folder structure
-- MongoDB transactions used in critical flows (order, coupon, stock)
-- Centralized error handling with HTTP status codes
-- Reusable services shared across user/admin routes
+- Modular folder structure: `controllers`, `routes`, `services`, `models`, `middlewares`
+- Internal scripts in EJS pages
+- Reusable services across modules
+- Error handling middleware
+- Logger with daily rotation and cleanup
+- Clean, maintainable architecture for scalability
 
 ---
 
 ## 📈 Development Status
 
-✅ Core functionality completed  
-✅ Razorpay payment flow with fallback implemented  
-✅ Offers, coupon logic, and transaction handling done  
-✅ Admin-side sales reporting & export  
-🧪 Ongoing: Wallet UI and analytics review system  
-🎯 **Next Goal:** Redesign order management pages and admin dashboard  
+✅ Complete user + admin modules  
+✅ End-to-end Razorpay integration with fallback  
+✅ OTP-based auth flow, Google OAuth  
+✅ Admin sales report export (PDF/Excel)  
+✅ Robust stock/coupon/order validation using MongoDB transactions  
+✅ Wishlist, Cart, Return & Refund Logic  
+🧪 Wallet & Refund display (UI phase pending)  
+🎯 **Next Goal:** Refactor order management layout + analytics visualization
 
 ---
 
@@ -142,5 +148,5 @@ Aspiring Software Engineer | Full-stack Developer
 
 ## 📌 Note
 
-This project is intended for learning purposes.  
-Contributions, suggestions, and constructive code reviews are welcome!
+This project is built as a learning + portfolio piece.  
+Feedback, issues, and pull requests are always welcome!
