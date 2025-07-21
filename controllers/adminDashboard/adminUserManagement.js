@@ -1,5 +1,5 @@
 import HttpStatusCode from "../../utils/httpStatusCode.js";
-import { getPaginatedUsers } from '../../servises/adminUserManagement/paginationQuires.js';
+import { getPaginatedUsers } from '../../services/adminUserManagement/paginationQuires.js';
 import { User } from "../../models/userModels.js";
 
 

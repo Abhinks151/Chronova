@@ -5,7 +5,7 @@ import {
   getAllActiveCouponsService,
   getCouponManagemntPageDataService,
   toggleActiveStatusService,
-} from "../../servises/offers/adminCouponServices.js";
+} from "../../services/offers/adminCouponServices.js";
 import httpStatusCOde from "../../utils/httpStatusCode.js";
 import { logger } from "../../config/logger.js";
 

@@ -37,11 +37,11 @@ export const placeOrderService = async (
 
 
     // console.log(orderData)
-    if(orderData.paymentMethod === 'cod' && orderData.total >= 1000){
-      throw new Error('Minimum order amount for COD is 1000');
+    if(orderData.paymentMethod === 'cod' && orderData.total > 1000){
+      throw new Error('Maximum order amount for COD is 1000');
     }
 
-
+    
 
     const productIds = orderData.items.map(
       (item) => item.productId?._id?.toString() || item.productId?.toString()

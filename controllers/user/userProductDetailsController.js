@@ -1,7 +1,7 @@
-import { findBestPriceForProduct } from "../../servises/offers/bestOfferForProductService.js";
-import { getFeaturedProducts } from "../../servises/user/featuredProduct.js";
-import { getProductDetails } from "../../servises/user/productDetailsService.js";
-import { findWishlistByUserId } from "../../servises/user/wishlistServices.js";
+import { findBestPriceForProduct } from "../../services/offers/bestOfferForProductService.js";
+import { getFeaturedProducts } from "../../services/user/featuredProduct.js";
+import { getProductDetails } from "../../services/user/productDetailsService.js";
+import { findWishlistByUserId } from "../../services/user/wishlistServices.js";
 import httpStatusCode from "../../utils/httpStatusCode.js";
 
 export const productDetails = async (req, res) => {

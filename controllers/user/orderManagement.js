@@ -1,12 +1,12 @@
 import { Order } from "../../models/order.js";
 import { Products } from "../../models/products.js";
-import { getCartedProducts } from "../../servises/user/cartServices.js";
+import { getCartedProducts } from "../../services/user/cartServices.js";
 import {
   getSingleOrderService,
   orderListByUserId,
   placeOrderService,
   generateInvoiceService,
-} from "../../servises/user/orderService.js";
+} from "../../services/user/orderService.js";
 import httpStatusCode from "../../utils/httpStatusCode.js";
 import { logStockChange } from "../../utils/logStockRegistry.js";
 import { returnReason } from "../../utils/returnReason.js";

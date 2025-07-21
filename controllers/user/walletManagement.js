@@ -1,4 +1,4 @@
-import { getFilteredWalletHistoryService, getWalletHistoryService } from "../../servises/user/walletService.js";
+import { getFilteredWalletHistoryService, getWalletHistoryService } from "../../services/user/walletService.js";
 import httpStatusCOde from '../../utils/httpStatusCode.js';
 
 export const getWalletPage = (req, res) => {

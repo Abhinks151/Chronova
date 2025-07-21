@@ -18,6 +18,7 @@ import adminStockRouter from "./adminDashboardRoutes/adminStockManagementRoutes.
 import offerRouter from "./adminDashboardRoutes/adminOfferRoutes.js";
 import couponRouter from "./adminDashboardRoutes/adminCouponRoutes.js";
 import salesRouter from "./adminDashboardRoutes/adminSalesRoutes.js";
+import dashboardRouter from "./adminDashboardRoutes/adminDashboardRoutes.js";
 
 const indexRoutes = express.Router();
 
@@ -39,6 +40,7 @@ indexRoutes.use("/admin", adminStockRouter);
 indexRoutes.use('/admin', offerRouter);
 indexRoutes.use('/admin', couponRouter);
 indexRoutes.use('/admin', salesRouter);
+indexRoutes.use('/admin', dashboardRouter);
 
 
 indexRoutes.use('/api',userRazorpayRoutes)

@@ -6,7 +6,7 @@ import {
   updateOrderPaymentStatus as updateOrderPaymentStatusService,
   updateItemPaymentStatus as updateItemPaymentStatusService,
   getOrderPaymentStatus as getOrderPaymentStatusService,
-} from '../../servises/adminOrderManagementService/orderService.js';
+} from '../../services/adminOrderManagementService/orderService.js';
 
 
 export const getOrders = async (req, res) => {

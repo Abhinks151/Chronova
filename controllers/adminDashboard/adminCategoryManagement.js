@@ -1,11 +1,11 @@
 
-import { addCategoryService } from "../../servises/adminCategoryManagemnt/addCategoryService.js";
-import { filterCategoriesService } from "../../servises/adminCategoryManagemnt/filterCategoryService.js";
-import { getCategoryService } from "../../servises/adminCategoryManagemnt/getCategoryService.js";
+import { addCategoryService } from "../../services/adminCategoryManagemnt/addCategoryService.js";
+import { filterCategoriesService } from "../../services/adminCategoryManagemnt/filterCategoryService.js";
+import { getCategoryService } from "../../services/adminCategoryManagemnt/getCategoryService.js";
 import httpStatusCode from "../../utils/httpStatusCode.js";
-import { editCategoryService } from "../../servises/adminCategoryManagemnt/editCategoryService.js";
-import { toggleBlockCategoryService } from "../../servises/adminCategoryManagemnt/blockCategory.js";
-import { deleteCategoryService } from "../../servises/adminCategoryManagemnt/deleteCategory.js";
+import { editCategoryService } from "../../services/adminCategoryManagemnt/editCategoryService.js";
+import { toggleBlockCategoryService } from "../../services/adminCategoryManagemnt/blockCategory.js";
+import { deleteCategoryService } from "../../services/adminCategoryManagemnt/deleteCategory.js";
 import { types } from "../../utils/categoryTypes.js";
 
 

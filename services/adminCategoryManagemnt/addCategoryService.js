@@ -2,6 +2,7 @@ import { Category } from "../../models/category.js";
 import { Products } from "../../models/products.js";
 import mongoose from "mongoose";
 
+// const CHAR_NUM_REGEX = 
 
 export const addCategoryService = async ({ categoryName, type, description, products = [] }) => {
   if (!categoryName || !categoryName.trim() || !/^[a-zA-Z0-9\s]+$/i.test(categoryName)) {

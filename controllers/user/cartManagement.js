@@ -4,7 +4,7 @@ import {
   postAddToCartService,
   removeCartService,
   updateCartService,
-} from "../../servises/user/cartServices.js";
+} from "../../services/user/cartServices.js";
 import httpStatusCode from "../../utils/httpStatusCode.js";
 
 export const getCartPage = async (req, res) => {

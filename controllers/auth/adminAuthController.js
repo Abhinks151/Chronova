@@ -1,7 +1,7 @@
 import httpStatusCode from "../../utils/httpStatusCode.js";
 import { validationResult } from 'express-validator';
 import dotenv from "dotenv";
-import { adminLoginService } from "../../servises/auth/adminService.js";
+import { adminLoginService } from "../../services/auth/adminService.js";
 // import validate from "../../utils/validateRules.js";
 
 dotenv.config();

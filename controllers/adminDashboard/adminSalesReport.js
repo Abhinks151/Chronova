@@ -1,5 +1,5 @@
 import httpStatusCode from "../../utils/httpStatusCode.js";
-import { generatePDFReportService, generateExcelReportService, getSalesReportService } from "../../servises/adminSalesService/adminSalesService.js";
+import { generatePDFReportService, generateExcelReportService, getSalesReportService } from "../../services/adminSalesService/adminSalesService.js";
 
 export const getSalesReport = async (req, res) => {
   try {

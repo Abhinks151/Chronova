@@ -1,9 +1,9 @@
 import httpStatusCode from '../../utils/httpStatusCode.js';
-import { addProductService, getCategories } from '../../servises/productManagement/addProductServise.js';
-import { blockProductService } from '../../servises/productManagement/blockProductServise.js';
-import { deleteProductService } from '../../servises/productManagement/daleteProductServise.js';
-import { getCategory, paginationService } from '../../servises/productManagement/paginationService.js';
-import { getProduct, updateProductService } from '../../servises/productManagement/editProductService.js';
+import { addProductService, getCategories } from '../../services/productManagement/addProductServise.js';
+import { blockProductService } from '../../services/productManagement/blockProductServise.js';
+import { deleteProductService } from '../../services/productManagement/daleteProductServise.js';
+import { getCategory, paginationService } from '../../services/productManagement/paginationService.js';
+import { getProduct, updateProductService } from '../../services/productManagement/editProductService.js';
 
 
 
