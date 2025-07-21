@@ -1,12 +1,12 @@
 import { validationResult } from 'express-validator';
 import dotenv from 'dotenv';
 import httpStatusCode from '../../utils/httpStatusCode.js';
-import { registerUser } from "../../servises/auth/userRegisterService.js";
-import { verifyUserOTPService } from "../../servises/auth/verifyUserService.js";
-import { handleResendVerification } from "../../servises/auth/resendVerificationCodeService.js";
-import { forgotPassword } from "../../servises/auth/forgotPasswordService.js";
-import { handlePasswordReset, resetPassword } from "../../servises/auth/resetPasswordService.js";
-import { loginUserService } from '../../servises/auth/userLoginService.js';
+import { registerUser } from "../../services/auth/userRegisterService.js";
+import { verifyUserOTPService } from "../../services/auth/verifyUserService.js";
+import { handleResendVerification } from "../../services/auth/resendVerificationCodeService.js";
+import { forgotPassword } from "../../services/auth/forgotPasswordService.js";
+import { handlePasswordReset, resetPassword } from "../../services/auth/resetPasswordService.js";
+import { loginUserService } from '../../services/auth/userLoginService.js';
 
 dotenv.config();
 

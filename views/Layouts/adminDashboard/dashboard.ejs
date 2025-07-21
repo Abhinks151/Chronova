@@ -1,0 +1,383 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Dashboard</title>
+
+    <link rel="stylesheet" href="/styles/dashboard.css" />
+    <link rel="stylesheet" href="/styles/admin-dashboard.css" />
+
+    <link
+      rel="stylesheet"
+      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"
+    />
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/axios/1.4.0/axios.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  </head>
+
+  <body>
+    <%- include('../../partials/sidebar') %>
+
+    <main class="main-content" role="main">
+      <header class="page-header">
+        <h1>Dashboard</h1>
+      </header>
+
+      <!-- Key Metrics Section -->
+      <section class="stats-section" aria-labelledby="metrics-heading">
+        <h2 class="section-title" id="metrics-heading">
+          <i class="fas fa-chart-bar"></i>
+          Key Performance Metrics
+        </h2>
+
+        <div class="stats-container">
+          <article class="stat-card">
+            <div class="stat-header">
+              <div class="stat-icon user"></div>
+              <div class="stat-label">Total Users</div>
+            </div>
+            <div class="stat-value" id="userCount">Loading...</div>
+            <div class="stat-trend trend-up">
+              <i class="fas fa-arrow-up"></i>
+              <span>100% from last month</span>
+            </div>
+          </article>
+
+          <article class="stat-card">
+            <div class="stat-header">
+              <div class="stat-icon ordrs"></div>
+              <div class="stat-label">Total Orders</div>
+            </div>
+            <div class="stat-value" id="orderCount">Loading...</div>
+            <div class="stat-trend trend-up">
+              <i class="fas fa-arrow-up"></i>
+              <span>800% from last month</span>
+            </div>
+          </article>
+
+          <article class="stat-card">
+            <div class="stat-header">
+              <div class="stat-icon sals"></div>
+              <div class="stat-label">Total Revenue</div>
+            </div>
+            <div class="stat-value" id="totalSales">Loading...</div>
+            <div class="stat-trend trend-down">
+              <i class="fas fa-arrow-down"></i>
+              <span>-100.7% from last month</span>
+            </div>
+          </article>
+        </div>
+      </section>
+
+      <!-- Revenue Analytics Section -->
+      <section class="chart-section" aria-labelledby="revenue-heading">
+        <div class="chart-header">
+          <h2 class="chart-title" id="revenue-heading">
+            <i class="fas fa-chart-line"></i>
+            Revenue Analytics
+          </h2>
+
+          <div class="filter-controls">
+            <label for="revenueFilter" class="sr-only"
+              >Select time period</label
+            >
+            <select id="revenueFilter" aria-describedby="filter-help">
+              <option value="monthly">Monthly View</option>
+              <option value="weekly">Weekly View</option>
+              <option value="yearly">Yearly View</option>
+              <option value="daily">Daily View</option>
+              <option value="custom">Custom Range</option>
+            </select>
+          </div>
+        </div>
+
+        <div id="customDateInputs">
+          <label for="customStartDate">
+            <i class="fas fa-calendar-alt"></i>
+            From:
+            <input type="date" id="customStartDate" />
+          </label>
+          <label for="customEndDate">
+            <i class="fas fa-calendar-alt"></i>
+            To:
+            <input type="date" id="customEndDate" />
+          </label>
+          <button id="applyCustomDate" type="button">
+            <i class="fas fa-filter"></i>
+            Apply Filter
+          </button>
+        </div>
+
+        <div class="chart-container">
+          <canvas id="myChart" aria-label="Revenue analytics chart"></canvas>
+        </div>
+      </section>
+
+      <!-- Top Performers Section -->
+      <section class="top-items-section" aria-labelledby="performers-heading">
+        <h2 class="section-title" id="performers-heading">
+          <i class="fas fa-trophy"></i>
+          Top Performers
+        </h2>
+
+        <div class="top-items">
+          <article class="top-item-card">
+            <header class="card-header">
+              <i class="fas fa-box"></i>
+              <h3>Best Selling Products</h3>
+            </header>
+            <div class="item-list" id="bestTenProducts">
+              <div class="loading">
+                <i class="fas fa-spinner"></i>
+                Loading products...
+              </div>
+            </div>
+          </article>
+
+          <article class="top-item-card">
+            <header class="card-header">
+              <i class="fas fa-tags"></i>
+              <h3>Top Categories</h3>
+            </header>
+            <div class="item-list" id="bestTenCategory">
+              <div class="loading">
+                <i class="fas fa-spinner"></i>
+                Loading categories...
+              </div>
+            </div>
+          </article>
+
+          <article class="top-item-card">
+            <header class="card-header">
+              <i class="fas fa-star"></i>
+              <h3>Leading Brands</h3>
+            </header>
+            <div class="item-list" id="bestTenBrands">
+              <div class="loading">
+                <i class="fas fa-spinner"></i>
+                Loading brands...
+              </div>
+            </div>
+          </article>
+        </div>
+      </section>
+    </main>
+
+    <script>
+      // DOM Elements
+      const userCount = document.getElementById("userCount");
+      const orderCount = document.getElementById("orderCount");
+      const totalSales = document.getElementById("totalSales");
+      const bestTenProducts = document.getElementById("bestTenProducts");
+      const bestTenCategory = document.getElementById("bestTenCategory");
+      const bestTenBrands = document.getElementById("bestTenBrands");
+      const customDateInputs = document.getElementById("customDateInputs");
+      const revenueFilter = document.getElementById("revenueFilter");
+      const applyCustomBtn = document.getElementById("applyCustomDate");
+      const chartCanvas = document.getElementById("myChart");
+
+      customDateInputs.style.display = "none";
+      let chartInstance;
+
+      async function getDashboardData() {
+        try {
+          const res = await axios.get("/admin/dashboard/data");
+          const data = res.data.data;
+
+          if (res.data.success) {
+            userCount.textContent = data.userCount.toLocaleString();
+            orderCount.textContent = data.orderCount.toLocaleString();
+            totalSales.textContent = `₹${data.totalSales.toLocaleString()}`;
+
+            bestTenProducts.innerHTML = data.bestTenProducts
+              .map(
+                (product, index) => `
+              <div class="item-row">
+                <span class="item-name">${index + 1}. ${
+                  product.productName
+                }</span>
+                <span class="item-value">
+                  <i class="fas fa-chart-bar"></i>
+                  ${product.totalQuantity} sold
+                </span>
+              </div>
+            `
+              )
+              .join("");
+
+            bestTenCategory.innerHTML = data.bestTenCategory
+              .map(
+                (category, index) => `
+              <div class="item-row">
+                <span class="item-name">${index + 1}. ${
+                  category.categoryName
+                }</span>
+                <span class="item-value">
+                  <i class="fas fa-chart-bar"></i>
+                  ${category.totalQuantity} sold
+                </span>
+              </div>
+            `
+              )
+              .join("");
+
+            bestTenBrands.innerHTML = data.bestTenBrands
+              .map(
+                (brand, index) => `
+              <div class="item-row">
+                <span class="item-name">${index + 1}. ${brand.brand}</span>
+                <span class="item-value">
+                  <i class="fas fa-chart-bar"></i>
+                  ${brand.totalQuantity} sold
+                </span>
+              </div>
+            `
+              )
+              .join("");
+          } else {
+            console.error("Dashboard data error:", res.data.error);
+          }
+        } catch (error) {
+          console.error("Failed to fetch dashboard data:", error);
+
+          [bestTenProducts, bestTenCategory, bestTenBrands].forEach(
+            (element) => {
+              element.innerHTML = `
+              <div class="loading" style="color: #ef4444;">
+                <i class="fas fa-exclamation-triangle"></i>
+                Failed to load data
+              </div>
+            `;
+            }
+          );
+        }
+      }
+
+      // Load revenue chart
+      async function loadRevenueChart({
+        range = "monthly",
+        customStart = null,
+        customEnd = null,
+      } = {}) {
+        try {
+          let url = `/admin/dashboard/sales/chart/data?range=${range}`;
+          if (customStart && customEnd) {
+            url += `&customStart=${customStart}&customEnd=${customEnd}`;
+          }
+
+          const res = await axios.get(url);
+          const data = res.data.data;
+
+          if (chartInstance) chartInstance.destroy();
+
+          chartInstance = new Chart(chartCanvas, {
+            type: "line",
+            data: {
+              labels: data.chartLabels,
+              datasets: [
+                {
+                  label: "Revenue (₹)",
+                  data: data.chartValues,
+                  borderColor: "#3b82f6",
+                  backgroundColor: "rgba(59, 130, 246, 0.1)",
+                  borderWidth: 3,
+                  tension: 0.4,
+                  fill: true,
+                  pointBackgroundColor: "#ffffff",
+                  pointBorderColor: "#3b82f6",
+                  pointBorderWidth: 2,
+                  pointRadius: 6,
+                  pointHoverRadius: 8,
+                },
+              ],
+            },
+            options: {
+              responsive: true,
+              maintainAspectRatio: false,
+              plugins: {
+                legend: {
+                  display: true,
+                  position: "top",
+                  labels: {
+                    usePointStyle: true,
+                    font: { weight: "600" },
+                  },
+                },
+                tooltip: {
+                  backgroundColor: "rgba(0, 0, 0, 0.8)",
+                  titleFont: { weight: "600" },
+                  bodyFont: { weight: "500" },
+                  cornerRadius: 8,
+                  displayColors: false,
+                },
+              },
+              scales: {
+                y: {
+                  beginAtZero: true,
+                  ticks: {
+                    callback: (val) => `₹${val.toLocaleString()}`,
+                    font: { weight: "500" },
+                  },
+                  grid: {
+                    color: "rgba(0, 0, 0, 0.05)",
+                  },
+                },
+                x: {
+                  grid: {
+                    display: false,
+                  },
+                  ticks: {
+                    font: { weight: "500" },
+                  },
+                },
+              },
+              interaction: {
+                intersect: false,
+                mode: "index",
+              },
+            },
+          });
+        } catch (error) {
+          console.error("Error loading revenue chart:", error);
+        }
+      }
+
+      revenueFilter.addEventListener("change", (e) => {
+        const selected = e.target.value;
+
+        if (selected === "custom") {
+          customDateInputs.style.display = "flex";
+        } else {
+          customDateInputs.style.display = "none";
+          loadRevenueChart({ range: selected });
+        }
+      });
+
+      applyCustomBtn.addEventListener("click", () => {
+        const start = document.getElementById("customStartDate").value;
+        const end = document.getElementById("customEndDate").value;
+
+        if (!start || !end) {
+          return alert("Please select both start and end dates.");
+        }
+
+        if (new Date(end) < new Date(start)) {
+          return alert("End date cannot be before start date.");
+        }
+
+        loadRevenueChart({
+          range: "custom",
+          customStart: start,
+          customEnd: end,
+        });
+      });
+
+      document.addEventListener("DOMContentLoaded", function () {
+        getDashboardData();
+        loadRevenueChart();
+      });
+    </script>
+  </body>
+</html>

@@ -5,8 +5,8 @@ import {
   getActiveProductOffers,
   getProductOfferByIdService,
   toggleProductOfferStatusService
-} from "../../servises/offers/adminProductOfferService.js";
-import { getActiveProducts } from "../../servises/user/getUserProductService.js";
+} from "../../services/offers/adminProductOfferService.js";
+import { getActiveProducts } from "../../services/user/getUserProductService.js";
 import httpStatusCode from '../../utils/httpStatusCode.js';
 
 

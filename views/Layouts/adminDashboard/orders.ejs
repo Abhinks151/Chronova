@@ -10,12 +10,12 @@
 </head>
 <body>
     <%- include('../../partials/sidebar') %>
-    
+
     <div class="container">
         <header class="page-header">
             <h1>Order Management</h1>
             <div class="header-stats">
-                <span class="stat">Total Orders: <%= totalOrders %></span>
+                <span class="stat">Total Orders: <span id="totalOrdersCount"><%= totalOrders %></span></span>
             </div>
         </header>
 
@@ -23,7 +23,7 @@
         <div class="filters-section">
             <form id="filterForm" class="filters-form">
                 <div class="search-group">
-                    <input 
+                    <input
                         type="text"
                         id="searchInput"
                         name="search"
@@ -33,7 +33,7 @@
                     >
                     <button type="submit" class="search-btn">Search</button>
                 </div>
-                
+
                 <div class="filter-group">
                     <select id="statusFilter" name="status" class="filter-select">
                         <option value="">All Statuses</option>
@@ -43,13 +43,13 @@
                             </option>
                         <% }) %>
                     </select>
-                    
+
                     <select id="sortBy" name="sortBy" class="filter-select">
                         <option value="createdAt" <%= sortBy === 'createdAt' ? 'selected' : '' %>>Date</option>
                         <option value="totalAmount" <%= sortBy === 'totalAmount' ? 'selected' : '' %>>Amount</option>
                         <option value="orderStatus" <%= sortBy === 'orderStatus' ? 'selected' : '' %>>Status</option>
                     </select>
-                    
+
                     <select id="sortOrder" name="sortOrder" class="filter-select">
                         <option value="desc" <%= sortOrder === 'desc' ? 'selected' : '' %>>Descending</option>
                         <option value="asc" <%= sortOrder === 'asc' ? 'selected' : '' %>>Ascending</option>
@@ -72,78 +72,19 @@
                         <th>Actions</th>
                     </tr>
                 </thead>
-                <tbody>
-                    <% if (orders.length === 0) { %>
-                        <tr>
-                            <td colspan="7" class="no-data">No orders found</td>
-                        </tr>
-                    <% } else { %>
-                        <% orders.forEach(order => { %>
-                            <tr>
-                                <td class="order-id">#<%= order.orderId %></td>
-                                <td>
-                                    <div class="customer-info">
-                                        <div class="customer-name"><%= order.userId?.name || order.shippingAddress.fullName %></div>
-                                        <div class="customer-email"><%= order.userId?.email || 'N/A' %></div>
-                                    </div>
-                                </td>
-                                <td><%= new Date(order.createdAt).toLocaleDateString() %></td>
-                                <td>
-                                    <span class="status-badge status-<%= order.orderStatus.toLowerCase().replace(/\s+/g, '-') %>">
-                                        <%= order.orderStatus %>
-                                    </span>
-                                </td>
-                                <td>
-                                    <div class="payment-info">
-                                        <div class="payment-method"><%= order.paymentMethod %></div>
-                                        <div class="payment-status status-<%= order.paymentStatus.toLowerCase() %>">
-                                            <%= order.paymentStatus %>
-                                        </div>
-                                    </div>
-                                </td>
-                                <td class="amount">
-                                    ₹<%= order.totalAmount.toFixed(2) %>
-                                    <% if (order.refundedAmount > 0) { %>
-                                        <br><small style="color: #ef4444;">Refunded: ₹<%= order.refundedAmount.toFixed(2) %></small>
-                                    <% } %>
-                                </td>
-                                <td>
-                                    <button
-                                        class="btn btn-primary view-details-btn"
-                                        onclick="viewOrderDetails('<%= order._id %>')"
-                                    >
-                                        View Details
-                                    </button>
-                                </td>
-                            </tr>
-                        <% }) %>
-                    <% } %>
+                <tbody id="ordersTableBody">
+                    <!-- Orders will be dynamically loaded here by JavaScript -->
                 </tbody>
             </table>
         </div>
 
         <!-- Pagination -->
         <div class="pagination-container">
-            <div class="pagination-info">
-                Showing <%= (currentPage - 1) * limit + 1 %> to <%= Math.min(currentPage * limit, totalOrders) %> of <%= totalOrders %> orders
+            <div class="pagination-info" id="paginationInfo">
+                <!-- Pagination info will be dynamically loaded here by JavaScript -->
             </div>
-            <div class="pagination">
-                <% if (currentPage > 1) { %>
-                    <button class="pagination-btn" onclick="goToPage(<%= currentPage - 1 %>)">Previous</button>
-                <% } %>
-                
-                <% for (let i = Math.max(1, currentPage - 2); i <= Math.min(totalPages, currentPage + 2); i++) { %>
-                    <button
-                        class="pagination-btn <%= i === currentPage ? 'active' : '' %>"
-                        onclick="goToPage(<%= i %>)"
-                    >
-                        <%= i %>
-                    </button>
-                <% } %>
-                
-                <% if (currentPage < totalPages) { %>
-                    <button class="pagination-btn" onclick="goToPage(<%= currentPage + 1 %>)">Next</button>
-                <% } %>
+            <div class="pagination" id="paginationControls">
+                <!-- Pagination buttons will be dynamically loaded here by JavaScript -->
             </div>
         </div>
     </div>
@@ -167,7 +108,7 @@
             <h3 id="confirmationTitle">Confirm Action</h3>
             <p id="confirmationMessage">Are you sure you want to proceed?</p>
             <div id="rejectionReasonContainer" style="display: none;">
-                <textarea 
+                <textarea
                     id="rejectionReasonInput"
                     class="rejection-reason-input"
                     placeholder="Please provide a reason for rejecting this return request..."
@@ -201,14 +142,15 @@
             sortOrder: "<%= sortOrder %>",
             page: <%= currentPage %>
         };
-
         let pendingAction = null;
+        let currentOrderIdInModal = null; // To keep track of the order currently in the modal
         const axios = window.axios;
 
         // Initialize event listeners when DOM is loaded
         document.addEventListener("DOMContentLoaded", () => {
             initializeEventListeners();
             initializeCharacterCounters();
+            fetchAndRenderOrders(); // Initial load of orders
         });
 
         // Initialize all event listeners
@@ -246,7 +188,6 @@
             window.onclick = (event) => {
                 const orderModal = document.getElementById("orderModal");
                 const confirmationModal = document.getElementById("confirmationModal");
-
                 if (event.target === orderModal) {
                     closeModal();
                 }
@@ -260,7 +201,6 @@
         function initializeCharacterCounters() {
             const rejectionInput = document.getElementById("rejectionReasonInput");
             const charCount = document.getElementById("rejectionCharCount");
-
             if (rejectionInput && charCount) {
                 rejectionInput.addEventListener("input", function () {
                     charCount.textContent = this.value.length;
@@ -268,38 +208,130 @@
             }
         }
 
-        // ==================== FILTER AND PAGINATION FUNCTIONS ====================
+        // ==================== DYNAMIC RENDERING FUNCTIONS ====================
 
+        // Fetch and render orders table and pagination
+        async function fetchAndRenderOrders() {
+            showLoading();
+            try {
+                const params = new URLSearchParams();
+                if (currentFilters.search) params.append("search", currentFilters.search);
+                if (currentFilters.status) params.append("status", currentFilters.status);
+                if (currentFilters.sortBy) params.append("sortBy", currentFilters.sortBy);
+                if (currentFilters.sortOrder) params.append("sortOrder", currentFilters.sortOrder);
+                params.append("page", currentFilters.page);
+
+                const response = await axios.get(`/admin/orders/data?${params.toString()}`);
+                const { orders, totalOrders, currentPage, totalPages, limit } = response.data;
+                console.log(response.data);
+                // Update total orders count in header
+                document.getElementById("totalOrdersCount").textContent = totalOrders;
+
+                // Render table body
+                const ordersTableBody = document.getElementById("ordersTableBody");
+                ordersTableBody.innerHTML = ""; // Clear existing rows
+
+                if (orders.length === 0) {
+                    ordersTableBody.innerHTML = '<tr><td colspan="7" class="no-data">No orders found</td></tr>';
+                } else {
+                    orders.forEach(order => {
+                        const row = document.createElement("tr");
+                        row.innerHTML = `
+                            <td class="order-id">#${order.orderId}</td>
+                            <td>
+                                <div class="customer-info">
+                                    <div class="customer-name">${order.userId?.name || order.shippingAddress.fullName}</div>
+                                    <div class="customer-email">${order.userId?.email || 'N/A'}</div>
+                                </div>
+                            </td>
+                            <td>${new Date(order.createdAt).toLocaleDateString()}</td>
+                            <td>
+                                <span class="status-badge status-${order.orderStatus.toLowerCase().replace(/\s+/g, '-')}">
+                                    ${order.orderStatus}
+                                </span>
+                            </td>
+                            <td>
+                                <div class="payment-info">
+                                    <div class="payment-method">${order.paymentMethod}</div>
+                                    <div class="payment-status status-${order.paymentStatus.toLowerCase()}">
+                                        ${order.paymentStatus}
+                                    </div>
+                                </div>
+                            </td>
+                            <td class="amount">
+                                ₹${order.totalAmount.toFixed(2)}
+                                ${order.refundedAmount > 0 ? `<br><small style="color: #ef4444;">Refunded: ₹${order.refundedAmount.toFixed(2)}</small>` : ''}
+                            </td>
+                            <td>
+                                <button
+                                    class="btn btn-primary view-details-btn"
+                                    onclick="viewOrderDetails('${order._id}')"
+                                >
+                                    View Details
+                                </button>
+                            </td>
+                        `;
+                        ordersTableBody.appendChild(row);
+                    });
+                }
+
+                // Render pagination controls
+                const paginationInfo = document.getElementById("paginationInfo");
+                const paginationControls = document.getElementById("paginationControls");
+
+                paginationInfo.textContent = `Showing ${(currentPage - 1) * limit + 1} to ${Math.min(currentPage * limit, totalOrders)} of ${totalOrders} orders`;
+                paginationControls.innerHTML = ""; // Clear existing buttons
+
+                if (currentPage > 1) {
+                    paginationControls.innerHTML += `<button class="pagination-btn" onclick="goToPage(${currentPage - 1})">Previous</button>`;
+                }
+
+                for (let i = Math.max(1, currentPage - 2); i <= Math.min(totalPages, currentPage + 2); i++) {
+                    paginationControls.innerHTML += `
+                        <button
+                            class="pagination-btn ${i === currentPage ? 'active' : ''}"
+                            onclick="goToPage(${i})"
+                        >
+                            ${i}
+                        </button>
+                    `;
+                }
+
+                if (currentPage < totalPages) {
+                    paginationControls.innerHTML += `<button class="pagination-btn" onclick="goToPage(${currentPage + 1})">Next</button>`;
+                }
+
+            } catch (error) {
+                console.error("Error fetching and rendering orders:", error);
+                const errorMessage = error.response?.data?.error || "Error fetching orders";
+                showToast(errorMessage, "error");
+            } finally {
+                hideLoading();
+            }
+        }
+
+        // ==================== FILTER AND PAGINATION FUNCTIONS ====================
         // Apply filters and reload page
         function applyFilters() {
-            const search = document.getElementById("searchInput")?.value || "";
-            const status = document.getElementById("statusFilter")?.value || "";
-            const sortBy = document.getElementById("sortBy")?.value || "";
-            const sortOrder = document.getElementById("sortOrder")?.value || "";
-
-            const params = new URLSearchParams();
-            if (search) params.append("search", search);
-            if (status) params.append("status", status);
-            if (sortBy) params.append("sortBy", sortBy);
-            if (sortOrder) params.append("sortOrder", sortOrder);
-            params.append("page", "1"); // Reset to first page
-
-            window.location.href = `${window.location.pathname}?${params.toString()}`;
+            currentFilters.search = document.getElementById("searchInput")?.value || "";
+            currentFilters.status = document.getElementById("statusFilter")?.value || "";
+            currentFilters.sortBy = document.getElementById("sortBy")?.value || "";
+            currentFilters.sortOrder = document.getElementById("sortOrder")?.value || "";
+            currentFilters.page = 1; // Reset to first page on filter change
+            fetchAndRenderOrders();
         }
 
         // Pagination
         function goToPage(page) {
-            const params = new URLSearchParams(window.location.search);
-            params.set("page", page);
-            window.location.href = `${window.location.pathname}?${params.toString()}`;
+            currentFilters.page = page;
+            fetchAndRenderOrders();
         }
 
         // ==================== ORDER DETAILS AND MODAL FUNCTIONS ====================
-
         // View order details
         async function viewOrderDetails(orderId) {
             showLoading();
-
+            currentOrderIdInModal = orderId; // Store the ID of the order being viewed
             try {
                 const response = await axios.get(`/admin/orders/${orderId}`);
                 displayOrderDetails(response.data.order);
@@ -318,11 +350,8 @@
             const modalBody = document.getElementById("modalBody");
             const modalTitle = document.getElementById("modalTitle");
             modalTitle.textContent = `Order #${order.orderId}`;
-
             const returnRequests = order.items.filter((item) => item.status === "Return Requested");
-
             modalBody.innerHTML = generateOrderDetailsHTML(order, returnRequests);
-
             // Set current status data attributes for payment selects
             setTimeout(() => {
                 setPaymentStatusDataAttributes(order);
@@ -337,7 +366,7 @@
                     ${generateAddressSection(order)}
                     ${generateOrderStatusSection(order)}
                     ${generatePaymentInfoSection(order)}
-                    ${returnRequests.length > 0 ? generateReturnRequestsSection(order._id,returnRequests) : ""}
+                    ${returnRequests.length > 0 ? generateReturnRequestsSection(order._id, returnRequests) : ""}
                     ${generateOrderItemsSection(order)}
                     ${generateOrderSummarySection(order)}
                     ${generateTimelineSection(order)}
@@ -400,7 +429,6 @@
                 "Return Approved",
                 "Partially Return Approved",
             ];
-
             return `
                 <div class="detail-section">
                     <h3>Order Status</h3>
@@ -427,7 +455,6 @@
         // Generate payment information section
         function generatePaymentInfoSection(order) {
             const paymentStatusOptions = ["Pending", "Paid", "Failed", "Refunded", "Cancelled"];
-
             return `
                 <div class="detail-section">
                     <h3>💳 Payment Information</h3>
@@ -453,9 +480,9 @@
                                 </div>
                             </div>
                         </div>
-                        
+
                         <div class="payment-section-divider"></div>
-                        
+
                         <div class="payment-status-update">
                             <select id="orderPaymentStatusSelect" class="payment-status-select" data-current-status="${order.paymentStatus}">
                                 ${paymentStatusOptions
@@ -473,7 +500,7 @@
         }
 
         // Generate return requests section
-        function generateReturnRequestsSection(orderId,returnRequests) {
+        function generateReturnRequestsSection(orderId, returnRequests) {
             return `
                 <div class="detail-section" id="returnRequestsSection">
                     <h3>🔄 Pending Return Requests (${returnRequests.length})</h3>
@@ -519,7 +546,6 @@
                 "Return Rejected",
             ];
             const paymentStatusOptions = ["Pending", "Paid", "Failed", "Refunded", "Cancelled"];
-
             return `
                 <div class="detail-section">
                     <h3>Order Items</h3>
@@ -529,7 +555,7 @@
                                 (item) => `
                             <div class="item-card">
                                 <div class="item-image">
-                                    <img src="${item.image?.url || "/placeholder.svg"}" alt="${item.productName}" />
+                                    <img src="${item.image?.url || "/placeholder.svg?height=64&width=64"}" alt="${item.productName}" />
                                 </div>
                                 <div class="item-info">
                                     <h4>${item.productName}</h4>
@@ -539,7 +565,7 @@
                                         <span class="status-badge status-${item.status.toLowerCase().replace(/\s+/g, "-")}">${item.status}</span>
                                         <span class="item-payment-badge ${item.paymentStatus ? item.paymentStatus.toLowerCase() : "pending"}">${item.paymentStatus || "Pending"}</span>
                                     </p>
-                                    
+
                                     <div class="item-actions">
                                         <select class="item-status-select" data-item-id="${item._id}">
                                             ${itemStatusOptions
@@ -553,7 +579,7 @@
                                             Update Item Status
                                         </button>
                                     </div>
-                                    
+
                                     <!-- Item Payment Status -->
                                     <div class="item-payment-status">
                                         <div class="payment-info-item">
@@ -574,7 +600,6 @@
                                             </button>
                                         </div>
                                     </div>
-                                    
                                     ${generateItemStatusBadges(item)}
                                     ${generateItemReasons(item)}
                                 </div>
@@ -590,34 +615,27 @@
         // Generate item status badges
         function generateItemStatusBadges(item) {
             let badges = "";
-
             if (item.status === "Return Approved") {
                 badges += '<span class="status-badge bg-success text-white mt-2">✅ Return Approved & Refunded</span>';
             }
-
             if (item.status === "Return Rejected") {
                 badges += '<span class="status-badge bg-danger text-white mt-2">❌ Return Rejected</span>';
             }
-
             return badges;
         }
 
         // Generate item reasons
         function generateItemReasons(item) {
             let reasons = "";
-
             if (item.cancelReason) {
                 reasons += `<div class="reason-info"><p><strong>Cancel Reason:</strong> ${item.cancelReason}</p></div>`;
             }
-
             if (item.returnReason) {
                 reasons += `<div class="reason-info"><p><strong>Return Reason:</strong> ${item.returnReason}</p></div>`;
             }
-
             if (item.returnRejectionReason) {
                 reasons += `<div class="reason-info"><p><strong>Rejection Reason:</strong> ${item.returnRejectionReason}</p></div>`;
             }
-
             return reasons;
         }
 
@@ -687,7 +705,6 @@
             if (orderPaymentSelect) {
                 orderPaymentSelect.setAttribute("data-current-status", order.paymentStatus);
             }
-
             // Set current status for item payment selects
             order.items.forEach((item) => {
                 const itemPaymentSelect = document.querySelector(`[data-item-payment-id="${item._id}"]`);
@@ -698,22 +715,20 @@
         }
 
         // ==================== ORDER STATUS UPDATE FUNCTIONS ====================
-
         // Update order status
         async function updateOrderStatus(orderId) {
             const newStatus = document.getElementById("orderStatusSelect").value;
             showLoading();
-
             try {
                 const response = await axios.put(`/admin/orders/${orderId}/status`, {
                     status: newStatus,
                 });
                 showToast("Order status updated successfully!", "success");
-
-                // Refresh the page to show updated data
-                setTimeout(() => {
-                    window.location.reload();
-                }, 1500);
+                // Refresh the main order list and the modal if open
+                fetchAndRenderOrders();
+                if (currentOrderIdInModal === orderId && document.getElementById("orderModal").style.display === "block") {
+                    viewOrderDetails(orderId);
+                }
             } catch (error) {
                 console.error("Error updating order status:", error);
                 const errorMessage = error.response?.data?.error || "Error updating order status";
@@ -728,25 +743,22 @@
             const selectElement = document.querySelector(`[data-item-id="${itemId}"]`);
             const newStatus = selectElement.value;
             let reason = "";
-
             if (newStatus === "Cancelled" || newStatus === "Return Requested") {
                 reason = prompt(`Please enter reason for ${newStatus.toLowerCase()}:`);
                 if (!reason) return;
             }
-
             showLoading();
-
             try {
                 const response = await axios.put(`/admin/orders/${orderId}/items/${itemId}/status`, {
                     status: newStatus,
                     reason: reason,
                 });
                 showToast("Item status updated successfully!", "success");
-
                 // Refresh the modal with updated data
-                setTimeout(() => {
+                if (currentOrderIdInModal === orderId && document.getElementById("orderModal").style.display === "block") {
                     viewOrderDetails(orderId);
-                }, 1000);
+                }
+                fetchAndRenderOrders(); // Also refresh the main list in case order status changed
             } catch (error) {
                 console.error("Error updating item status:", error);
                 const errorMessage = error.response?.data?.error || "Error updating item status";
@@ -757,17 +769,14 @@
         }
 
         // ==================== PAYMENT STATUS UPDATE FUNCTIONS ====================
-
         // Update order payment status
         async function updateOrderPaymentStatus(orderId) {
             const newPaymentStatus = document.getElementById("orderPaymentStatusSelect").value;
             const currentStatus = document.getElementById("orderPaymentStatusSelect").getAttribute("data-current-status");
-
             if (newPaymentStatus === currentStatus) {
                 showToast("Payment status is already set to this value", "info");
                 return;
             }
-
             // Show confirmation for critical status changes
             if (newPaymentStatus === "Refunded" || newPaymentStatus === "Failed") {
                 showConfirmationModal(
@@ -784,31 +793,27 @@
         // Process order payment status update
         async function processOrderPaymentStatusUpdate(orderId, newPaymentStatus) {
             showLoading();
-
             try {
                 const response = await axios.put(`/admin/orders/${orderId}/payment-status`, {
                     paymentStatus: newPaymentStatus,
                 });
-
                 const message = response.data.message || "Order payment status updated successfully!";
                 showToast(message, "success");
-
                 // Update the badge in the modal
                 const paymentBadge = document.querySelector(".payment-status-badge");
                 if (paymentBadge) {
                     paymentBadge.className = `payment-status-badge ${newPaymentStatus.toLowerCase()}`;
                     paymentBadge.textContent = newPaymentStatus;
                 }
-
                 // Refresh the modal with updated data
-                setTimeout(() => {
+                if (currentOrderIdInModal === orderId && document.getElementById("orderModal").style.display === "block") {
                     viewOrderDetails(orderId);
-                }, 1000);
+                }
+                fetchAndRenderOrders(); // Also refresh the main list
             } catch (error) {
                 console.error("Error updating order payment status:", error);
                 const errorMessage = error.response?.data?.error || "Error updating order payment status";
                 showToast(errorMessage, "error");
-
                 // Reset the select to previous value
                 const select = document.getElementById("orderPaymentStatusSelect");
                 select.value = select.getAttribute("data-current-status");
@@ -822,12 +827,10 @@
             const selectElement = document.querySelector(`[data-item-payment-id="${itemId}"]`);
             const newPaymentStatus = selectElement.value;
             const currentStatus = selectElement.getAttribute("data-current-status");
-
             if (newPaymentStatus === currentStatus) {
                 showToast("Item payment status is already set to this value", "info");
                 return;
             }
-
             // Show confirmation for critical status changes
             if (newPaymentStatus === "Refunded" || newPaymentStatus === "Failed") {
                 showConfirmationModal(
@@ -844,22 +847,18 @@
         // Process item payment status update
         async function processItemPaymentStatusUpdate(orderId, itemId, newPaymentStatus) {
             showLoading();
-
             try {
                 const response = await axios.put(`/admin/orders/${orderId}/items/${itemId}/payment-status`, {
                     paymentStatus: newPaymentStatus,
                 });
-
                 const message = response.data.message || "Item payment status updated successfully!";
                 showToast(message, "success");
-
                 // Update the item payment badge in the modal
                 const itemBadge = document.querySelector(`[data-item-id="${itemId}"] .item-payment-badge`);
                 if (itemBadge) {
                     itemBadge.className = `item-payment-badge ${newPaymentStatus.toLowerCase()}`;
                     itemBadge.textContent = newPaymentStatus;
                 }
-
                 // Update the item payment section badge
                 const itemPaymentBadge = document
                     .querySelector(`[data-item-payment-id="${itemId}"]`)
@@ -869,26 +868,24 @@
                     itemPaymentBadge.className = `payment-status-badge ${newPaymentStatus.toLowerCase()}`;
                     itemPaymentBadge.textContent = newPaymentStatus;
                 }
-
                 // Refresh the modal with updated data
-                setTimeout(() => {
+                if (currentOrderIdInModal === orderId && document.getElementById("orderModal").style.display === "block") {
                     viewOrderDetails(orderId);
-                }, 500);
-			    window.onreload = true;
+                }
+                fetchAndRenderOrders(); // Also refresh the main list
             } catch (error) {
                 console.error("Error updating item payment status:", error);
                 const errorMessage = error.response?.data?.error || "Error updating item payment status";
                 showToast(errorMessage, "error");
-
                 // Reset the select to previous value
-                selectElement.value = currentStatus;
+                const selectElement = document.querySelector(`[data-item-payment-id="${itemId}"]`);
+                selectElement.value = selectElement.getAttribute("data-current-status");
             } finally {
                 hideLoading();
             }
         }
 
         // ==================== RETURN REQUEST FUNCTIONS ====================
-
         // Show approve return confirmation
         function showApproveReturnConfirmation(orderId, itemId, productName, refundAmount) {
             showConfirmationModal(
@@ -920,30 +917,15 @@
         // Approve return
         async function approveReturn(orderId, itemId) {
             showLoading();
-
             try {
                 const response = await axios.post(`/admin/orders/${orderId}/items/${itemId}/approve-return`);
-
                 const message = response.data.message || "Return approved successfully!";
                 showToast(message, "success");
-
-                // Remove the item from pending returns section
-                const itemElement = document.getElementById(`return-item-${itemId}`);
-                if (itemElement) {
-                    itemElement.remove();
-                }
-
-                // Check if there are any more pending returns
-                const returnSection = document.getElementById("returnRequestsSection");
-                const remainingItems = returnSection?.querySelectorAll(".return-request-card");
-                if (remainingItems && remainingItems.length === 0) {
-                    returnSection.style.display = "none";
-                }
-
                 // Refresh modal data after a short delay
-                setTimeout(() => {
+                if (currentOrderIdInModal === orderId && document.getElementById("orderModal").style.display === "block") {
                     viewOrderDetails(orderId);
-                }, 2000);
+                }
+                fetchAndRenderOrders(); // Also refresh the main list
             } catch (error) {
                 console.error("Error approving return:", error);
                 const errorMessage = error.response?.data?.error || "Unknown error occurred during return approval.";
@@ -956,32 +938,17 @@
         // Reject return
         async function rejectReturn(orderId, itemId, rejectionReason) {
             showLoading();
-
             try {
                 const response = await axios.post(`/admin/orders/${orderId}/items/${itemId}/reject-return`, {
                     rejectionReason: rejectionReason,
                 });
-
                 const message = response.data.message || "Return request rejected successfully!";
                 showToast(message, "warning");
-
-                // Remove the item from pending returns section
-                const itemElement = document.getElementById(`return-item-${itemId}`);
-                if (itemElement) {
-                    itemElement.remove();
-                }
-
-                // Check if there are any more pending returns
-                const returnSection = document.getElementById("returnRequestsSection");
-                const remainingItems = returnSection?.querySelectorAll(".return-request-card");
-                if (remainingItems && remainingItems.length === 0) {
-                    returnSection.style.display = "none";
-                }
-
                 // Refresh modal data after a short delay
-                setTimeout(() => {
+                if (currentOrderIdInModal === orderId && document.getElementById("orderModal").style.display === "block") {
                     viewOrderDetails(orderId);
-                }, 2000);
+                }
+                fetchAndRenderOrders(); // Also refresh the main list
             } catch (error) {
                 console.error("Error rejecting return:", error);
                 const errorMessage = error.response?.data?.error || "Unknown error occurred during return rejection.";
@@ -992,7 +959,6 @@
         }
 
         // ==================== ORDER CANCELLATION FUNCTIONS ====================
-
         // Show cancel order confirmation
         function showCancelOrderConfirmation(orderId) {
             showConfirmationModal(
@@ -1010,17 +976,16 @@
         // Cancel order
         async function cancelOrder(orderId, reason) {
             showLoading();
-
             try {
                 const response = await axios.put(`/admin/orders/${orderId}/cancel`, {
                     reason: reason,
                 });
                 showToast("Order cancelled successfully!", "success");
-
-                // Refresh the page to show updated data
-                setTimeout(() => {
-                    window.location.reload();
-                }, 1500);
+                // Refresh the main order list and close modal if open
+                fetchAndRenderOrders();
+                if (currentOrderIdInModal === orderId && document.getElementById("orderModal").style.display === "block") {
+                    closeModal(); // Close modal as the entire order is cancelled
+                }
             } catch (error) {
                 console.error("Error cancelling order:", error);
                 const errorMessage = error.response?.data?.error || "Error cancelling order";
@@ -1031,26 +996,21 @@
         }
 
         // ==================== MODAL AND UI UTILITY FUNCTIONS ====================
-
         // Show confirmation modal
         function showConfirmationModal(title, message, onConfirm, type = "default", showRejectionInput = false) {
             document.getElementById("confirmationTitle").textContent = title;
             document.getElementById("confirmationMessage").textContent = message;
-
             const confirmButton = document.getElementById("confirmationButton");
             const rejectionContainer = document.getElementById("rejectionReasonContainer");
             const rejectionInput = document.getElementById("rejectionReasonInput");
-
             // Reset rejection input
             rejectionInput.value = "";
             document.getElementById("rejectionCharCount").textContent = "0";
-
             if (showRejectionInput) {
                 rejectionContainer.style.display = "block";
             } else {
                 rejectionContainer.style.display = "none";
             }
-
             // Style the confirm button based on type
             confirmButton.className = `btn-confirm ${type}`;
             if (type === "approve") {
@@ -1060,7 +1020,6 @@
             } else {
                 confirmButton.textContent = "Confirm";
             }
-
             pendingAction = onConfirm;
             document.getElementById("confirmationModal").style.display = "block";
         }
@@ -1084,22 +1043,18 @@
         function showToast(message, type = "info") {
             const toast = document.createElement("div");
             toast.className = `toast ${type}`;
-
             const iconMap = {
                 success: "✓",
                 error: "✕",
                 warning: "⚠",
                 info: "ℹ",
             };
-
             toast.innerHTML = `
                 <span class="toast-icon">${iconMap[type] || "ℹ"}</span>
                 <span class="toast-message">${message}</span>
                 <button class="toast-close" onclick="this.parentElement.remove()">×</button>
             `;
-
             document.getElementById("toastContainer").appendChild(toast);
-
             // Auto remove after 5 seconds
             setTimeout(() => {
                 if (toast.parentElement) {
@@ -1118,6 +1073,7 @@
         function closeModal() {
             document.getElementById("orderModal").style.display = "none";
             document.body.style.overflow = "auto";
+            currentOrderIdInModal = null; // Clear the stored order ID
         }
 
         // Show loading spinner

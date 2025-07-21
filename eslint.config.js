@@ -15,6 +15,7 @@ export default defineConfig([
       // Customize your rules here
       "no-console": "off",
       "no-unused-vars": "warn",
+      
     },
   },
 ]);

@@ -1,4 +1,4 @@
-import { getActiveCategories, getStockData, getStockRegistryByProductId } from '../../servises/adminStockMangementServies.js'
+import { getActiveCategories, getStockData, getStockRegistryByProductId } from '../../services/adminStockMangementServies.js'
 
 
 export const getStockRegistryByProduct = async (req, res) => {

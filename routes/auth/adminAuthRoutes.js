@@ -11,7 +11,7 @@ adminAuthRouter.get('/login', getAdminLogin);
 adminAuthRouter.post('/login',validate(['email', 'password']), postAdminLogin);
 adminAuthRouter.get('/logout',authenticateAdmin,adminLogout);
 
-adminAuthRouter.get('/dashboard',authenticateAdmin,getDashboard);
+adminAuthRouter.get('/dashboards',authenticateAdmin,getDashboard);
 
 
 

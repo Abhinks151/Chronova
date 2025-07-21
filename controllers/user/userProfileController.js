@@ -1,6 +1,6 @@
 
 import { User } from "../../models/userModels.js";
-import { addAddressService, changeEmail, deleteAddressService, editAddressService, editDefaultByIdService, finduserById, getAllAddress, validateAndUpdateUser } from "../../servises/user/userProfileServices.js"
+import { addAddressService, changeEmail, deleteAddressService, editAddressService, editDefaultByIdService, finduserById, getAllAddress, validateAndUpdateUser } from "../../services/user/userProfileServices.js"
 import cloudinary from "../../utils/cloudinary.js";
 import httpStatusCode from "../../utils/httpStatusCode.js"
 import { sendResetPasswordToken } from "../../utils/sendVerificationOTP.js";

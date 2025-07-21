@@ -2,11 +2,11 @@ import jwt from "jsonwebtoken";
 import {
   getActiveCategories,
   getProductByCategoryId,
-} from "../../servises/user/getUserProductService.js";
-import { findWishlistByUserId } from "../../servises/user/wishlistServices.js";
+} from "../../services/user/getUserProductService.js";
+import { findWishlistByUserId } from "../../services/user/wishlistServices.js";
 import httpStatusCode from "../../utils/httpStatusCode.js";
 import dotenv from "dotenv";
-import { findBestPriceForProduct } from "../../servises/offers/bestOfferForProductService.js";
+import { findBestPriceForProduct } from "../../services/offers/bestOfferForProductService.js";
 
 dotenv.config();
 const config = {

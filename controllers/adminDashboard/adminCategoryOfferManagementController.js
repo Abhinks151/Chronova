@@ -6,8 +6,8 @@ import {
   getActiveCategoryOffers,
   getCategoryOfferByIdService,
   toggleCategoryOfferStatusService
-} from '../../servises/offers/adminCategoryOfferService.js';
-import { getActiveCategories } from '../../servises/user/getUserProductService.js';
+} from '../../services/offers/adminCategoryOfferService.js';
+import { getActiveCategories } from '../../services/user/getUserProductService.js';
 import httpStatusCode from '../../utils/httpStatusCode.js';
 
 export const getCategoryOfferManagementPage = async (req, res) => {

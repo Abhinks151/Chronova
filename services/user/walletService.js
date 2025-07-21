@@ -35,15 +35,22 @@ export const getFilteredWalletHistoryService = async (userId, { page, limit, typ
 
 export const getWalletHistoryService = async (userId) => {
   try {
-    const data = await Wallet.findOne({ userId })
+    let data = await Wallet.findOne({ userId })
       .populate('transactions')
 
     if (!data) {
-      throw new Error("Wallet not found for the given user ID");
+      if (!data) {
+        data = await Wallet.create({
+          userId,
+          balance: 0,
+          transactions: []
+        });
+      }
+
     }
 
 
-    
+
     return data;
   } catch (error) {
     console.error("Error in getWalletHistory:", error);

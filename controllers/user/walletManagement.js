@@ -1,4 +1,4 @@
-import { getFilteredWalletHistoryService, getWalletHistoryService } from "../../servises/user/walletService.js";
+import { getFilteredWalletHistoryService, getWalletHistoryService } from "../../services/user/walletService.js";
 import httpStatusCOde from '../../utils/httpStatusCode.js';
 
 export const getWalletPage = (req, res) => {
@@ -26,9 +26,9 @@ export const getWalletHistory = async (req, res) => {
 
     if (!data) {
       return res.status(httpStatusCOde.NOT_FOUND.code).json({
-        message: "Wallet not found for the given user ID",
+        message: "Wallet is empty",
         success: false,
-        data: null
+        data: [],
       });
     }
     res.json({

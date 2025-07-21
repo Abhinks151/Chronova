@@ -1,4 +1,4 @@
-import { countWishlistProductByUserId, getWishlistProductsByUserId, wishlistToggleService } from '../../servises/user/wishlistServices.js';
+import { countWishlistProductByUserId, getWishlistProductsByUserId, wishlistToggleService } from '../../services/user/wishlistServices.js';
 import httpStatusCode from '../../utils/httpStatusCode.js';
 
 

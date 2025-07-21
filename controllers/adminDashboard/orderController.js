@@ -6,7 +6,7 @@ import {
   updateOrderPaymentStatus as updateOrderPaymentStatusService,
   updateItemPaymentStatus as updateItemPaymentStatusService,
   getOrderPaymentStatus as getOrderPaymentStatusService,
-} from '../../servises/adminOrderManagementService/orderService.js';
+} from '../../services/adminOrderManagementService/orderService.js';
 
 
 export const getOrders = async (req, res) => {
@@ -85,6 +85,66 @@ export const getOrders = async (req, res) => {
     res.status(500).render("error", { message: "Error fetching orders" })
   }
 }
+
+
+
+export const getOrdersData = async (req, res) => {
+  try {
+    const page = Number.parseInt(req.query.page) || 1;
+    const limit = Number.parseInt(req.query.limit) || 10;
+    const skip = (page - 1) * limit;
+    const search = req.query.search || "";
+    const status = req.query.status || "";
+    const sortBy = req.query.sortBy || "createdAt";
+    const sortOrder = req.query.sortOrder || "desc";
+
+    const searchQuery = {};
+    if (search) {
+      searchQuery.$or = [
+        { orderId: { $regex: search, $options: "i" } },
+        { "shippingAddress.fullName": { $regex: search, $options: "i" } },
+        { "items.productName": { $regex: search, $options: "i" } },
+        { "items.brand": { $regex: search, $options: "i" } },
+      ];
+    }
+
+    if (status) {
+      if (status === "Return Requested") {
+        searchQuery.items = {
+          $elemMatch: { status: "Return Requested" },
+        };
+      } else {
+        searchQuery.orderStatus = status;
+      }
+    }
+
+    const sortObj = {};
+    sortObj[sortBy] = sortOrder === "desc" ? -1 : 1;
+
+    const orders = await Order.find(searchQuery)
+      .populate("userId", "name email")
+      .sort(sortObj)
+      .skip(skip)
+      .limit(limit);
+
+    const totalOrders = await Order.countDocuments(searchQuery);
+    const totalPages = Math.ceil(totalOrders / limit);
+
+    res.status(200).json({
+      orders,
+      totalOrders,
+      currentPage: page,
+      totalPages,
+      limit,
+    });
+  } catch (error) {
+    console.error("Error fetching orders (API):", error);
+    res.status(500).json({ error: "Failed to fetch orders" });
+  }
+};
+
+
+
 
 export const getOrderDetails = async (req, res) => {
   try {
@@ -545,7 +605,7 @@ export const updateOrderPaymentStatus = async (req, res) => {
   try {
     const { orderId } = req.params
     const { paymentStatus } = req.body
-    const adminId = req.user?.id || "admin" // Adjust based on your auth structure
+    const adminId = req.admin?._id || "admin";
 
     // Validate payment status
     const validStatuses = ["Pending", "Paid", "Failed", "Refunded", "Cancelled"]
