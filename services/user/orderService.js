@@ -5,10 +5,12 @@ import { Order } from "../../models/order.js";
 import { Category } from "../../models/category.js";
 import puppeteer from "puppeteer";
 import path from "path";
+import { logger } from '../../config/logger.js';
 import ejs from "ejs";
 import { logStockChange } from "../../utils/logStockRegistry.js";
 import { fileURLToPath } from "url";
 import { Coupon } from "../../models/coupon.js";
+import * as crypto from 'crypto';
 
 import mongoose from 'mongoose';
 
@@ -16,6 +18,69 @@ import mongoose from 'mongoose';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
+
+
+
+
+export const verifyRazorpayPaymentService = async (body) => {
+  const {
+    razorpay_order_id,
+    razorpay_payment_id,
+    razorpay_signature,
+    orderId,
+  } = body;
+
+  if (!orderId || !razorpay_order_id || !razorpay_payment_id || !razorpay_signature) {
+    logger.warn("Missing required fields in Razorpay payment verification", body);
+    const error = new Error("Missing required fields");
+    error.statusCode = httpStatusCode.BAD_REQUEST.code;
+    throw error;
+  }
+
+  const hmac = crypto.createHmac("sha256", process.env.RAZORPAY_SECRET_KEY);
+  hmac.update(`${razorpay_order_id}|${razorpay_payment_id}`);
+  const generatedSignature = hmac.digest("hex");
+
+  if (generatedSignature !== razorpay_signature) {
+    logger.warn("Invalid Razorpay signature", {
+      received: razorpay_signature,
+      expected: generatedSignature,
+    });
+    const error = new Error("Invalid payment signature");
+    error.statusCode = httpStatusCode.BAD_REQUEST.code;
+    throw error;
+  }
+
+  const order = await Order.findOne({ orderId });
+
+  if (!order) {
+    logger.warn("Order not found during payment verification", { orderId });
+    const error = new Error("Order not found");
+    error.statusCode = httpStatusCode.NOT_FOUND.code;
+    throw error;
+  }
+
+  order.paymentStatus = "Paid";
+  order.isPaid = true;
+  order.paymentDetails = {
+    transactionId: razorpay_payment_id,
+    razorpay_order_id,
+    razorpay_signature,
+    paymentDate: new Date(),
+    paymentProvider: "Razorpay",
+  };
+
+  await order.save();
+
+  logger.info("Payment verified and order updated", { orderId });
+
+  return {
+    success: true,
+    message: "Payment verified and order updated",
+    orderId,
+  };
+};
+
 
 export const placeOrderService = async (
   userId,
@@ -36,11 +101,11 @@ export const placeOrderService = async (
 
 
     // console.log(orderData)
-    if(orderData.paymentMethod === 'cod' && orderData.total > 1000){
+    if (orderData.paymentMethod === 'cod' && orderData.total > 1000) {
       throw new Error('Maximum order amount for COD is 1000');
     }
 
-    
+
 
     const productIds = orderData.items.map(
       (item) => item.productId?._id?.toString() || item.productId?.toString()
@@ -162,11 +227,11 @@ export const placeOrderService = async (
       paymentStatus: isVerifiedOnline ? "Paid" : "Pending",
       paymentDetails: isVerifiedOnline
         ? {
-            paymentProvider: "Razorpay",
-            razorpay_payment_id: orderData.paymentDetails?.razorpay_payment_id,
-            razorpay_order_id: orderData.paymentDetails?.razorpay_order_id,
-            razorpay_signature: orderData.paymentDetails?.razorpay_signature,
-          }
+          paymentProvider: "Razorpay",
+          razorpay_payment_id: orderData.paymentDetails?.razorpay_payment_id,
+          razorpay_order_id: orderData.paymentDetails?.razorpay_order_id,
+          razorpay_signature: orderData.paymentDetails?.razorpay_signature,
+        }
         : {},
     });
 
@@ -264,143 +329,242 @@ export const getSingleOrderService = async (userId, orderId) => {
   return order;
 };
 
-export const cancelOrderItemService = async (userId, orderId, itemId) => {
+
+export const cancelEntireOrderService = async (userId, orderId) => {
   const order = await Order.findOne({ userId, orderId });
 
   if (!order) {
-    throw new Error("Order not found or access denied.");
+    logger.warn(`Order not found: orderId=${orderId}, userId=${userId}`);
+    const error = new Error("Order not found.");
+    error.statusCode = httpStatusCode.NOT_FOUND.code;
+    throw error;
+  }
+
+  if (order.orderStatus === "Cancelled") {
+    logger.info(`Order already cancelled: orderId=${orderId}`);
+    const error = new Error("Order already cancelled.");
+    error.statusCode = httpStatusCode.BAD_REQUEST.code;
+    throw error;
+  }
+
+  const allItemsPlaced = order.items.every(item => item.status === "Placed");
+  if (!allItemsPlaced) {
+    logger.warn(`Order has non-cancellable items: orderId=${orderId}`);
+    const error = new Error("Only orders with all items in 'Placed' status can be cancelled.");
+    error.statusCode = httpStatusCode.BAD_REQUEST.code;
+    throw error;
+  }
+
+  for (const item of order.items) {
+    await Products.findByIdAndUpdate(item.productId, {
+      $inc: { stockQuantity: item.quantity },
+    });
+
+    item.status = "Cancelled";
+    item.cancelReason = "Cancelled by user";
+
+    await logStockChange({
+      productId: item.productId,
+      action: "stock_in",
+      quantity: item.quantity,
+      reason: "Order Cancelled",
+      updatedBy: "system",
+      userId,
+    });
+  }
+
+  order.orderStatus = "Cancelled";
+  order.cancellation = {
+    cancelledAt: new Date(),
+    cancelledBy: "User",
+    reason: "Cancelled by user",
+  };
+
+  await order.save();
+
+  logger.info(`Order cancelled successfully: orderId=${orderId}`);
+  return order;
+};
+
+
+
+
+export const cancelSingleItemService = async (userId, orderId, itemId) => {
+  const order = await Order.findOne({ userId, orderId });
+
+  if (!order) {
+    logger.warn(`Order not found for user ${userId}, orderId=${orderId}`);
+    const error = new Error("Order not found.");
+    error.statusCode = httpStatusCode.NOT_FOUND.code;
+    throw error;
   }
 
   const item = order.items.id(itemId);
-
   if (!item) {
-    throw new Error("Item not found in this order.");
+    logger.warn(`Item not found in order ${orderId}, itemId=${itemId}`);
+    const error = new Error("Item not found in order.");
+    error.statusCode = httpStatusCode.NOT_FOUND.code;
+    throw error;
   }
 
   if (item.status !== "Placed") {
-    throw new Error("Only items with 'Placed' status can be cancelled.");
+    logger.info(`Item cannot be cancelled: itemId=${itemId}, currentStatus=${item.status}`);
+    const error = new Error("Item cannot be cancelled.");
+    error.statusCode = httpStatusCode.BAD_REQUEST.code;
+    throw error;
   }
-
-  item.status = "Cancelled";
-  item.cancelReason = "Cancelled by user";
 
   await Products.findByIdAndUpdate(item.productId, {
     $inc: { stockQuantity: item.quantity },
   });
 
-  // Update order status based on item statuses
-  await updateOrderStatusBasedOnItems(order);
+  item.status = "Cancelled";
+  item.cancelReason = "Cancelled by user";
+
+  await logStockChange({
+    productId: item.productId,
+    action: "stock_in",
+    quantity: item.quantity,
+    reason: "Item Cancelled",
+    updatedBy: "system",
+    userId,
+  });
+
+  const allItemsCancelled = order.items.every(i => i.status === "Cancelled");
+  if (allItemsCancelled) {
+    order.orderStatus = "Cancelled";
+    order.cancellation = {
+      cancelledAt: new Date(),
+      cancelledBy: "User",
+      reason: "All items cancelled",
+    };
+    logger.info(`Entire order marked as cancelled since all items are cancelled: orderId=${orderId}`);
+  }
 
   await order.save();
 
+  logger.info(`Item cancelled successfully: itemId=${itemId}, orderId=${orderId}`);
   return order;
 };
 
-export const returnOrderItemService = async (
-  userId,
-  orderId,
-  itemId,
-  returnReason
-) => {
+
+
+
+export const returnOrderItemService = async (userId, orderId, itemId, returnReason) => {
+  if (!returnReason?.trim()) {
+    logger.warn("Return reason is missing or empty.");
+    const error = new Error("Return reason is required.");
+    error.statusCode = httpStatusCode.BAD_REQUEST.code;
+    throw error;
+  }
+
   const order = await Order.findOne({ userId, orderId });
 
   if (!order) {
-    throw new Error("Order not found or access denied.");
+    logger.warn(`Order not found: orderId=${orderId}, userId=${userId}`);
+    const error = new Error("Order not found.");
+    error.statusCode = httpStatusCode.NOT_FOUND.code;
+    throw error;
   }
 
   const item = order.items.id(itemId);
-
   if (!item) {
-    throw new Error("Item not found in this order.");
+    logger.warn(`Item not found in order: itemId=${itemId}, orderId=${orderId}`);
+    const error = new Error("Item not found.");
+    error.statusCode = httpStatusCode.NOT_FOUND.code;
+    throw error;
   }
 
   if (item.status !== "Delivered") {
-    throw new Error("Only delivered items can be returned.");
+    logger.info(`Return denied: item not delivered. itemId=${itemId}, status=${item.status}`);
+    const error = new Error("Only delivered items can be returned.");
+    error.statusCode = httpStatusCode.BAD_REQUEST.code;
+    throw error;
   }
 
-  if (item.returnReason) {
-    throw new Error("Return request already submitted for this item.");
-  }
-
-  // Set status to "Return Requested" and add return reason
   item.status = "Return Requested";
-  item.returnReason = returnReason;
-  item.returnRequestedAt = new Date();
-
-  // Update return info
-  if (!order.returnInfo) {
-    order.returnInfo = {
-      totalReturnRequests: 0,
-      approvedReturns: 0,
-      rejectedReturns: 0,
-    };
-  }
-  order.returnInfo.totalReturnRequests += 1;
-
-  // Update order status based on item statuses
-  await updateOrderStatusBasedOnItems(order);
+  item.returnReason = returnReason.trim();
 
   await order.save();
 
+  logger.info(`Return request submitted: itemId=${itemId}, orderId=${orderId}`);
   return order;
 };
 
-export const returnEntireOrderService = async (
-  userId,
-  orderId,
-  returnReason
-) => {
+
+
+
+
+export const returnEntireOrderService = async (userId, orderId, returnReason) => {
+  if (!returnReason?.trim()) {
+    logger.warn("Return reason missing for entire order return.");
+    const error = new Error("Return reason is required.");
+    error.statusCode = httpStatusCode.BAD_REQUEST.code;
+    throw error;
+  }
+
   const order = await Order.findOne({ userId, orderId });
 
   if (!order) {
-    throw new Error("Order not found or access denied.");
+    logger.warn(`Order not found: orderId=${orderId}, userId=${userId}`);
+    const error = new Error("Order not found.");
+    error.statusCode = httpStatusCode.NOT_FOUND.code;
+    throw error;
   }
 
-  const deliveredItems = order.items.filter(
-    (item) => item.status === "Delivered" && !item.returnReason
-  );
-
-  if (deliveredItems.length === 0) {
-    throw new Error("No delivered items available for return.");
+  const allItemsDelivered = order.items.every(item => item.status === "Delivered");
+  if (!allItemsDelivered) {
+    logger.info(`Order contains non-delivered items, cannot return entire order: orderId=${orderId}`);
+    const error = new Error("Only delivered orders can be returned.");
+    error.statusCode = httpStatusCode.BAD_REQUEST.code;
+    throw error;
   }
 
-  // Update all delivered items to return requested
-  let returnRequestCount = 0;
-  order.items = order.items.map((item) => {
-    if (item.status === "Delivered" && !item.returnReason) {
-      returnRequestCount++;
-      return {
-        ...item._doc,
-        status: "Return Requested",
-        returnReason: returnReason,
-        returnRequestedAt: new Date(),
-      };
-    }
-    return item;
-  });
-
-  // Update return info
-  if (!order.returnInfo) {
-    order.returnInfo = {
-      totalReturnRequests: 0,
-      approvedReturns: 0,
-      rejectedReturns: 0,
-    };
+  for (const item of order.items) {
+    item.status = "Return Requested";
+    item.returnReason = returnReason.trim();
   }
-  order.returnInfo.totalReturnRequests += returnRequestCount;
 
-  // Update order status based on item statuses
-  await updateOrderStatusBasedOnItems(order);
+  order.orderStatus = "Return Requested";
+  order.returnRequest = {
+    requestedAt: new Date(),
+    requestedBy: "User",
+    reason: returnReason.trim(),
+  };
 
   await order.save();
 
+  logger.info(`Entire order return requested: orderId=${orderId}, userId=${userId}`);
   return order;
 };
+
+export const viewInvoiceService = async (userId, orderId) => {
+  if (!userId || !orderId) {
+    logger.warn("Missing userId or orderId for invoice generation.");
+    const error = new Error("User ID and Order ID are required.");
+    error.statusCode = httpStatusCode.BAD_REQUEST.code;
+    throw error;
+  }
+
+  const order = await Order.findOne({ _id: orderId, userId });
+
+  if (!order) {
+    logger.warn(`Order not found for invoice: userId=${userId}, orderId=${orderId}`);
+    const error = new Error("Order not found.");
+    error.statusCode = httpStatusCode.NOT_FOUND.code;
+    throw error;
+  }
+
+  logger.info(`Invoice rendered for orderId=${orderId}`);
+  return order;
+};
+
 
 export const generateInvoiceService = async (userId, orderId) => {
   const order = await Order.findOne({ userId, orderId });
 
   if (!order) {
+    logger.warn(`Order not found for PDF invoice: userId=${userId}, orderId=${orderId}`);
     throw new Error("Order not found or access denied.");
   }
 
@@ -423,49 +587,68 @@ export const generateInvoiceService = async (userId, orderId) => {
     printBackground: true,
   });
 
+  logger.info(`Invoice PDF generated for orderId=${orderId}`);
   await browser.close();
 
   return pdfBuffer;
 };
 
-async function updateOrderStatusBasedOnItems(order) {
-  const itemStatuses = order.items.map((item) => item.status);
-  const totalItems = order.items.length;
+// export const generateInvoiceService = async (userId, orderId) => {
+//   const order = await Order.findOne({ _id: orderId, userId });
 
-  const statusCounts = {
-    placed: itemStatuses.filter((s) => s === "Placed").length,
-    cancelled: itemStatuses.filter((s) => s === "Cancelled").length,
-    shipped: itemStatuses.filter((s) => s === "Shipped").length,
-    delivered: itemStatuses.filter((s) => s === "Delivered").length,
-    returnRequested: itemStatuses.filter((s) => s === "Return Requested")
-      .length,
-    returnApproved: itemStatuses.filter((s) => s === "Return Approved").length,
-    returnRejected: itemStatuses.filter((s) => s === "Return Rejected").length,
-  };
+//   if (!order) {
+//     const error = new Error("Order not found.");
+//     error.statusCode = httpStatusCode.NOT_FOUND.code;
+//     throw error;
+//   }
 
-  if (statusCounts.returnApproved === totalItems) {
-    order.orderStatus = "Return Approved";
-  } else if (statusCounts.returnApproved > 0) {
-    order.orderStatus = "Partially Return Approved";
-  } else if (statusCounts.returnRequested > 0) {
-    if (statusCounts.returnRequested === totalItems) {
-      order.orderStatus = "Return Requested";
-    } else {
-      order.orderStatus = "Return Requested";
-    }
-  } else if (statusCounts.cancelled === totalItems) {
-    order.orderStatus = "Cancelled";
-  } else if (statusCounts.cancelled > 0) {
-    order.orderStatus = "Partially Cancelled";
-  } else if (statusCounts.delivered === totalItems) {
-    order.orderStatus = "Delivered";
-  } else if (statusCounts.delivered > 0) {
-    order.orderStatus = "Delivered";
-  } else if (statusCounts.shipped > 0) {
-    order.orderStatus = "Shipped";
-  } else if (statusCounts.placed === totalItems) {
-    order.orderStatus = "Placed";
-  }
-}
+//   const htmlContent = await renderInvoiceTemplate(order); // Render EJS or any view engine
+//   const pdfBuffer = await generatePDFBuffer(htmlContent); // Convert HTML to PDF buffer
+
+//   return pdfBuffer;
+// };
+
+
+// async function updateOrderStatusBasedOnItems(order) {
+//   const itemStatuses = order.items.map((item) => item.status);
+//   const totalItems = order.items.length;
+
+//   const statusCounts = {
+//     placed: itemStatuses.filter((s) => s === "Placed").length,
+//     cancelled: itemStatuses.filter((s) => s === "Cancelled").length,
+//     shipped: itemStatuses.filter((s) => s === "Shipped").length,
+//     delivered: itemStatuses.filter((s) => s === "Delivered").length,
+//     returnRequested: itemStatuses.filter((s) => s === "Return Requested")
+//       .length,
+//     returnApproved: itemStatuses.filter((s) => s === "Return Approved").length,
+//     returnRejected: itemStatuses.filter((s) => s === "Return Rejected").length,
+//   };
+
+//   if (statusCounts.returnApproved === totalItems) {
+//     order.orderStatus = "Return Approved";
+//   } else if (statusCounts.returnApproved > 0) {
+//     order.orderStatus = "Partially Return Approved";
+//   } else if (statusCounts.returnRequested > 0) {
+//     if (statusCounts.returnRequested === totalItems) {
+//       order.orderStatus = "Return Requested";
+//     } else {
+//       order.orderStatus = "Return Requested";
+//     }
+//   } else if (statusCounts.cancelled === totalItems) {
+//     order.orderStatus = "Cancelled";
+//   } else if (statusCounts.cancelled > 0) {
+//     order.orderStatus = "Partially Cancelled";
+//   } else if (statusCounts.delivered === totalItems) {
+//     order.orderStatus = "Delivered";
+//   } else if (statusCounts.delivered > 0) {
+//     order.orderStatus = "Delivered";
+//   } else if (statusCounts.shipped > 0) {
+//     order.orderStatus = "Shipped";
+//   } else if (statusCounts.placed === totalItems) {
+//     order.orderStatus = "Placed";
+//   }
+// }
 
 export const returnReason = ["Damaged", "Wrong Item", "Quality Issue", "Other"];
+
+
