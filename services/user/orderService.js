@@ -7,7 +7,6 @@ import puppeteer from "puppeteer";
 import path from "path";
 import ejs from "ejs";
 import { logStockChange } from "../../utils/logStockRegistry.js";
-import { logger } from "../../config/logger.js";
 import { fileURLToPath } from "url";
 import { Coupon } from "../../models/coupon.js";
 

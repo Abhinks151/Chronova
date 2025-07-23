@@ -25,9 +25,12 @@ export const verifyRazorpayPayment = async (req, res) => {
       orderId,
     } = req.body;
 
-    
+
     if (!orderId || !razorpay_order_id || !razorpay_payment_id || !razorpay_signature) {
-      return res.status(400).json({ success: false, message: "Missing required fields" });
+      return res.status(httpStatusCode.BAD_REQUEST.code).json({
+        success: false,
+        message: "Missing required fields"
+      });
     }
 
     const hmac = crypto.createHmac("sha256", process.env.RAZORPAY_SECRET_KEY);
@@ -36,14 +39,20 @@ export const verifyRazorpayPayment = async (req, res) => {
 
     if (generatedSignature !== razorpay_signature) {
       return res
-        .status(400)
-        .json({ success: false, message: "Invalid payment signature" });
+        .status(httpStatusCode.BAD_REQUEST.code)
+        .json({
+          success: false,
+          message: "Invalid payment signature"
+        });
     }
 
     const order = await Order.findOne({ orderId });
 
     if (!order) {
-      return res.status(404).json({ success: false, message: "Order not found" });
+      return res.status(httpStatusCode.NOT_FOUND.code).json({
+        success: false,
+        message: "Order not found"
+      });
     }
 
     order.paymentStatus = "Paid";
@@ -58,14 +67,14 @@ export const verifyRazorpayPayment = async (req, res) => {
 
     await order.save();
 
-    return res.status(200).json({
+    return res.status(httpStatusCode.OK.code).json({
       success: true,
       message: "Payment verified and order updated",
       orderId,
     });
   } catch (err) {
     console.error("Error verifying Razorpay payment:", err);
-    return res.status(500).json({ success: false, message: err.message });
+    return res.status(httpStatusCode.INTERNAL_SERVER_ERROR.code).json({ success: false, message: err.message });
   }
 };
 
@@ -284,7 +293,7 @@ export const cancelEntireOrderController = async (req, res) => {
 
     await order.save();
 
-    return res.status(200).json({
+    return res.status(httpStatusCode.OK.code).json({
       success: true,
       message: "Order cancelled successfully.",
       order,
