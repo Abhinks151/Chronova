@@ -5,8 +5,8 @@ import mongoose from "mongoose";
 
 
 
-export const getActiveProductOffers = async ({ page = 1, limit = 10, sort = "createdAt_desc", search = "", status = "" , discount = ""}) => {
- const skip = (page - 1) * limit;
+export const getActiveProductOffers = async ({ page = 1, limit = 10, sort = "createdAt_desc", search = "", status = "", discount = "" }) => {
+  const skip = (page - 1) * limit;
 
   const query = { isDeleted: false };
 
@@ -58,9 +58,9 @@ export const addProductOfferService = async (offerData) => {
     throw new Error("All fields are required and at least one product must be selected");
   }
 
-  const isExist = await ProductOffer.findOne({name});
-  if(isExist){
-    throw new Error("Product offer name already exist"); 
+  const isExist = await ProductOffer.findOne({ name });
+  if (isExist) {
+    throw new Error("Product offer name already exist");
   }
 
   if (discountPercentage <= 0 || discountPercentage > 100) {
@@ -104,10 +104,20 @@ export const editProductOfferService = async (offerId, data) => {
     logger.warn("Invalid product offer payload during edit");
     throw new Error("All fields are required and at least one product must be selected");
   }
-   const isExist = await ProductOffer.findOne({name});
-  if(isExist){
-    throw new Error("Product offer name already exist"); 
+
+
+  const offer = await ProductOffer.findById(offerId);
+  if (!offer) {
+    throw new Error("Product offer not found");
   }
+
+  if (!offer.name === name) {
+    const isExist = await ProductOffer.findOne({ name });
+    if (isExist) {
+      throw new Error("Product offer name already exist");
+    }
+  }
+
 
   if (discountPercentage <= 0 || discountPercentage > 100) {
     throw new Error("Discount percent must be between 1 and 100");

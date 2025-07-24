@@ -365,7 +365,7 @@ export const approveReturn = async (req, res) => {
 
     // console.log(item.price, item.discount, item.quantity,item.finalPrice);
 
-    const refundAmount = item.finalPrice * item.quantity;
+    const refundAmount = item.netItemTotal * item.quantity;
     let wallet = await Wallet.findOne({ userId: order.userId._id });
 
     const transaction = {
