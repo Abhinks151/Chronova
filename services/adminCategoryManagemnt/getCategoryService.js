@@ -18,7 +18,7 @@ export const getCategoryService = async () => {
             $match: {
               $expr: {
                 $and: [
-                  { $in: ['$$categoryId', '$category'] },  // ✅ fix for array
+                  { $in: ['$$categoryId', '$category'] },
                   { $eq: ['$isDeleted', false] }
                 ]
               }

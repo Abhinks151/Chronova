@@ -255,14 +255,24 @@
         }
       }
 
-      // Load revenue chart
       async function loadRevenueChart({
         range = "monthly",
         customStart = null,
         customEnd = null,
+        timezone = Intl.DateTimeFormat().resolvedOptions().timeZone,
+        aggregateBy = "totalAmount",
+        showMetrics = true,
+        showTrendline = false,
+        animationDuration = 1000,
       } = {}) {
         try {
-          let url = `/admin/dashboard/sales/chart/data?range=${range}`;
+          // Show loading state
+          const loadingOverlay = document.getElementById("chart-loading");
+          if (loadingOverlay) loadingOverlay.style.display = "flex";
+
+          let url = `/admin/dashboard/sales/chart/data?range=${range}&timezone=${encodeURIComponent(
+            timezone
+          )}&aggregateBy=${aggregateBy}`;
           if (customStart && customEnd) {
             url += `&customStart=${customStart}&customEnd=${customEnd}`;
           }
@@ -270,32 +280,63 @@
           const res = await axios.get(url);
           const data = res.data.data;
 
-          if (chartInstance) chartInstance.destroy();
+          // Update metrics display if enabled
+          if (showMetrics && data.metadata) {
+            updateMetricsDisplay(data.metadata);
+          }
 
+          if (chartInstance) {
+            chartInstance.destroy();
+          }
+
+          // Prepare datasets
+          const datasets = [
+            {
+              label: `Revenue (₹)`,
+              data: data.chartValues,
+              borderColor: "#3b82f6",
+              backgroundColor: "rgba(59, 130, 246, 0.1)",
+              borderWidth: 3,
+              tension: 0.4,
+              fill: true,
+              pointBackgroundColor: "#ffffff",
+              pointBorderColor: "#3b82f6",
+              pointBorderWidth: 2,
+              pointRadius: 6,
+              pointHoverRadius: 8,
+            },
+          ];
+
+          // Add trendline if requested
+          if (showTrendline && data.chartValues.length > 2) {
+            const trendlineData = calculateTrendline(data.chartValues);
+            datasets.push({
+              label: "Trend",
+              data: trendlineData,
+              borderColor: "#ef4444",
+              backgroundColor: "transparent",
+              borderWidth: 2,
+              borderDash: [5, 5],
+              pointRadius: 0,
+              tension: 0,
+              fill: false,
+            });
+          }
+
+          // Enhanced chart configuration
           chartInstance = new Chart(chartCanvas, {
             type: "line",
             data: {
               labels: data.chartLabels,
-              datasets: [
-                {
-                  label: "Revenue (₹)",
-                  data: data.chartValues,
-                  borderColor: "#3b82f6",
-                  backgroundColor: "rgba(59, 130, 246, 0.1)",
-                  borderWidth: 3,
-                  tension: 0.4,
-                  fill: true,
-                  pointBackgroundColor: "#ffffff",
-                  pointBorderColor: "#3b82f6",
-                  pointBorderWidth: 2,
-                  pointRadius: 6,
-                  pointHoverRadius: 8,
-                },
-              ],
+              datasets: datasets,
             },
             options: {
               responsive: true,
               maintainAspectRatio: false,
+              animation: {
+                duration: animationDuration,
+                easing: "easeInOutQuart",
+              },
               plugins: {
                 legend: {
                   display: true,
@@ -303,6 +344,17 @@
                   labels: {
                     usePointStyle: true,
                     font: { weight: "600" },
+                    generateLabels: (chart) => {
+                      const original =
+                        Chart.defaults.plugins.legend.labels.generateLabels;
+                      const labels = original.call(this, chart);
+
+                      // Add metadata to legend if available
+                      if (data.metadata && labels.length > 0) {
+                        labels[0].text += ` (Total: ₹${data.metadata.totalRevenue.toLocaleString()})`;
+                      }
+                      return labels;
+                    },
                   },
                 },
                 tooltip: {
@@ -311,7 +363,50 @@
                   bodyFont: { weight: "500" },
                   cornerRadius: 8,
                   displayColors: false,
+                  callbacks: {
+                    title: (context) => {
+                      return `${context[0].label}`;
+                    },
+                    beforeBody: (context) => {
+                      const index = context[0].dataIndex;
+                      const lines = [`Revenue: ₹${context[0].formattedValue}`];
+
+                      if (data.chartCounts && data.chartCounts[index]) {
+                        lines.push(`Orders: ${data.chartCounts[index]}`);
+                      }
+
+                      if (data.chartAverages && data.chartAverages[index]) {
+                        lines.push(
+                          `Avg Order: ₹${Math.round(
+                            data.chartAverages[index]
+                          ).toLocaleString()}`
+                        );
+                      }
+
+                      return lines;
+                    },
+                    label: () => "", // Clear default label since we're using beforeBody
+                  },
                 },
+                annotation: data.metadata
+                  ? {
+                      annotations: {
+                        averageLine: {
+                          type: "line",
+                          yMin: data.metadata.averageOrderValue,
+                          yMax: data.metadata.averageOrderValue,
+                          borderColor: "rgba(255, 193, 7, 0.8)",
+                          borderWidth: 2,
+                          borderDash: [10, 5],
+                          label: {
+                            content: `Avg: ₹${data.metadata.averageOrderValue.toLocaleString()}`,
+                            enabled: true,
+                            position: "end",
+                          },
+                        },
+                      },
+                    }
+                  : {},
               },
               scales: {
                 y: {
@@ -330,6 +425,8 @@
                   },
                   ticks: {
                     font: { weight: "500" },
+                    maxRotation: 45,
+                    minRotation: 0,
                   },
                 },
               },
@@ -337,12 +434,153 @@
                 intersect: false,
                 mode: "index",
               },
+              onHover: (event, elements) => {
+                chartCanvas.style.cursor =
+                  elements.length > 0 ? "pointer" : "default";
+              },
+              onClick: (event, elements) => {
+                if (elements.length > 0) {
+                  const index = elements[0].index;
+                  const label = data.chartLabels[index];
+                  const value = data.chartValues[index];
+
+                  // Trigger custom event for drill-down functionality
+                  window.dispatchEvent(
+                    new CustomEvent("chartPointClick", {
+                      detail: {
+                        index,
+                        label,
+                        value,
+                        range,
+                        customStart,
+                        customEnd,
+                      },
+                    })
+                  );
+                }
+              },
             },
           });
+
+          // Hide loading state
+          if (loadingOverlay) loadingOverlay.style.display = "none";
+
+          // Store chart data for export functionality
+          window.currentChartData = {
+            labels: data.chartLabels,
+            values: data.chartValues,
+            metadata: data.metadata,
+            range,
+            customStart,
+            customEnd,
+          };
         } catch (error) {
           console.error("Error loading revenue chart:", error);
+
+          // Hide loading state
+          const loadingOverlay = document.getElementById("chart-loading");
+          if (loadingOverlay) loadingOverlay.style.display = "none";
+
+          // Show error message
+          const errorContainer = document.getElementById("chart-error");
+          if (errorContainer) {
+            errorContainer.textContent = `Failed to load chart: ${error.message}`;
+            errorContainer.style.display = "block";
+          }
         }
       }
+
+      // Helper function to update metrics display
+      function updateMetricsDisplay(metadata) {
+        const metricsContainer = document.getElementById("chart-metrics");
+        if (!metricsContainer) return;
+
+        const growthClass =
+          metadata.growthRate >= 0 ? "text-green-600" : "text-red-600";
+        const growthIcon = metadata.growthRate >= 0 ? "↗" : "↘";
+
+        metricsContainer.innerHTML = `
+    <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-4">
+      <div class="bg-white p-4 rounded-lg shadow">
+        <p class="text-sm text-gray-600">Total Revenue</p>
+        <p class="text-2xl font-bold text-blue-600">₹${metadata.totalRevenue.toLocaleString()}</p>
+      </div>
+      <div class="bg-white p-4 rounded-lg shadow">
+        <p class="text-sm text-gray-600">Total Orders</p>
+        <p class="text-2xl font-bold text-green-600">${metadata.totalOrders.toLocaleString()}</p>
+      </div>
+      <div class="bg-white p-4 rounded-lg shadow">
+        <p class="text-sm text-gray-600">Avg Order Value</p>
+        <p class="text-2xl font-bold text-purple-600">₹${metadata.averageOrderValue.toLocaleString()}</p>
+      </div>
+      <div class="bg-white p-4 rounded-lg shadow">
+        <p class="text-sm text-gray-600">Growth Rate</p>
+        <p class="text-2xl font-bold ${growthClass}">${growthIcon} ${Math.abs(
+          metadata.growthRate
+        )}%</p>
+      </div>
+    </div>
+  `;
+      }
+
+      // Helper function to calculate trendline
+      function calculateTrendline(data) {
+        const n = data.length;
+        const indices = Array.from({ length: n }, (_, i) => i);
+
+        const sumX = indices.reduce((a, b) => a + b, 0);
+        const sumY = data.reduce((a, b) => a + b, 0);
+        const sumXY = indices.reduce((sum, x, i) => sum + x * data[i], 0);
+        const sumXX = indices.reduce((sum, x) => sum + x * x, 0);
+
+        const slope = (n * sumXY - sumX * sumY) / (n * sumXX - sumX * sumX);
+        const intercept = (sumY - slope * sumX) / n;
+
+        return indices.map((x) => slope * x + intercept);
+      }
+
+      // Export functionality
+      function exportChartData(format = "csv") {
+        if (!window.currentChartData) {
+          alert("No chart data available to export");
+          return;
+        }
+
+        const data = window.currentChartData;
+
+        if (format === "csv") {
+          const csvContent = [
+            ["Date", "Revenue", "Orders", "Average Order Value"].join(","),
+            ...data.labels.map((label, index) =>
+              [
+                label,
+                data.values[index],
+                data.metadata?.chartCounts?.[index] || "",
+                data.metadata?.chartAverages?.[index] || "",
+              ].join(",")
+            ),
+          ].join("\n");
+
+          const blob = new Blob([csvContent], { type: "text/csv" });
+          const url = window.URL.createObjectURL(blob);
+          const a = document.createElement("a");
+          a.href = url;
+          a.download = `revenue-chart-${data.range}-${
+            new Date().toISOString().split("T")[0]
+          }.csv`;
+          a.click();
+          window.URL.revokeObjectURL(url);
+        }
+      }
+
+      // Add event listener for drill-down functionality
+      window.addEventListener("chartPointClick", (event) => {
+        const { index, label, value, range } = event.detail;
+        console.log(`Clicked on ${label}: ₹${value.toLocaleString()}`);
+
+        // You can implement drill-down logic here
+        // For example, show detailed breakdown for the selected time period
+      });
 
       revenueFilter.addEventListener("change", (e) => {
         const selected = e.target.value;
