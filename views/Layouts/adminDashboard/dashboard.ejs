@@ -278,9 +278,11 @@
           }
 
           const res = await axios.get(url);
+          
           const data = res.data.data;
+          // console.log(data.chartLabels.length, data.chartValues.length);
+          // console.log(data.chartLabels, data.chartValues);
 
-          // Update metrics display if enabled
           if (showMetrics && data.metadata) {
             updateMetricsDisplay(data.metadata);
           }
@@ -307,7 +309,7 @@
             },
           ];
 
-          // Add trendline if requested
+
           if (showTrendline && data.chartValues.length > 2) {
             const trendlineData = calculateTrendline(data.chartValues);
             datasets.push({
@@ -323,7 +325,6 @@
             });
           }
 
-          // Enhanced chart configuration
           chartInstance = new Chart(chartCanvas, {
             type: "line",
             data: {

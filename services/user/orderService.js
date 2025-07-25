@@ -126,7 +126,7 @@ export const placeOrderService = async (userId, orderData, req, isVerifiedOnline
     for (const item of orderData.items) {
       const productId = item.productId?._id?.toString() || item.productId?.toString();
       const product = products.find((product) => {
-        product._id.toString() === productId;
+        return product._id.toString() === productId;
       });
 
       if (!product) throw new Error("Product not found or blocked/deleted");
