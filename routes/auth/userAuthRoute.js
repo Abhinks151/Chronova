@@ -34,7 +34,7 @@ userAuthRouter.post('/login', validate(['email', 'password']), postUserLogin);
 userAuthRouter.get('/forgot-password', getForgotPassord);
 userAuthRouter.post('/forgot-password', postForgotPassword);
 
-userAuthRouter.get('/reset-password/:token', authenticateUser, getResetPassword);
+userAuthRouter.get('/reset-password/:token', getResetPassword);
 userAuthRouter.post('/reset-password', authenticateUser, postResetPassword);
 
 userAuthRouter.get('/logout', userLogout);
@@ -46,3 +46,4 @@ userAuthRouter.get('/logout', userLogout);
 // userAuthRouter.get('/', (req, res) => res.status(200).render('Layouts/home'));
 
 export default userAuthRouter;
+
