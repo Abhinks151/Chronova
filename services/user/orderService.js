@@ -94,9 +94,9 @@ export const placeOrderService = async (userId, orderData, req, isVerifiedOnline
       throw new Error('Maximum order amount for COD is 1000');
     }
 
-    const productIds = orderData.items.map(
-      (item) => item.productId?._id?.toString() || item.productId?.toString()
-    );
+    const productIds = orderData.items.map((item) => {
+      return item.productId?._id?.toString() || item.productId?.toString()
+    });
 
     const products = await Products.find({
       _id: { $in: productIds },
@@ -104,10 +104,13 @@ export const placeOrderService = async (userId, orderData, req, isVerifiedOnline
       isBlocked: false,
     }).lean().session(session);
 
-    if (!products.length) throw new Error("No valid products found");
+    if (!products.length) {
+      throw new Error("No valid products found")
+    };
 
     const items = [];
 
+    //error add fallback
     const grossTotal = orderData.items.reduce((acc, item) => {
       const price = Number(item.offerPrice || item.price || 0);
       const quantity = Number(item.quantity || 0);
@@ -115,11 +118,16 @@ export const placeOrderService = async (userId, orderData, req, isVerifiedOnline
     }, 0);
 
     const couponDiscount = Number(orderData.discount || 0);
-    const discountRatio = grossTotal > 0 ? couponDiscount / grossTotal : 0;
+    let discountRatio = 0;
+    if (grossTotal > 0) {
+      discountRatio = couponDiscount / grossTotal;
+    }
 
     for (const item of orderData.items) {
       const productId = item.productId?._id?.toString() || item.productId?.toString();
-      const product = products.find((p) => p._id.toString() === productId);
+      const product = products.find((product) => {
+        return product._id.toString() === productId;
+      });
 
       if (!product) throw new Error("Product not found or blocked/deleted");
       const itemQty = Number(item.quantity || 0);
@@ -140,7 +148,7 @@ export const placeOrderService = async (userId, orderData, req, isVerifiedOnline
       const basePrice = Number(product.finalPrice || product.salePrice || product.price || 0);
       const offerPrice = Number(item.offer?.offerPrice || basePrice || 0);
       const perUnitDiscount = +(offerPrice * discountRatio).toFixed(2);
-      const netPrice = +(offerPrice - perUnitDiscount).toFixed(2);
+      const netPrice = Number(offerPrice - perUnitDiscount).toFixed(2);
 
       for (let i = 0; i < itemQty; i++) {
         items.push({
@@ -222,11 +230,11 @@ export const placeOrderService = async (userId, orderData, req, isVerifiedOnline
       paymentStatus: isVerifiedOnline ? "Paid" : "Pending",
       paymentDetails: isVerifiedOnline
         ? {
-            paymentProvider: "Razorpay",
-            razorpay_payment_id: orderData.paymentDetails?.razorpay_payment_id,
-            razorpay_order_id: orderData.paymentDetails?.razorpay_order_id,
-            razorpay_signature: orderData.paymentDetails?.razorpay_signature,
-          }
+          paymentProvider: "Razorpay",
+          razorpay_payment_id: orderData.paymentDetails?.razorpay_payment_id,
+          razorpay_order_id: orderData.paymentDetails?.razorpay_order_id,
+          razorpay_signature: orderData.paymentDetails?.razorpay_signature,
+        }
         : {},
     });
 

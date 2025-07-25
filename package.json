@@ -35,7 +35,6 @@
     "nanoid": "^5.1.5",
     "nocache": "^4.0.0",
     "nodemailer": "^7.0.3",
-    "noisejs": "^2.1.0",
     "npm": "^11.4.1",
     "passport": "^0.7.0",
     "passport-google-oauth20": "^2.0.0",
