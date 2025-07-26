@@ -65,6 +65,7 @@ export const getUserRegister = async (req, res) => {
 export const postUserRegister = async (req, res) => {
   try {
     const errors = validationResult(req);
+    // console.log(errors);
     if (!errors.isEmpty()) {
       const formattedErrors = {};
       errors.array().forEach(err => {

@@ -3,11 +3,11 @@ import { body } from 'express-validator';
 
 
 const validationSchemas = {
-  firstName: body('firstName')
+  firstname: body('firstname')
     .notEmpty().withMessage('First name is required')
     .isAlpha().withMessage('First name must contain only letters'),
 
-  lastName: body('lastName')
+  lastname: body('lastname')
     .optional({ checkFalsy: true })
     .isAlpha().withMessage('Last name must contain only letters'),
 
