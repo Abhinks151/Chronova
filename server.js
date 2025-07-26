@@ -49,6 +49,25 @@ app.use(
 // app.use(requestLogger);
 app.use("/", indexRoutes);
 
+app.get("/error", (req, res, next) => {
+  next(new Error("This is a test error"));
+});
+
+
+
+//Error
+app.use((err,req,res,next)=>{
+  console.log(err);
+  res.status(500).render("Layouts/error", {
+    statusCode: 500,
+    message : "Internal Server Error",
+    description: "Something went wrong. Please try again later.",
+  });
+})
+
+
+
+
 app.listen(PORT, () => {
   console.log(`Server running on http://localhost:${PORT}/user/home`);
   console.log(`Server running on http://localhost:${PORT}/admin/dashboard`);
