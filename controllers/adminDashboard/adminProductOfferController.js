@@ -59,7 +59,7 @@ export const getProductOfferManagementPageData = async (req, res) => {
 
 export const addProductOffer = async (req, res) => {
   try {
-    console.log(req.body);
+    // console.log(req.body);
     const data = await addProductOfferService(req.body);
     return res.status(httpStatusCode.CREATED.code).json({
       message: "Product offer added successfully",

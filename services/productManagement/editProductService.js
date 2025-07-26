@@ -9,10 +9,10 @@ export const getProduct = async (id) => {
 };
 
 
+
 export const updateProductService = async (productId, body, files) => {
   try {
     const existingProduct = await Products.findById(productId);
-
     if (!existingProduct) {
       return {
         success: false,
@@ -21,19 +21,101 @@ export const updateProductService = async (productId, body, files) => {
       };
     }
 
-    if (body.sku && body.sku !== existingProduct.sku) {
-      const skuExists = await Products.findOne({
-        sku: body.sku,
-        _id: { $ne: productId },
-      });
+    const {
+      productName,
+      description,
+      price,
+      salePrice,
+      stockQuantity,
+      category,
+      brand,
+      color,
+      dialSize,
+      weight,
+      sku,
+    } = body;
 
+    const trimmedName = productName?.trim();
+    const trimmedSKU = sku?.trim();
+    const trimmedColor = color?.trim();
+
+    const enums = {
+      productType: [
+        "Analog", "Digital", "Smart", "Hybrid", "Automatic",
+        "Mechanical", "Quartz", "Chronograph", "Skeleton",
+      ],
+      strapType: ["Leather", "Metal", "Rubber", "Fabric", "Silicone", "Ceramic", "NATO"],
+      dialShape: ["Round", "Square", "Rectangle", "Oval", "Tonneau"],
+      movement: ["Quartz", "Automatic", "Manual", "Digital", "Solar"],
+      waterResistance: ["30M", "50M", "100M", "200M", "300M", "500M"],
+      warranty: ["6 months", "1 year", "2 years", "3 years", "5 years", "Lifetime"],
+    };
+
+    if (!trimmedName || !/^[a-zA-Z0-9\s-_]+$/.test(trimmedName)) {
+      return { success: false, message: "Product name is required and must contain only letters, numbers, spaces, hyphens, and underscores" };
+    }
+
+    if (!description || typeof description !== "string" || description.trim().length < 10) {
+      return { success: false, message: "Product description is required and must be at least 10 characters long" };
+    }
+
+    const parsedPrice = Number(price);
+    const parsedSalePrice = Number(salePrice);
+
+    if (isNaN(parsedPrice) || parsedPrice < 0) {
+      return { success: false, message: "Regular price must be a valid non-negative number" };
+    }
+
+    if (isNaN(parsedSalePrice) || parsedSalePrice < 0) {
+      return { success: false, message: "Sale price must be a valid non-negative number" };
+    }
+
+    if (parsedSalePrice > parsedPrice) {
+      return { success: false, message: "Sale price cannot exceed the regular price" };
+    }
+
+    const parsedStock = Number(stockQuantity);
+    if (isNaN(parsedStock) || parsedStock < 0) {
+      return { success: false, message: "Stock quantity must be a valid non-negative number" };
+    }
+
+    if (!trimmedSKU || trimmedSKU.length < 3) {
+      return { success: false, message: "SKU is required and must be at least 3 characters long" };
+    }
+
+    if (trimmedSKU !== existingProduct.sku) {
+      const skuExists = await Products.findOne({ sku: trimmedSKU, _id: { $ne: productId } });
       if (skuExists) {
-        return {
-          success: false,
-          statusCode: httpStatusCode.BAD_REQUEST.code,
-          message: "SKU already exists. Please use a different SKU.",
-        };
+        return { success: false, message: "SKU already exists. Please use a different SKU." };
       }
+    }
+
+    if (!Array.isArray(category) || !category.every(id => mongoose.Types.ObjectId.isValid(id))) {
+      return { success: false, message: "Invalid category list" };
+    }
+
+    if (brand && (!/^[a-zA-Z\s]+$/.test(brand) || typeof brand !== "string")) {
+      return { success: false, message: "Brand must be a string containing only letters and spaces" };
+    }
+
+    for (const [key, validValues] of Object.entries(enums)) {
+      if (!validValues.includes(body[key])) {
+        return { success: false, message: `Invalid value for ${key}` };
+      }
+    }
+
+    if (!trimmedColor || trimmedColor.length < 2) {
+      return { success: false, message: "Color must be a valid string with at least 2 characters" };
+    }
+
+    const parsedDialSize = Number(dialSize);
+    if (isNaN(parsedDialSize) || parsedDialSize < 20 || parsedDialSize > 60) {
+      return { success: false, message: "Dial size must be between 20 and 60 mm" };
+    }
+
+    const parsedWeight = Number(weight);
+    if (isNaN(parsedWeight) || parsedWeight < 10 || parsedWeight > 1000) {
+      return { success: false, message: "Weight must be between 10g and 1000g" };
     }
 
     let images = existingProduct.images || Array(4).fill(null);
@@ -46,8 +128,8 @@ export const updateProductService = async (productId, body, files) => {
       if (index !== null && index >= 0 && index < 4) {
         if (images[index]?.public_id) {
           cloudinary.uploader.destroy(images[index].public_id)
-            .then((res) => console.log(`Deleted ${images[index].public_id}:`, res))
-            .catch((err) => console.error(`Error deleting ${images[index].public_id}:`, err));
+            .then(res => console.log(`Deleted ${images[index].public_id}:`, res))
+            .catch(err => console.error(`Error deleting ${images[index].public_id}:`, err));
         }
 
         updatedImages[index] = {
@@ -61,75 +143,13 @@ export const updateProductService = async (productId, body, files) => {
     const finalImages = updatedImages.filter((img) => img);
     existingProduct.images = finalImages;
 
-    const productData = {
-      ...body,
-      images: finalImages,
-      updatedAt: new Date(),
-    };
-
-    const { productName, description, price, stockQuantity, category, brand } = productData;
-
-    if (!productName || !productName.trim() || !/^[a-zA-Z0-9\s_-]+$/i.test(productName.trim())) {
-      return {
-        success: false,
-        statusCode: httpStatusCode.BAD_REQUEST.code,
-        message: "Product name is required and must contain only letters, numbers, - and _",
-      };
-    }
-
-    if (!description || !description.trim() || description.trim().length < 10) {
-      return {
-        success: false,
-        statusCode: httpStatusCode.BAD_REQUEST.code,
-        message: "Product description is required and must be at least 10 characters",
-      };
-    }
-
-    if (isNaN(Number(price)) || Number(price) < 0) {
-      return {
-        success: false,
-        statusCode: httpStatusCode.BAD_REQUEST.code,
-        message: "Product price must be a valid non-negative number",
-      };
-    }
-
-    if (isNaN(Number(stockQuantity)) || Number(stockQuantity) < 0) {
-      return {
-        success: false,
-        statusCode: httpStatusCode.BAD_REQUEST.code,
-        message: "Product stock must be a valid non-negative number",
-      };
-    }
-
-    if (!Array.isArray(category) || !category.every((id) => mongoose.Types.ObjectId.isValid(id))) {
-      return {
-        success: false,
-        statusCode: httpStatusCode.BAD_REQUEST.code,
-        message: "Invalid category id",
-      };
-    }
-
-    if (brand && (!/^[a-zA-Z\s]+$/i.test(brand) || typeof brand !== "string")) {
-      return {
-        success: false,
-        statusCode: httpStatusCode.BAD_REQUEST.code,
-        message: "Brand must be a string containing only letters and spaces",
-      };
-    }
-
     const oldStock = existingProduct.stockQuantity;
-    const newStock = Number(stockQuantity);
+    const newStock = parsedStock;
 
     if (oldStock !== newStock) {
       const action = newStock > oldStock ? 'stock_in' : 'stock_out';
       const quantity = Math.abs(newStock - oldStock);
       const reason = 'Manual update by admin';
-
-      // console.log("Old Stock:", oldStock);
-      // console.log("New Stock:", newStock);
-      // console.log("Action:", action);
-      // console.log("Quantity:", quantity);
-      // console.log('')
 
       await logStockChange({
         productId,
@@ -140,12 +160,21 @@ export const updateProductService = async (productId, body, files) => {
         previousStock: oldStock,
         newStock: newStock,
       });
-
     }
 
-    const updatedProduct = await Products.findByIdAndUpdate(productId, productData, {
-      new: true,
-    });
+    const updatedProduct = await Products.findByIdAndUpdate(productId, {
+      ...body,
+      productName: trimmedName,
+      sku: trimmedSKU,
+      color: trimmedColor,
+      dialSize: parsedDialSize,
+      weight: parsedWeight,
+      price: parsedPrice,
+      salePrice: parsedSalePrice,
+      stockQuantity: parsedStock,
+      images: finalImages,
+      updatedAt: new Date(),
+    }, { new: true });
 
     return {
       success: true,
@@ -155,7 +184,6 @@ export const updateProductService = async (productId, body, files) => {
 
   } catch (error) {
     console.error("Service error in updateProductService:", error);
-
     return {
       success: false,
       statusCode: httpStatusCode.INTERNAL_SERVER_ERROR.code,
@@ -163,5 +191,6 @@ export const updateProductService = async (productId, body, files) => {
     };
   }
 };
+
 
 

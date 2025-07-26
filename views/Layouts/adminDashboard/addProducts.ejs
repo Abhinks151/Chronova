@@ -1,594 +1,532 @@
 <!DOCTYPE html>
 <html lang="en">
-	<head>
-		<meta charset="UTF-8" />
-		<meta name="viewport" content="width=device-width, initial-scale=1.0" />
-		<title>Add Product - Admin Panel</title>
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Add Product - Admin Panel</title>
 
-		<!-- External CDNs -->
-		<link
-			href="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.5.12/cropper.min.css"
-			rel="stylesheet"
-		/>
-		<script src="https://cdnjs.cloudflare.com/ajax/libs/axios/1.4.0/axios.min.js"></script>
-		<script src="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.5.12/cropper.min.js"></script>
-		<link rel="stylesheet" href="/styles/dashboard.css" />
-		<link rel="stylesheet" href="/styles/admin-add-products.css" />
-	</head>
-	<body>
-		<%- include('../../partials/sidebar') %>
-		<div class="main-content">
-			<div class="page-header">
-				<h1>Add New Product</h1>
-				<p>Add a new watch product to your inventory</p>
-			</div>
+    <!-- External CDNs -->
+    <link
+      href="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.5.12/cropper.min.css"
+      rel="stylesheet"
+    />
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/axios/1.4.0/axios.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.5.12/cropper.min.js"></script>
+    <link rel="stylesheet" href="/styles/dashboard.css" />
+    <link rel="stylesheet" href="/styles/admin-add-products.css" />
+  </head>
+  <body>
+    <%- include('../../partials/sidebar') %>
+    <div class="main-content">
+      <div class="page-header">
+        <h1>Add New Product</h1>
+        <p>Add a new watch product to your inventory</p>
+      </div>
 
-			<div id="alertContainer"></div>
+      <div id="alertContainer"></div>
 
-			<form id="productForm" class="form-container">
-				<!-- Basic Information -->
-				<div class="form-section">
-					<h2 class="section-title">Basic Information</h2>
-					<div class="form-grid">
-						<div class="form-group">
-							<label for="productName"
-								>Product Name
-								<span class="required">*</span></label
-							>
-							<input
-								type="text"
-								id="productName"
-								name="productName"
-								required
-							/>
-						</div>
+      <form id="productForm" class="form-container">
+        <!-- Basic Information -->
+        <div class="form-section">
+          <h2 class="section-title">Basic Information</h2>
+          <div class="form-grid">
+            <div class="form-group">
+              <label for="productName"
+                >Product Name <span class="required">*</span></label
+              >
+              <input type="text" id="productName" name="productName" />
+            </div>
 
-						<div class="form-group">
-							<label for="brand"
-								>Brand <span class="required">*</span></label
-							>
-							<select id="brand" name="brand" required>
-								<option value="">Select Brand</option>
-								<option value="Rolex">Rolex</option>
-								<option value="Omega">Omega</option>
-								<option value="Seiko">Seiko</option>
-								<option value="Casio">Casio</option>
-								<option value="Tissot">Tissot</option>
-								<option value="Citizen">Citizen</option>
-								<option value="TAG Heuer">TAG Heuer</option>
-								<option value="Fossil">Fossil</option>
-								<option value="Apple">Apple</option>
-								<option value="Samsung">Samsung</option>
-								<option value="Other">Other</option>
-							</select>
-						</div>
+            <div class="form-group">
+              <label for="brand">Brand <span class="required">*</span></label>
+              <select id="brand" name="brand">
+                <option value="">Select Brand</option>
+                <option value="Rolex">Rolex</option>
+                <option value="Omega">Omega</option>
+                <option value="Seiko">Seiko</option>
+                <option value="Casio">Casio</option>
+                <option value="Tissot">Tissot</option>
+                <option value="Citizen">Citizen</option>
+                <option value="TAG Heuer">TAG Heuer</option>
+                <option value="Fossil">Fossil</option>
+                <option value="Apple">Apple</option>
+                <option value="Samsung">Samsung</option>
+                <option value="Other">Other</option>
+              </select>
+            </div>
 
-						<div class="form-group">
-							<label for="productType"
-								>Product Type
-								<span class="required">*</span></label
-							>
-							<select
-								id="productType"
-								name="productType"
-								required
-							>
-								<option value="">Select Product Type</option>
-								<option value="Analog">Analog</option>
-								<option value="Digital">Digital</option>
-								<option value="Smart">Smart</option>
-								<option value="Hybrid">Hybrid</option>
-								<option value="Automatic">Automatic</option>
-								<option value="Mechanical">Mechanical</option>
-								<option value="Quartz">Quartz</option>
-								<option value="Chronograph">Chronograph</option>
-								<option value="Skeleton">Skeleton</option>
-							</select>
-						</div>
+            <div class="form-group">
+              <label for="productType"
+                >Product Type <span class="required">*</span></label
+              >
+              <select id="productType" name="productType">
+                <option value="">Select Product Type</option>
+                <option value="Analog">Analog</option>
+                <option value="Digital">Digital</option>
+                <option value="Smart">Smart</option>
+                <option value="Hybrid">Hybrid</option>
+                <option value="Automatic">Automatic</option>
+                <option value="Mechanical">Mechanical</option>
+                <option value="Quartz">Quartz</option>
+                <option value="Chronograph">Chronograph</option>
+                <option value="Skeleton">Skeleton</option>
+              </select>
+            </div>
 
-						<div class="form-group">
-							<label>
-								Categories <span class="required">*</span>
-							</label>
-							<div class="checkbox-group" id="categoryCheckboxes">
-								<% categories.forEach(category => { %>
-								<div class="checkbox-item">
-									<input
-										type="checkbox"
-										id="<%= category._id %>"
-										name="category"
-										value="<%= category._id %>"
-									/>
-									<label for="<%= category._id %>"
-										><%= category.categoryName %></label
-									>
-								</div>
-								<% }); %>
-							</div>
-						</div>
+            <div class="form-group">
+              <label> Categories <span class="required">*</span> </label>
+              <div class="checkbox-group" id="categoryCheckboxes">
+                <% categories.forEach(category => { %>
+                <div class="checkbox-item">
+                  <input
+                    type="checkbox"
+                    id="<%= category._id %>"
+                    name="category"
+                    value="<%= category._id %>"
+                  />
+                  <label for="<%= category._id %>"
+                    ><%= category.categoryName %></label
+                  >
+                </div>
+                <% }); %>
+              </div>
+            </div>
 
-						<div class="form-group full-width">
-							<label for="description"
-								>Description
-								<span class="required">*</span></label
-							>
-							<textarea
-								id="description"
-								name="description"
-								placeholder="Enter detailed product description..."
-								required
-							></textarea>
-						</div>
-					</div>
-				</div>
+            <div class="form-group full-width">
+              <label for="description"
+                >Description <span class="required">*</span></label
+              >
+              <textarea
+                id="description"
+                name="description"
+                placeholder="Enter detailed product description..."
+              ></textarea>
+            </div>
+          </div>
+        </div>
 
-				<!-- Watch Specifications -->
-				<div class="form-section">
-					<h2 class="section-title">Watch Specifications</h2>
-					<div class="form-grid">
-						<div class="form-group">
-							<label for="strapType"
-								>Strap Type
-								<span class="required">*</span></label
-							>
-							<select id="strapType" name="strapType" required>
-								<option value="">Select Strap Type</option>
-								<option value="Leather">Leather</option>
-								<option value="Metal">Metal</option>
-								<option value="Rubber">Rubber</option>
-								<option value="Fabric">Fabric</option>
-								<option value="Silicone">Silicone</option>
-								<option value="Ceramic">Ceramic</option>
-								<option value="NATO">NATO</option>
-							</select>
-						</div>
+        <!-- Watch Specifications -->
+        <div class="form-section">
+          <h2 class="section-title">Watch Specifications</h2>
+          <div class="form-grid">
+            <div class="form-group">
+              <label for="strapType"
+                >Strap Type <span class="required">*</span></label
+              >
+              <select id="strapType" name="strapType">
+                <option value="">Select Strap Type</option>
+                <option value="Leather">Leather</option>
+                <option value="Metal">Metal</option>
+                <option value="Rubber">Rubber</option>
+                <option value="Fabric">Fabric</option>
+                <option value="Silicone">Silicone</option>
+                <option value="Ceramic">Ceramic</option>
+                <option value="NATO">NATO</option>
+              </select>
+            </div>
 
-						<div class="form-group">
-							<label for="slypeType"
-								>Style Type
-								<span class="required">*</span></label
-							>
-							<select id="slypeType" name="slypeType" required>
-								<option value="">Select Style Type</option>
-								<option value="Classic">Classic</option>
-								<option value="Modern">Modern</option>
-								<option value="Vintage">Vintage</option>
-								<option value="Contemporary">
-									Contemporary
-								</option>
-								<option value="Traditional">Traditional</option>
-							</select>
-						</div>
+            <div class="form-group">
+              <label for="slypeType"
+                >Style Type <span class="required">*</span></label
+              >
+              <select id="slypeType" name="slypeType">
+                <option value="">Select Style Type</option>
+                <option value="Classic">Classic</option>
+                <option value="Modern">Modern</option>
+                <option value="Vintage">Vintage</option>
+                <option value="Contemporary">Contemporary</option>
+                <option value="Traditional">Traditional</option>
+              </select>
+            </div>
 
-						<div class="form-group">
-							<label for="color"
-								>Color <span class="required">*</span></label
-							>
-							<input
-								type="text"
-								id="color"
-								name="color"
-								placeholder="e.g., Black, Silver, Gold"
-								required
-							/>
-						</div>
+            <div class="form-group">
+              <label for="color">Color <span class="required">*</span></label>
+              <input
+                type="text"
+                id="color"
+                name="color"
+                placeholder="e.g., Black, Silver, Gold"
+              />
+            </div>
 
-						<div class="form-group">
-							<label for="dialSize"
-								>Dial Size (mm)
-								<span class="required">*</span></label
-							>
-							<input
-								type="number"
-								id="dialSize"
-								name="dialSize"
-								placeholder="e.g., 40"
-								min="20"
-								max="60"
-								required
-							/>
-						</div>
+            <div class="form-group">
+              <label for="dialSize"
+                >Dial Size (mm) <span class="required">*</span></label
+              >
+              <input
+                type="number"
+                id="dialSize"
+                name="dialSize"
+                placeholder="e.g., 40"
+                min="20"
+                max="60"
+              />
+            </div>
 
-						<div class="form-group">
-							<label for="dialShape"
-								>Dial Shape
-								<span class="required">*</span></label
-							>
-							<select id="dialShape" name="dialShape" required>
-								<option value="">Select Dial Shape</option>
-								<option value="Round">Round</option>
-								<option value="Square">Square</option>
-								<option value="Rectangle">Rectangle</option>
-								<option value="Oval">Oval</option>
-								<option value="Tonneau">Tonneau</option>
-							</select>
-						</div>
+            <div class="form-group">
+              <label for="dialShape"
+                >Dial Shape <span class="required">*</span></label
+              >
+              <select id="dialShape" name="dialShape">
+                <option value="">Select Dial Shape</option>
+                <option value="Round">Round</option>
+                <option value="Square">Square</option>
+                <option value="Rectangle">Rectangle</option>
+                <option value="Oval">Oval</option>
+                <option value="Tonneau">Tonneau</option>
+              </select>
+            </div>
 
-						<div class="form-group">
-							<label for="movement"
-								>Movement Type
-								<span class="required">*</span></label
-							>
-							<select id="movement" name="movement" required>
-								<option value="">Select Movement</option>
-								<option value="Quartz">Quartz</option>
-								<option value="Automatic">Automatic</option>
-								<option value="Manual">Manual</option>
-								<option value="Digital">Digital</option>
-								<option value="Solar">Solar</option>
-							</select>
-						</div>
+            <div class="form-group">
+              <label for="movement"
+                >Movement Type <span class="required">*</span></label
+              >
+              <select id="movement" name="movement">
+                <option value="">Select Movement</option>
+                <option value="Quartz">Quartz</option>
+                <option value="Automatic">Automatic</option>
+                <option value="Manual">Manual</option>
+                <option value="Digital">Digital</option>
+                <option value="Solar">Solar</option>
+              </select>
+            </div>
 
-						<div class="form-group">
-							<label for="waterResistance"
-								>Water Resistance
-								<span class="required">*</span></label
-							>
-							<select
-								id="waterResistance"
-								name="waterResistance"
-								required
-							>
-								<option value="">
-									Select Water Resistance
-								</option>
-								<option value="30M">30M (3 ATM)</option>
-								<option value="50M">50M (5 ATM)</option>
-								<option value="100M">100M (10 ATM)</option>
-								<option value="200M">200M (20 ATM)</option>
-								<option value="300M">300M (30 ATM)</option>
-								<option value="500M">500M (50 ATM)</option>
-							</select>
-						</div>
+            <div class="form-group">
+              <label for="waterResistance"
+                >Water Resistance <span class="required">*</span></label
+              >
+              <select id="waterResistance" name="waterResistance">
+                <option value="">Select Water Resistance</option>
+                <option value="30M">30M (3 ATM)</option>
+                <option value="50M">50M (5 ATM)</option>
+                <option value="100M">100M (10 ATM)</option>
+                <option value="200M">200M (20 ATM)</option>
+                <option value="300M">300M (30 ATM)</option>
+                <option value="500M">500M (50 ATM)</option>
+              </select>
+            </div>
 
-						<div class="form-group">
-							<label for="warranty"
-								>Warranty Period
-								<span class="required">*</span></label
-							>
-							<select id="warranty" name="warranty" required>
-								<option value="">Select Warranty</option>
-								<option value="6 months">6 Months</option>
-								<option value="1 year">1 Year</option>
-								<option value="2 years">2 Years</option>
-								<option value="3 years">3 Years</option>
-								<option value="5 years">5 Years</option>
-								<option value="Lifetime">Lifetime</option>
-							</select>
-						</div>
+            <div class="form-group">
+              <label for="warranty"
+                >Warranty Period <span class="required">*</span></label
+              >
+              <select id="warranty" name="warranty">
+                <option value="">Select Warranty</option>
+                <option value="6 months">6 Months</option>
+                <option value="1 year">1 Year</option>
+                <option value="2 years">2 Years</option>
+                <option value="3 years">3 Years</option>
+                <option value="5 years">5 Years</option>
+                <option value="Lifetime">Lifetime</option>
+              </select>
+            </div>
 
-						<div class="form-group">
-							<label for="weight"
-								>Weight (grams)
-								<span class="required">*</span></label
-							>
-							<input
-								type="number"
-								id="weight"
-								name="weight"
-								placeholder="e.g., 150"
-								min="10"
-								max="1000"
-								required
-							/>
-						</div>
-					</div>
-				</div>
+            <div class="form-group">
+              <label for="weight"
+                >Weight (grams) <span class="required">*</span></label
+              >
+              <input
+                type="number"
+                id="weight"
+                name="weight"
+                placeholder="e.g., 150"
+              />
+            </div>
+          </div>
+        </div>
 
-				<!-- Pricing & Inventory -->
-				<div class="form-section">
-					<h2 class="section-title">Pricing & Inventory</h2>
-					<div class="form-grid">
-						<div class="form-group">
-							<label for="price"
-								>Regular Price
-								<span class="required">*</span></label
-							>
-							<input
-								type="number"
-								id="price"
-								name="price"
-								step="0.01"
-								min="0"
-								required
-								placeholder="0.00"
-							/>
-						</div>
+        <!-- Pricing & Inventory -->
+        <div class="form-section">
+          <h2 class="section-title">Pricing & Inventory</h2>
+          <div class="form-grid">
+            <div class="form-group">
+              <label for="price"
+                >Regular Price <span class="required">*</span></label
+              >
+              <input
+                type="number"
+                id="price"
+                name="price"
+                step="0.01"
+                placeholder="0.00"
+              />
+            </div>
 
-						<div class="form-group">
-							<label for="salePrice"
-								>Sale Price
-								<span class="required">*</span></label
-							>
-							<input
-								type="number"
-								id="salePrice"
-								name="salePrice"
-								step="0.01"
-								min="0"
-								required
-								placeholder="0.00"
-							/>
-						</div>
+            <div class="form-group">
+              <label for="salePrice"
+                >Sale Price <span class="required">*</span></label
+              >
+              <input
+                type="number"
+                id="salePrice"
+                name="salePrice"
+                step="0.01"
+                placeholder="0.00"
+              />
+            </div>
 
-						<div class="form-group">
-							<label for="stockQuantity"
-								>Stock Quantity
-								<span class="required">*</span></label
-							>
-							<input
-								type="number"
-								id="stockQuantity"
-								name="stockQuantity"
-								min="0"
-								required
-								placeholder="0"
-							/>
-						</div>
+            <div class="form-group">
+              <label for="stockQuantity"
+                >Stock Quantity <span class="required">*</span></label
+              >
+              <input
+                type="number"
+                id="stockQuantity"
+                name="stockQuantity"
+                placeholder="0"
+              />
+            </div>
 
-						<div class="form-group">
-							<label for="sku"
-								>SKU Code <span class="required">*</span></label
-							>
-							<input
-								type="text"
-								id="sku"
-								name="sku"
-								placeholder="e.g., WTH-001"
-								required
-							/>
-						</div>
-					</div>
-				</div>
+            <div class="form-group">
+              <label for="sku">SKU Code <span class="required">*</span></label>
+              <input
+                type="text"
+                id="sku"
+                name="sku"
+                placeholder="e.g., WTH-001"
+              />
+            </div>
+          </div>
+        </div>
 
-				<!-- Product Images -->
-				<div class="form-section">
-					<h2 class="section-title">
-						Product Images
-						<span style="color: #e74c3c; font-size: 14px;"
-							>(4 images required)</span
-						>
-					</h2>
-					<div class="image-upload-container">
-						<div class="image-upload-box" data-index="0">
-							<div class="upload-icon">📷</div>
-							<div class="upload-text">
-								<strong>Primary Image</strong><br />
-								Click to upload
-							</div>
-							<input
-								type="file"
-								accept="image/*"
-								style="display: none;"
-								data-index="0"
-							/>
-						</div>
+        <!-- Product Images -->
+        <div class="form-section">
+          <h2 class="section-title">
+            Product Images
+            <span style="color: #e74c3c; font-size: 14px"
+              >(4 images required)</span
+            >
+          </h2>
+          <div class="image-upload-container">
+            <div class="image-upload-box" data-index="0">
+              <div class="upload-icon">📷</div>
+              <div class="upload-text">
+                <strong>Primary Image</strong><br />
+                Click to upload
+              </div>
+              <input
+                type="file"
+                accept="image/*"
+                style="display: none"
+                data-index="0"
+              />
+            </div>
 
-						<div class="image-upload-box" data-index="1">
-							<div class="upload-icon">📷</div>
-							<div class="upload-text">
-								<strong>Image 2</strong><br />
-								Click to upload
-							</div>
-							<input
-								type="file"
-								accept="image/*"
-								style="display: none;"
-								data-index="1"
-							/>
-						</div>
+            <div class="image-upload-box" data-index="1">
+              <div class="upload-icon">📷</div>
+              <div class="upload-text">
+                <strong>Image 2</strong><br />
+                Click to upload
+              </div>
+              <input
+                type="file"
+                accept="image/*"
+                style="display: none"
+                data-index="1"
+              />
+            </div>
 
-						<div class="image-upload-box" data-index="2">
-							<div class="upload-icon">📷</div>
-							<div class="upload-text">
-								<strong>Image 3</strong><br />
-								Click to upload
-							</div>
-							<input
-								type="file"
-								accept="image/*"
-								style="display: none;"
-								data-index="2"
-							/>
-						</div>
+            <div class="image-upload-box" data-index="2">
+              <div class="upload-icon">📷</div>
+              <div class="upload-text">
+                <strong>Image 3</strong><br />
+                Click to upload
+              </div>
+              <input
+                type="file"
+                accept="image/*"
+                style="display: none"
+                data-index="2"
+              />
+            </div>
 
-						<div class="image-upload-box" data-index="3">
-							<div class="upload-icon">📷</div>
-							<div class="upload-text">
-								<strong>Image 4</strong><br />
-								Click to upload
-							</div>
-							<input
-								type="file"
-								accept="image/*"
-								style="display: none;"
-								data-index="3"
-							/>
-						</div>
-					</div>
-				</div>
+            <div class="image-upload-box" data-index="3">
+              <div class="upload-icon">📷</div>
+              <div class="upload-text">
+                <strong>Image 4</strong><br />
+                Click to upload
+              </div>
+              <input
+                type="file"
+                accept="image/*"
+                style="display: none"
+                data-index="3"
+              />
+            </div>
+          </div>
+        </div>
 
-				<div class="form-actions">
-					<button
-						type="button"
-						class="btn btn-secondary"
-						onclick="resetForm()"
-					>
-						Reset
-					</button>
-					<button type="submit" class="btn btn-primary">
-						Add Product
-					</button>
-				</div>
-			</form>
-		</div>
+        <div class="form-actions">
+          <button type="button" class="btn btn-secondary" onclick="resetForm()">
+            Reset
+          </button>
+          <button type="submit" class="btn btn-primary">Add Product</button>
+        </div>
+      </form>
+    </div>
 
-		<div id="cropperModal" class="modal">
-			<div class="modal-content">
-				<div class="modal-header">
-					<h3>Crop Image</h3>
-					<span class="close">&times;</span>
-				</div>
-				<div class="crop-container">
-					<img id="cropperImage" style="max-width: 100%;" />
-				</div>
-				<div class="crop-controls">
-					<button
-						type="button"
-						class="btn btn-secondary"
-						id="cancelCrop"
-					>
-						Cancel
-					</button>
-					<button
-						type="button"
-						class="btn btn-success"
-						id="applyCrop"
-					>
-						Apply Crop
-					</button>
-				</div>
-			</div>
-		</div>
-		<div id="toast" class="toast"></div>
+    <div id="cropperModal" class="modal">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h3>Crop Image</h3>
+          <span class="close">&times;</span>
+        </div>
+        <div class="crop-container">
+          <img id="cropperImage" style="max-width: 100%" />
+        </div>
+        <div class="crop-controls">
+          <button type="button" class="btn btn-secondary" id="cancelCrop">
+            Cancel
+          </button>
+          <button type="button" class="btn btn-success" id="applyCrop">
+            Apply Crop
+          </button>
+        </div>
+      </div>
+    </div>
+    <div id="toast" class="toast"></div>
 
-		<script>
-			let cropper = null;
-			let currentImageIndex = null;
-			let croppedImages = {};
+    <script>
+      let cropper = null;
+      let currentImageIndex = null;
+      let croppedImages = {};
 
-			function showToast(message, type = 'success') {
-  const toast = document.getElementById('toast');
-  toast.textContent = message;
-  toast.className = `toast toast-${type} show`;
+      function showToast(message, type = "success") {
+        const toast = document.getElementById("toast");
+        toast.textContent = message;
+        toast.className = `toast toast-${type} show`;
 
-  setTimeout(() => {
-    toast.classList.remove('show');
-  }, 3000);
-}
+        setTimeout(() => {
+          toast.classList.remove("show");
+        }, 3000);
+      }
 
-			document.addEventListener('DOMContentLoaded', function() {
-			    initializeImageUpload();
-			    initializeFormSubmission();
-			    initializeCropperModal();
-			    initializeToggleSwitches();
-			    initializePriceValidation();
-			    initializeCategoryValidation();
-			    initializeAutoSKU();
-			});
+      document.addEventListener("DOMContentLoaded", function () {
+        initializeImageUpload();
+        initializeFormSubmission();
+        initializeCropperModal();
+        initializeToggleSwitches();
+        initializePriceValidation();
+        initializeCategoryValidation();
+        initializeAutoSKU();
+      });
 
-			function initializeImageUpload() {
-			    const uploadBoxes = document.querySelectorAll('.image-upload-box');
+      function initializeImageUpload() {
+        const uploadBoxes = document.querySelectorAll(".image-upload-box");
 
-			    uploadBoxes.forEach(box => {
-			        const input = box.querySelector('input[type="file"]');
-			        const index = box.dataset.index;
+        uploadBoxes.forEach((box) => {
+          const input = box.querySelector('input[type="file"]');
+          const index = box.dataset.index;
 
-			        box.addEventListener('click', () => {
-			            if (!box.classList.contains('has-image')) {
-			                input.click();
-			            }
-			        });
+          box.addEventListener("click", () => {
+            if (!box.classList.contains("has-image")) {
+              input.click();
+            }
+          });
 
-			        input.addEventListener('change', (e) => {
-			            if (e.target.files && e.target.files[0]) {
-			                currentImageIndex = index;
-			                openCropper(e.target.files[0]);
-			            }
-			        });
-			    });
-			}
+          input.addEventListener("change", (e) => {
+            if (e.target.files && e.target.files[0]) {
+              currentImageIndex = index;
+              openCropper(e.target.files[0]);
+            }
+          });
+        });
+      }
 
-			function openCropper(file) {
-			    const reader = new FileReader();
-			    reader.onload = function(e) {
-			        const cropperImage = document.getElementById('cropperImage');
-			        cropperImage.src = e.target.result;
+      function openCropper(file) {
+        const reader = new FileReader();
+        reader.onload = function (e) {
+          const cropperImage = document.getElementById("cropperImage");
+          cropperImage.src = e.target.result;
 
-			        document.getElementById('cropperModal').style.display = 'block';
+          document.getElementById("cropperModal").style.display = "block";
 
-			        // Initialize cropper
-			        if (cropper) {
-			            cropper.destroy();
-			        }
+          // Initialize cropper
+          if (cropper) {
+            cropper.destroy();
+          }
 
-			        cropper = new Cropper(cropperImage, {
-			            aspectRatio: 1,
-			            viewMode: 1,
-			            dragMode: 'move',
-			            autoCropArea: 0.8,
-			            restore: false,
-			            guides: false,
-			            center: false,
-			            highlight: false,
-			            cropBoxMovable: true,
-			            cropBoxResizable: true,
-			            toggleDragModeOnDblclick: false,
-			        });
-			    };
-			    reader.readAsDataURL(file);
-			}
+          cropper = new Cropper(cropperImage, {
+            aspectRatio: 1,
+            viewMode: 1,
+            dragMode: "move",
+            autoCropArea: 0.8,
+            restore: false,
+            guides: false,
+            center: false,
+            highlight: false,
+            cropBoxMovable: true,
+            cropBoxResizable: true,
+            toggleDragModeOnDblclick: false,
+          });
+        };
+        reader.readAsDataURL(file);
+      }
 
-			function initializeCropperModal() {
-			    const modal = document.getElementById('cropperModal');
-			    const closeBtn = modal.querySelector('.close');
-			    const cancelBtn = document.getElementById('cancelCrop');
-			    const applyBtn = document.getElementById('applyCrop');
+      function initializeCropperModal() {
+        const modal = document.getElementById("cropperModal");
+        const closeBtn = modal.querySelector(".close");
+        const cancelBtn = document.getElementById("cancelCrop");
+        const applyBtn = document.getElementById("applyCrop");
 
-			    closeBtn.addEventListener('click', closeCropper);
-			    cancelBtn.addEventListener('click', closeCropper);
-			    applyBtn.addEventListener('click', applyCrop);
+        closeBtn.addEventListener("click", closeCropper);
+        cancelBtn.addEventListener("click", closeCropper);
+        applyBtn.addEventListener("click", applyCrop);
 
-			    window.addEventListener('click', function(e) {
-			        if (e.target === modal) {
-			            closeCropper();
-			        }
-			    });
-			}
+        window.addEventListener("click", function (e) {
+          if (e.target === modal) {
+            closeCropper();
+          }
+        });
+      }
 
-			function closeCropper() {
-			    document.getElementById('cropperModal').style.display = 'none';
-			    if (cropper) {
-			        cropper.destroy();
-			        cropper = null;
-			    }
-			    currentImageIndex = null;
-			}
+      function closeCropper() {
+        document.getElementById("cropperModal").style.display = "none";
+        if (cropper) {
+          cropper.destroy();
+          cropper = null;
+        }
+        currentImageIndex = null;
+      }
 
-			function applyCrop() {
-			    if (cropper && currentImageIndex !== null) {
-			        const canvas = cropper.getCroppedCanvas({
-			            width: 400,
-			            height: 400,
-			            imageSmoothingEnabled: true,
-			            imageSmoothingQuality: 'high',
-			        });
+      function applyCrop() {
+        if (cropper && currentImageIndex !== null) {
+          const canvas = cropper.getCroppedCanvas({
+            width: 400,
+            height: 400,
+            imageSmoothingEnabled: true,
+            imageSmoothingQuality: "high",
+          });
 
-			        canvas.toBlob(function(blob) {
-			            croppedImages[currentImageIndex] = blob;
-			            updateImagePreview(currentImageIndex, canvas.toDataURL());
-			            closeCropper();
-			        }, 'image/jpeg', 0.9);
-			    }
-			}
+          canvas.toBlob(
+            function (blob) {
+              croppedImages[currentImageIndex] = blob;
+              updateImagePreview(currentImageIndex, canvas.toDataURL());
+              closeCropper();
+            },
+            "image/jpeg",
+            0.9
+          );
+        }
+      }
 
-			function updateImagePreview(index, dataURL) {
-			    const uploadBox = document.querySelector(`[data-index="${index}"]`);
-			    uploadBox.classList.add('has-image');
-			    uploadBox.classList.remove('required');
-			    uploadBox.innerHTML = `
+      function updateImagePreview(index, dataURL) {
+        const uploadBox = document.querySelector(`[data-index="${index}"]`);
+        uploadBox.classList.add("has-image");
+        uploadBox.classList.remove("required");
+        uploadBox.innerHTML = `
 			        <img src="${dataURL}" alt="Preview" class="image-preview">
 			        <button type="button" class="remove-image" onclick="removeImage(${index})">Remove</button>
 			    `;
-			}
+      }
 
-			function removeImage(index) {
-			    const uploadBox = document.querySelector(`[data-index="${index}"]`);
-			    uploadBox.classList.remove('has-image');
-			    uploadBox.classList.add('required');
+      function removeImage(index) {
+        const uploadBox = document.querySelector(`[data-index="${index}"]`);
+        uploadBox.classList.remove("has-image");
+        uploadBox.classList.add("required");
 
-			    const imageLabels = ['Primary Image', 'Image 2', 'Image 3', 'Image 4'];
-			    uploadBox.innerHTML = `
+        const imageLabels = ["Primary Image", "Image 2", "Image 3", "Image 4"];
+        uploadBox.innerHTML = `
 			        <div class="upload-icon">📷</div>
 			        <div class="upload-text">
 			            <strong>${imageLabels[index]}</strong><br>
@@ -597,300 +535,395 @@
 			        <input type="file" accept="image/*" style="display: none;" data-index="${index}">
 			    `;
 
-			    delete croppedImages[index];
+        delete croppedImages[index];
 
-			    // Re-initialize event listener for this box
-			    const input = uploadBox.querySelector('input[type="file"]');
-			    uploadBox.addEventListener('click', () => {
-			        if (!uploadBox.classList.contains('has-image')) {
-			            input.click();
-			        }
-			    });
+        // Re-initialize event listener for this box
+        const input = uploadBox.querySelector('input[type="file"]');
+        uploadBox.addEventListener("click", () => {
+          if (!uploadBox.classList.contains("has-image")) {
+            input.click();
+          }
+        });
 
-			    input.addEventListener('change', (e) => {
-			        if (e.target.files && e.target.files[0]) {
-			            currentImageIndex = index;
-			            openCropper(e.target.files[0]);
-			        }
-			    });
-			}
+        input.addEventListener("change", (e) => {
+          if (e.target.files && e.target.files[0]) {
+            currentImageIndex = index;
+            openCropper(e.target.files[0]);
+          }
+        });
+      }
 
-			function initializeFormSubmission() {
-			    const form = document.getElementById('productForm');
-			    form.addEventListener('submit', handleFormSubmission);
-			}
+      function initializeFormSubmission() {
+        const form = document.getElementById("productForm");
+        form.addEventListener("submit", handleFormSubmission);
+      }
 
-			async function handleFormSubmission(e) {
-			    e.preventDefault();
+      let formErrors = {}; // Global form error tracker
 
-			    // Validate form before submission
-			    if (!validateForm()) {
-			        return;
-			    }
+      async function handleFormSubmission(e) {
+        e.preventDefault();
 
-			    const submitBtn = e.target.querySelector('button[type="submit"]');
-			    submitBtn.classList.add('loading');
-			    submitBtn.disabled = true;
-			    submitBtn.textContent = 'Adding Product...';
+        // Clear any old errors
+        clearFieldErrors();
 
-			    try {
-			        const formData = new FormData();
+        // Validate on client-side (optional, if you have a function)
+        if (!validateForm()) {
+          showToast("Please fill all required fields", "error");
+          return;
+        }
 
-			        // Add form fields
-			        const formElements = e.target.elements;
-			        for (let element of formElements) {
-			            if (element.type === 'checkbox' && element.name === 'category') {
-			                if (element.checked) {
-			                    formData.append('category[]', element.value);
-			                }
-			            } else if (element.type !== 'file' && element.type !== 'submit' && element.name && element.type !== 'checkbox') {
-			                formData.append(element.name, element.value);
-			            }
-			        }
+        const submitBtn = e.target.querySelector('button[type="submit"]');
+        submitBtn.classList.add("loading");
+        submitBtn.disabled = true;
+        submitBtn.textContent = "Adding Product...";
 
-			        // Add cropped images
-			        Object.keys(croppedImages).forEach(index => {
-			            formData.append(`image_${index}`, croppedImages[index], `image_${index}.jpg`);
-			        });
+        try {
+          const formData = new FormData();
 
-			        const response = await axios.post('/admin/products/add', formData, {
-			            headers: {
-			                'Content-Type': 'multipart/form-data'
-			            }
-			        });
+          const formElements = e.target.elements;
+          for (let element of formElements) {
+            if (element.type === "checkbox" && element.name === "category") {
+              if (element.checked) {
+                formData.append("category[]", element.value);
+              }
+            } else if (
+              element.type !== "file" &&
+              element.type !== "submit" &&
+              element.name &&
+              element.type !== "checkbox"
+            ) {
+              formData.append(element.name, element.value);
+            }
+          }
 
-			        showAlert(response.data.message || 'Product added successfully!', 'success');
-							showToast(response.data.message || 'Product added successfully!', 'success');
-			        // Reset form after successful submission
-			        setTimeout(() => {
-			            resetForm();
-			        }, 1000);
+          // Append cropped images
+          Object.keys(croppedImages).forEach((index) => {
+            formData.append(
+              `image_${index}`,
+              croppedImages[index],
+              `image_${index}.jpg`
+            );
+          });
 
-			        // Redirect after showing success message
-			        setTimeout(() => {
-			            window.location.href = response.data.redirect || '/admin/products';
-			        }, 2000);
+          const response = await axios.post("/admin/products/add", formData, {
+            headers: {
+              "Content-Type": "multipart/form-data",
+            },
+          });
 
-			    } catch (error) {
-			        console.error('Error adding product:', error);
-			        const errorMessage = error.response?.data?.message || 'Error adding product. Please try again.';
-			        showAlert(errorMessage, 'error');
-							showToast(errorMessage, 'error');
-			    } finally {
-			        submitBtn.classList.remove('loading');
-			        submitBtn.disabled = false;
-			        submitBtn.textContent = 'Add Product';
-			    }
-			}
+          showAlert(
+            response.data.message || "Product added successfully!",
+            "success"
+          );
+          showToast(
+            response.data.message || "Product added successfully!",
+            "success"
+          );
 
-			function validateForm() {
-			    let isValid = true;
-			    const errors = [];
+          setTimeout(() => {
+            resetForm();
+          }, 1000);
 
-			    // Check required fields
-			    const requiredFields = [
-			        'productName', 'brand', 'productType', 'sku', 'description',
-			        'strapType', 'color', 'dialSize', 'dialShape', 'movement',
-			        'waterResistance', 'warranty', 'weight', 'price', 'salePrice', 'stockQuantity'
-			    ];
+          setTimeout(() => {
+            window.location.href = response.data.redirect || "/admin/products";
+          }, 2000);
+        } catch (error) {
+          console.error("Error adding product:", error);
 
-			    requiredFields.forEach(fieldName => {
-			        const field = document.getElementById(fieldName);
-			        if (!field.value.trim()) {
-			            field.style.borderColor = '#e74c3c';
-			            errors.push(`${fieldName.replace(/([A-Z])/g, ' $1').replace(/^./, str => str.toUpperCase())} is required`);
-			            isValid = false;
-			        } else {
-			            field.style.borderColor = '#e1e8ed';
-			        }
-			    });
+          const responseData = error.response?.data;
 
-			    // Check if at least one category is selected
-			    const categoryCheckboxes = document.querySelectorAll('input[name="category"]:checked');
-			    if (categoryCheckboxes.length === 0) {
-			        errors.push('Please select at least one category');
-			        isValid = false;
-			    }
+          if (responseData?.errors) {
+            formErrors = responseData.errors;
+            displayFieldErrors(formErrors);
+            showToast("Please fix the highlighted errors.", "error");
+          } else {
+            const errorMessage =
+              responseData?.message ||
+              "Error adding product. Please try again.";
+            showAlert(errorMessage, "error");
+            showToast(errorMessage, "error");
+          }
+        } finally {
+          submitBtn.classList.remove("loading");
+          submitBtn.disabled = false;
+          submitBtn.textContent = "Add Product";
+        }
+      }
 
-			    // Check if all 4 images are uploaded
-			    const uploadedImages = Object.keys(croppedImages).length;
-			    if (uploadedImages !== 4) {
-			        errors.push('Please upload all 4 required images');
-			        isValid = false;
-			    }
+      function displayFieldErrors(errors) {
+        Object.entries(errors).forEach(([field, message]) => {
+          const input = document.querySelector(`[name="${field}"]`);
+          if (input) {
+            const errorElem = document.createElement("div");
+            errorElem.className = "field-error";
+            errorElem.style.color = "red";
+            errorElem.style.fontSize = "12px";
+            errorElem.style.marginTop = "4px";
+            errorElem.textContent = message;
 
-			    // Price validation
-			    const price = parseFloat(document.getElementById('price').value);
-			    const salePrice = parseFloat(document.getElementById('salePrice').value);
+            // If it's a checkbox group (like category[]), target the parent group instead
+            if (input.type === "checkbox") {
+              const group = document.getElementById("categoryCheckboxes");
+              if (group && !group.querySelector(".field-error")) {
+                group.appendChild(errorElem);
+              }
+            } else {
+              if (!input.parentElement.querySelector(".field-error")) {
+                input.parentElement.appendChild(errorElem);
+              }
+            }
+          }
+        });
+      }
 
-			    if (price <= 0) {
-			        errors.push('Regular price must be greater than 0');
-			        isValid = false;
-			    }
+      function clearFieldErrors() {
+        const existingErrors = document.querySelectorAll(".field-error");
+        existingErrors.forEach((err) => err.remove());
+      }
 
-			    if (salePrice <= 0) {
-			        errors.push('Sale price must be greater than 0');
-			        isValid = false;
-			    }
+      function validateForm() {
+        let isValid = true;
+        const errors = [];
 
-			    if (salePrice > price) {
-			        errors.push('Sale price cannot be greater than regular price');
-			        isValid = false;
-			    }
+        // Check required fields
+        const requiredFields = [
+          "productName",
+          "brand",
+          "productType",
+          "sku",
+          "description",
+          "strapType",
+          "color",
+          "dialSize",
+          "dialShape",
+          "movement",
+          "waterResistance",
+          "warranty",
+          "weight",
+          "price",
+          "salePrice",
+          "stockQuantity",
+        ];
 
-			    // Stock validation
-			    const stock = parseInt(document.getElementById('stockQuantity').value);
-			    if (stock < 0) {
-			        errors.push('Stock quantity cannot be negative');
-			        isValid = false;
-			    }
+        requiredFields.forEach((fieldName) => {
+          const field = document.getElementById(fieldName);
+          if (!field.value.trim()) {
+            field.style.borderColor = "#e74c3c";
+            errors.push(
+              `${fieldName
+                .replace(/([A-Z])/g, " $1")
+                .replace(/^./, (str) => str.toUpperCase())} is required`
+            );
+            isValid = false;
+          } else {
+            field.style.borderColor = "#e1e8ed";
+          }
+        });
 
-			    if (!isValid) {
-			        showAlert(errors.join('<br>'), 'error');
-							showToast(errors.join('<br>'), 'error');
-			    }
+        // Check if at least one category is selected
+        const categoryCheckboxes = document.querySelectorAll(
+          'input[name="category"]:checked'
+        );
+        if (categoryCheckboxes.length === 0) {
+          errors.push("Please select at least one category");
+          isValid = false;
+        }
 
-			    return isValid;
-			}
+        // Check if all 4 images are uploaded
+        const uploadedImages = Object.keys(croppedImages).length;
+        if (uploadedImages !== 4) {
+          errors.push("Please upload all 4 required images");
+          isValid = false;
+        }
 
-			// Show alert messages
-			function showAlert(message, type) {
-			    const alertContainer = document.getElementById('alertContainer');
-			    const alert = document.createElement('div');
-			    alert.className = `alert alert-${type}`;
-			    alert.innerHTML = message;
+        // Price validation
+        const price = parseFloat(document.getElementById("price").value);
+        const salePrice = parseFloat(
+          document.getElementById("salePrice").value
+        );
 
-			    alertContainer.appendChild(alert);
+        if (price <= 0) {
+          errors.push("Regular price must be greater than 0");
+          isValid = false;
+        }
 
-			    setTimeout(() => {
-			        alert.remove();
-			    }, 5000);
-			}
+        if (salePrice <= 0) {
+          errors.push("Sale price must be greater than 0");
+          isValid = false;
+        }
 
-			function resetForm() {
-			    document.getElementById('productForm').reset();
+        if (salePrice > price) {
+          errors.push("Sale price cannot be greater than regular price");
+          isValid = false;
+        }
 
-			    // Reset image uploads
-			    for (let i = 0; i < 4; i++) {
-			        removeImage(i);
-			    }
+        // Stock validation
+        const stock = parseInt(document.getElementById("stockQuantity").value);
+        if (stock < 0) {
+          errors.push("Stock quantity cannot be negative");
+          isValid = false;
+        }
 
-			    // Reset toggles to default state
-			    const toggles = document.querySelectorAll('.toggle-switch');
-			    toggles.forEach(toggle => {
-			        toggle.classList.add('active');
-			        const field = toggle.dataset.field;
-			        const hiddenInput = document.querySelector(`input[name="${field}"]`);
-			        if (hiddenInput) {
-			            hiddenInput.value = 'false';
-			        }
-			    });
+        if (!isValid) {
+          showAlert(errors.join("<br>"), "error");
+          showToast(errors.join("<br>"), "error");
+        }
 
-			    // Clear cropped images
-			    croppedImages = {};
+        return isValid;
+      }
 
-			    // Clear any error styling
-			    const inputs = document.querySelectorAll('input, select, textarea');
-			    inputs.forEach(input => {
-			        input.style.borderColor = '#e1e8ed';
-			    });
+      // Show alert messages
+      function showAlert(message, type) {
+        const alertContainer = document.getElementById("alertContainer");
+        const alert = document.createElement("div");
+        alert.className = `alert alert-${type}`;
+        alert.innerHTML = message;
 
-			    // Clear alerts
-			    document.getElementById('alertContainer').innerHTML = '';
-			}
+        alertContainer.appendChild(alert);
 
-			function initializeToggleSwitches() {
-			    const toggles = document.querySelectorAll('.toggle-switch');
+        setTimeout(() => {
+          alert.remove();
+        }, 5000);
+      }
 
-			    toggles.forEach(toggle => {
-			        toggle.addEventListener('click', function() {
-			            this.classList.toggle('active');
+      function resetForm() {
+        document.getElementById("productForm").reset();
 
-			            const field = this.dataset.field;
-			            const hiddenInput = document.querySelector(`input[name="${field}"]`);
+        // Reset image uploads
+        for (let i = 0; i < 4; i++) {
+          removeImage(i);
+        }
 
-			            if (hiddenInput) {
-			                hiddenInput.value = this.classList.contains('active') ? 'false' : 'true';
-			            }
-			        });
-			    });
-			}
+        // Reset toggles to default state
+        const toggles = document.querySelectorAll(".toggle-switch");
+        toggles.forEach((toggle) => {
+          toggle.classList.add("active");
+          const field = toggle.dataset.field;
+          const hiddenInput = document.querySelector(`input[name="${field}"]`);
+          if (hiddenInput) {
+            hiddenInput.value = "false";
+          }
+        });
 
-			function initializePriceValidation() {
-			    const priceInput = document.getElementById('price');
-			    const salePriceInput = document.getElementById('salePrice');
-			    const priceInfo = document.getElementById('priceInfo');
+        // Clear cropped images
+        croppedImages = {};
 
-			    function validatePrices() {
-			        const price = parseFloat(priceInput.value) || 0;
-			        const salePrice = parseFloat(salePriceInput.value) || 0;
+        // Clear any error styling
+        const inputs = document.querySelectorAll("input, select, textarea");
+        inputs.forEach((input) => {
+          input.style.borderColor = "#e1e8ed";
+        });
 
-			        if (price > 0 && salePrice > 0) {
-			            if (salePrice > price) {
-			                priceInfo.style.display = 'block';
-			                priceInfo.style.backgroundColor = '#f8d7da';
-			                priceInfo.style.color = '#721c24';
-			                priceInfo.textContent = 'Sale price cannot be greater than regular price';
-			                salePriceInput.style.borderColor = '#e74c3c';
-			            } else {
-			                const discount = ((price - salePrice) / price * 100).toFixed(1);
-			                priceInfo.style.display = 'block';
-			                priceInfo.style.backgroundColor = '#e8f4fd';
-			                priceInfo.style.color = '#0c5460';
-			                priceInfo.textContent = `Discount: ${discount}% off`;
-			                salePriceInput.style.borderColor = '#e1e8ed';
-			            }
-			        } else {
-			            priceInfo.style.display = 'none';
-			            salePriceInput.style.borderColor = '#e1e8ed';
-			        }
-			    }
+        // Clear alerts
+        document.getElementById("alertContainer").innerHTML = "";
+      }
 
-			    priceInput.addEventListener('input', validatePrices);
-			    salePriceInput.addEventListener('input', validatePrices);
-			}
+      function initializeToggleSwitches() {
+        const toggles = document.querySelectorAll(".toggle-switch");
 
-			function initializeCategoryValidation() {
-			    const categoryCheckboxes = document.querySelectorAll('input[name="category"]');
+        toggles.forEach((toggle) => {
+          toggle.addEventListener("click", function () {
+            this.classList.toggle("active");
 
-			    categoryCheckboxes.forEach(checkbox => {
-			        checkbox.addEventListener('change', function() {
-			            const checkedCategories = document.querySelectorAll('input[name="category"]:checked');
-			            const categoryGrid = document.getElementById('categoryGrid');
+            const field = this.dataset.field;
+            const hiddenInput = document.querySelector(
+              `input[name="${field}"]`
+            );
 
-			            if (checkedCategories.length === 0) {
-			                categoryGrid.style.borderColor = '#e74c3c';
-			            } else {
-			                categoryGrid.style.borderColor = 'transparent';
-			            }
-			        });
-			    });
-			}
+            if (hiddenInput) {
+              hiddenInput.value = this.classList.contains("active")
+                ? "false"
+                : "true";
+            }
+          });
+        });
+      }
 
-			function initializeAutoSKU() {
-			    const brandSelect = document.getElementById('brand');
-			    const productNameInput = document.getElementById('productName');
-			    const skuInput = document.getElementById('sku');
+      function initializePriceValidation() {
+        const priceInput = document.getElementById("price");
+        const salePriceInput = document.getElementById("salePrice");
+        const priceInfo = document.getElementById("priceInfo");
 
-			    function generateSKU() {
-			        const brand = brandSelect.value;
-			        const productName = productNameInput.value;
+        function validatePrices() {
+          const price = parseFloat(priceInput.value) || 0;
+          const salePrice = parseFloat(salePriceInput.value) || 0;
 
-			        if (brand && productName) {
-			            const brandCode = brand.substring(0, 3).toUpperCase();
-			            const productCode = productName.replace(/\s+/g, '').substring(0, 3).toUpperCase();
-			            const randomNum = Math.floor(Math.random() * 1000).toString().padStart(3, '0');
+          if (price > 0 && salePrice > 0) {
+            if (salePrice > price) {
+              priceInfo.style.display = "block";
+              priceInfo.style.backgroundColor = "#f8d7da";
+              priceInfo.style.color = "#721c24";
+              priceInfo.textContent =
+                "Sale price cannot be greater than regular price";
+              salePriceInput.style.borderColor = "#e74c3c";
+            } else {
+              const discount = (((price - salePrice) / price) * 100).toFixed(1);
+              priceInfo.style.display = "block";
+              priceInfo.style.backgroundColor = "#e8f4fd";
+              priceInfo.style.color = "#0c5460";
+              priceInfo.textContent = `Discount: ${discount}% off`;
+              salePriceInput.style.borderColor = "#e1e8ed";
+            }
+          } else {
+            priceInfo.style.display = "none";
+            salePriceInput.style.borderColor = "#e1e8ed";
+          }
+        }
 
-			            skuInput.value = `${brandCode}-${productCode}-${randomNum}`;
-			        }
-			    }
+        priceInput.addEventListener("input", validatePrices);
+        salePriceInput.addEventListener("input", validatePrices);
+      }
 
-			    brandSelect.addEventListener('change', generateSKU);
-			    productNameInput.addEventListener('input', generateSKU);
-			}
+      function initializeCategoryValidation() {
+        const categoryCheckboxes = document.querySelectorAll(
+          'input[name="category"]'
+        );
 
-			window.removeImage = removeImage;
-			window.resetForm = resetForm;
-		</script>
-	</body>
+        categoryCheckboxes.forEach((checkbox) => {
+          checkbox.addEventListener("change", function () {
+            const checkedCategories = document.querySelectorAll(
+              'input[name="category"]:checked'
+            );
+            const categoryGrid = document.getElementById("categoryGrid");
+
+            if (checkedCategories.length === 0) {
+              categoryGrid.style.borderColor = "#e74c3c";
+            } else {
+              categoryGrid.style.borderColor = "transparent";
+            }
+          });
+        });
+      }
+
+      function initializeAutoSKU() {
+        const brandSelect = document.getElementById("brand");
+        const productNameInput = document.getElementById("productName");
+        const skuInput = document.getElementById("sku");
+
+        function generateSKU() {
+          const brand = brandSelect.value;
+          const productName = productNameInput.value;
+
+          if (brand && productName) {
+            const brandCode = brand.substring(0, 3).toUpperCase();
+            const productCode = productName
+              .replace(/\s+/g, "")
+              .substring(0, 3)
+              .toUpperCase();
+            const randomNum = Math.floor(Math.random() * 1000)
+              .toString()
+              .padStart(3, "0");
+
+            skuInput.value = `${brandCode}-${productCode}-${randomNum}`;
+          }
+        }
+
+        brandSelect.addEventListener("change", generateSKU);
+        productNameInput.addEventListener("input", generateSKU);
+      }
+
+      window.removeImage = removeImage;
+      window.resetForm = resetForm;
+    </script>
+  </body>
 </html>
