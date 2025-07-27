@@ -102,7 +102,7 @@ export const getAdminDashboardChartService = async (req) => {
       break;
     case "weekly":
       startDate.setDate(startDate.getDate() - 6);
-      startDate.setHours(0, 0, 0, 0);
+      startDate.setHours(23, 59, 59, 999);
       break;
     case "monthly":
       startDate.setDate(1);

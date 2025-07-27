@@ -442,7 +442,6 @@ export const rejectReturn = async (req, res) => {
     }
     order.returnInfo.rejectedReturns += 1
 
-    // Auto-update order status
     await updateOrderStatusBasedOnItems(order)
 
     order.updatedAt = new Date()

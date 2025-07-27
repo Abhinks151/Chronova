@@ -442,11 +442,7 @@
                                 .join("")}
                         </select>
                         <button class="btn btn-primary" onclick="updateOrderStatus('${order._id}')">Update Status</button>
-                        ${
-                            !order.orderStatus.includes("Cancelled") && !order.orderStatus.includes("Delivered")
-                                ? `<button class="btn btn-danger" onclick="showCancelOrderConfirmation('${order._id}')">Cancel Order</button>`
-                                : ""
-                        }
+                        
                     </div>
                 </div>
             `;

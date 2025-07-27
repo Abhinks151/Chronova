@@ -133,8 +133,9 @@ Chronova is a full-featured e-commerce platform for selling watches, crafted wit
 ✅ Admin sales report export (PDF/Excel)  
 ✅ Robust stock/coupon/order validation using MongoDB transactions  
 ✅ Wishlist, Cart, Return & Refund Logic  
-🧪 Wallet & Refund display (UI phase pending)  
-🎯 **Next Goal:** Refactor order management layout + analytics visualization
+✅ Wallet & Refund display 
+✅ Dashboard and analytics in admin side 
+🎯 **Next Goal:** Hosting
 
 ---
 
@@ -148,5 +149,4 @@ Aspiring Software Engineer | Full-stack Developer
 
 ## 📌 Note
 
-This project is built as a learning + portfolio piece.  
 Feedback, issues, and pull requests are always welcome!
