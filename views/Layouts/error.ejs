@@ -1,0 +1,110 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title><%= statusCode %> - <%= message %></title>
+  <style>
+    :root {
+      --primary-bg: #ffffff;
+      --accent-bg: #f8f9fa;
+      --error-color: #0d6efd;
+      --text-dark: #212529;
+      --text-light: #6c757d;
+      --button-bg: #0d6efd;
+      --button-text: #fff;
+      --button-hover-bg: #0253b3;
+    }
+
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+      background-color: var(--accent-bg);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      height: 100vh;
+      color: var(--text-dark);
+    }
+
+    .error-container {
+      background-color: var(--primary-bg);
+      border: 1px solid #dee2e6;
+      padding: 2.5rem 2rem;
+      border-radius: 12px;
+      width: 90%;
+      max-width: 480px;
+      box-shadow: 0 8px 24px rgba(0, 0, 0, 0.08);
+      text-align: center;
+      animation: fadeIn 0.3s ease-in-out;
+    }
+
+    .error-container h1 {
+      font-size: 2.2rem;
+      margin-bottom: 0.5rem;
+      color: var(--error-color);
+    }
+
+    .error-container p {
+      font-size: 1.1rem;
+      color: var(--text-light);
+      margin-bottom: 1rem;
+    }
+
+    .error-container a {
+      display: inline-block;
+      margin-top: 1.5rem;
+      background-color: var(--button-bg);
+      color: var(--button-text);
+      padding: 0.6rem 1.2rem;
+      font-size: 1rem;
+      border: none;
+      border-radius: 8px;
+      text-decoration: none;
+      transition: background-color 0.2s ease-in-out;
+    }
+
+    .error-container a:hover {
+      background-color: var(--button-hover-bg);
+    }
+
+    @keyframes fadeIn {
+      from {
+        opacity: 0;
+        transform: translateY(16px);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+
+    @media (max-width: 480px) {
+      .error-container {
+        padding: 2rem 1rem;
+      }
+
+      .error-container h1 {
+        font-size: 1.8rem;
+      }
+
+      .error-container p {
+        font-size: 1rem;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="error-container">
+    <h1><%= statusCode %> - <%= message %></h1>
+    <p><%= description %></p>
+    <a href="/user/home">Go Home</a>
+  </div>
+</body>
+</html>
+

@@ -118,14 +118,7 @@
 		Add to Cart
 	</button>
 
-	<!-- Buy Now -->
-	<button
-		class="btn-secondary <%= product.stockQuantity === 0 ? 'btn-disabled-secondary' : '' %>"
-		onclick="buyNow()"
-		<%= product.stockQuantity === 0 ? 'disabled' : '' %>>
-		<i class="fas fa-bolt"></i>
-		Buy Now
-	</button>
+	
 
 	<!-- Wishlist -->
 	<button class="wishlist-btn" onclick="toggleWishlist()">

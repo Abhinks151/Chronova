@@ -334,7 +334,6 @@
     const response = await axios.get(`/admin/products/filter?${params}`);
     const data = response.data;
 
-    console.log('Fetched product data:', data);
 
 
     if (data.success) {
@@ -411,8 +410,8 @@
           </td>
           <td>${product.brand}</td>
           <td class="price-cell">
-            <div class="sale-price">₹${formatPrice(product.salePrice)}</div>
-            ${product.price !== product.salePrice ? 
+            <div class="sale-price">₹${formatPrice(product.offer.offerPrice)}</div>
+            ${product.price !== product.offer.offerPrice ? 
               `<div class="original-price">₹${formatPrice(product.price)}</div>` : ''}
           </td>
           <td>
@@ -433,14 +432,12 @@
         </tr>
       `).join('');
     }
-
     // ==================== PAGINATION FUNCTIONS ====================
     // Update pagination information and button states
 function updatePagination() {
   const totalPages = Math.ceil(totalProducts / pageSize);
   const startItem = ((currentPage - 1) * pageSize) + 1;
   const endItem = Math.min(currentPage * pageSize, totalProducts);
-console.log({ totalProducts, pageSize, currentPage });
 
   document.getElementById('paginationInfo').textContent = 
     `Showing ${startItem} - ${endItem} of ${totalProducts} products`;

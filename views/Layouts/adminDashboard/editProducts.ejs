@@ -40,7 +40,7 @@
                             id="productName"
                             name="productName"
                             value="<%= product.productName || '' %>"
-                            required
+                            
                         />
                     </div>
 
@@ -48,7 +48,7 @@
                         <label for="brand">
                             Brand <span class="required">*</span>
                         </label>
-                        <select id="brand" name="brand" required>
+                        <select id="brand" name="brand" >
                             <option value="">Select Brand</option>
                             <% brands.forEach(brand => { %>
                                 <option value="<%= brand._id %>" 
@@ -64,7 +64,7 @@
                             Product Type
                             <span class="required">*</span>
                         </label>
-                        <select id="productType" name="productType" required>
+                        <select id="productType" name="productType" >
                             <option value="">Select Product Type</option>
                            <% types.forEach(type => { %>
                                 <option value="<%= type %>" 
@@ -102,7 +102,6 @@
                             id="description"
                             name="description"
                             placeholder="Enter detailed product description..."
-                            required
                         ><%= product.description || '' %></textarea>
                     </div>
                 </div>
@@ -117,7 +116,7 @@
                             Strap Type
                             <span class="required">*</span>
                         </label>
-                        <select id="strapType" name="strapType" required>
+                        <select id="strapType" name="strapType" >
                             <option value="">Select Strap Type</option>
                             <option value="Leather" <%= product.strapType === 'Leather' ? 'selected' : '' %>>Leather</option>
                             <option value="Metal" <%= product.strapType === 'Metal' ? 'selected' : '' %>>Metal</option>
@@ -139,7 +138,6 @@
                             name="color"
                             placeholder="e.g., Black, Silver, Gold"
                             value="<%= product.color || '' %>"
-                            required
                         />
                     </div>
 
@@ -156,7 +154,6 @@
                             min="20"
                             max="60"
                             value="<%= product.dialSize || '' %>"
-                            required
                         />
                     </div>
 
@@ -165,7 +162,7 @@
                             Dial Shape
                             <span class="required">*</span>
                         </label>
-                        <select id="dialShape" name="dialShape" required>
+                        <select id="dialShape" name="dialShape" >
                             <option value="">Select Dial Shape</option>
                             <option value="Round" <%= product.dialShape === 'Round' ? 'selected' : '' %>>Round</option>
                             <option value="Square" <%= product.dialShape === 'Square' ? 'selected' : '' %>>Square</option>
@@ -180,7 +177,7 @@
                             Movement Type
                             <span class="required">*</span>
                         </label>
-                        <select id="movement" name="movement" required>
+                        <select id="movement" name="movement" >
                             <option value="">Select Movement</option>
                             <option value="Quartz" <%= product.movement === 'Quartz' ? 'selected' : '' %>>Quartz</option>
                             <option value="Automatic" <%= product.movement === 'Automatic' ? 'selected' : '' %>>Automatic</option>
@@ -195,7 +192,7 @@
                             Water Resistance
                             <span class="required">*</span>
                         </label>
-                        <select id="waterResistance" name="waterResistance" required>
+                        <select id="waterResistance" name="waterResistance" >
                             <option value="">Select Water Resistance</option>
                             <option value="30M" <%= product.waterResistance === '30M' ? 'selected' : '' %>>30M (3 ATM)</option>
                             <option value="50M" <%= product.waterResistance === '50M' ? 'selected' : '' %>>50M (5 ATM)</option>
@@ -211,7 +208,7 @@
                             Warranty Period
                             <span class="required">*</span>
                         </label>
-                        <select id="warranty" name="warranty" required>
+                        <select id="warranty" name="warranty" >
                             <option value="">Select Warranty</option>
                             <option value="6 months" <%= product.warranty === '6 months' ? 'selected' : '' %>>6 Months</option>
                             <option value="1 year" <%= product.warranty === '1 year' ? 'selected' : '' %>>1 Year</option>
@@ -235,7 +232,6 @@
                             min="10"
                             max="1000"
                             value="<%= product.weight || '' %>"
-                            required
                         />
                     </div>
                 </div>
@@ -257,7 +253,6 @@
                             step="0.01"
                             min="0"
                             value="<%= product.price || '' %>"
-                            required
                             placeholder="0.00"
                         />
                     </div>
@@ -274,7 +269,6 @@
                             step="0.01"
                             min="0"
                             value="<%= product.salePrice || '' %>"
-                            required
                             placeholder="0.00"
                         />
                     </div>
@@ -290,7 +284,6 @@
                             name="stockQuantity"
                             min="0"
                             value="<%= product.stockQuantity || '' %>"
-                            required
                             placeholder="0"
                         />
                     </div>
@@ -305,7 +298,6 @@
                             name="sku"
                             placeholder="e.g., WTH-001"
                             value="<%= product.sku || '' %>"
-                            required
                         />
                     </div>
                 </div>

@@ -442,11 +442,7 @@
                                 .join("")}
                         </select>
                         <button class="btn btn-primary" onclick="updateOrderStatus('${order._id}')">Update Status</button>
-                        ${
-                            !order.orderStatus.includes("Cancelled") && !order.orderStatus.includes("Delivered")
-                                ? `<button class="btn btn-danger" onclick="showCancelOrderConfirmation('${order._id}')">Cancel Order</button>`
-                                : ""
-                        }
+                        
                     </div>
                 </div>
             `;
@@ -560,7 +556,7 @@
                                 <div class="item-info">
                                     <h4>${item.productName}</h4>
                                     <p><strong>Brand:</strong> ${item.brand}</p>
-                                    <p><strong>Price:</strong> ₹${item.price.toLocaleString()} × ${item.quantity} = ₹${(item.price * item.quantity).toLocaleString()}</p>
+                                    <p><strong>Price:</strong> ₹${item.netItemTotal.toLocaleString()} × ${item.quantity} = ₹${(item.netItemTotal * item.quantity).toLocaleString()}</p>
                                     <p><strong>Status:</strong>
                                         <span class="status-badge status-${item.status.toLowerCase().replace(/\s+/g, "-")}">${item.status}</span>
                                         <span class="item-payment-badge ${item.paymentStatus ? item.paymentStatus.toLowerCase() : "pending"}">${item.paymentStatus || "Pending"}</span>

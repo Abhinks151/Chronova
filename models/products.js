@@ -119,14 +119,6 @@ const productSchema = new mongoose.Schema({
     type: mongoose.Schema.Types.ObjectId,
     ref: 'Review',
   }],
-  hasActiveOffer: {
-    type: Boolean,
-    default: false,
-  },
-  appliedDiscountInfo: {
-    type: String,
-    default: "No discounts applied",
-  },
 }, {
   timestamps: true,
 });

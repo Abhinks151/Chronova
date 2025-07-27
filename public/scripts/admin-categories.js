@@ -452,7 +452,6 @@ function populateProductsList() {
       <div class="product-details">
         <div class="product-name">${product.productName}</div>
         <div class="product-brand">${product.brand}</div>
-        <div class="product-price">₹${product.salePrice}</div>
       </div>
       <div class="selection-indicator">
         <span class="checkmark">✓</span>
@@ -460,6 +459,10 @@ function populateProductsList() {
     </div>
   `).join('');
 }
+
+//add later if needed
+// <div class="product-price">₹${product.salePrice}</div>
+
 
 function filterProducts() {
   const query = document.getElementById('productSearch').value.toLowerCase();

@@ -470,6 +470,7 @@
         } else if (filteredOrders.length === 0) {
           showEmptyState();
         } else {
+          hideEmptyState()
           displayOrders();
         }
       }
@@ -539,11 +540,15 @@
                             }')">
                                 <i class="fas fa-eye"></i> View Details
                             </button>
-                            <button class="action-btn download-btn" onclick="event.stopPropagation(); downloadInvoice('${
-                              order.orderId
-                            }')">
-                                <i class="fas fa-download"></i> Invoice
-                            </button>
+                            ${
+                              order.isPaid
+                                ? `
+                                <button class="action-btn download-btn" onclick="event.stopPropagation(); downloadInvoice('${order.orderId}')">
+                                    <i class="fas fa-download"></i> Download Invoice
+                                </button>
+                            `
+                                : ""
+                            }
                             ${
                               order.paymentMethod === "ONLINE" &&
                               !order.isPaid &&
@@ -736,7 +741,9 @@
                             </span>
                         </div>
                         <div class="product-total">
-                            ₹${(item.finalPrice * item.quantity).toLocaleString()}
+                            ₹${(
+                              item.finalPrice * item.quantity
+                            ).toLocaleString()}
                         </div>
                         <div class="item-actions">
                             ${
@@ -1229,6 +1236,21 @@
         }
 
         document.getElementById("empty-state").style.display = "flex";
+        document.getElementById("error-message").style.display = "none";
+        document.getElementById("orders-container").style.display = "none";
+      }
+
+      function hideEmptyState(customMessage = null) {
+        hideLoading();
+        const emptyMessage = document.getElementById("empty-message");
+        if (customMessage) {
+          emptyMessage.textContent = '';
+        } else {
+          emptyMessage.textContent =
+            "You haven't placed any orders yet. Start shopping to see your orders here!";
+        }
+
+        document.getElementById("empty-state").style.display = "none";
         document.getElementById("error-message").style.display = "none";
         document.getElementById("orders-container").style.display = "none";
       }
