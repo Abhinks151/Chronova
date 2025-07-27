@@ -4,16 +4,27 @@ import { blockProductService } from '../../services/productManagement/blockProdu
 import { deleteProductService } from '../../services/productManagement/daleteProductServise.js';
 import { getCategory, paginationService } from '../../services/productManagement/paginationService.js';
 import { getProduct, updateProductService } from '../../services/productManagement/editProductService.js';
-
+import { findBestPriceForProduct } from '../../services/offers/bestOfferForProductService.js';
 
 
 export const getProductsPage = async (req, res) => {
   try {
     const paginated = await paginationService(req.query);
     const categories = await getCategory();
+
+    const productsWithPrice = await Promise.all(
+      paginated.products.map(async (product) => {
+        const offer = await findBestPriceForProduct(product._id);
+        return {
+          ...product,
+          offer,
+        };
+      })
+    );
+
     res.status(httpStatusCode.OK.code).render('Layouts/adminDashboard/products', {
       title: 'Products',
-      products: paginated.products,
+      products: productsWithPrice,
       categories,
       brands: paginated.brands,
       types: paginated.types,
@@ -33,10 +44,21 @@ export const getFilteredProducts = async (req, res) => {
     const paginated = await paginationService(req.query);
     const categories = await getCategory();
 
-    
+    const productsWithPrice = await Promise.all(
+      paginated.products.map(async (product) => {
+        const offer = await findBestPriceForProduct(product._id);
+        return {
+          ...product,
+          offer,
+        };
+      })
+    );
+
+    // console.log(productsWithPrice);
+
     res.status(httpStatusCode.OK.code).json({
       success: true,
-      products: paginated.products,
+      products: productsWithPrice,
       categories,
       brands: paginated.brands,
       types: paginated.types,
@@ -52,6 +74,7 @@ export const getFilteredProducts = async (req, res) => {
     });
   }
 };
+
 
 export const getAddProducts = async (req, res) => {
   try {

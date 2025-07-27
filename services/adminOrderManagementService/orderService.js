@@ -1,7 +1,6 @@
 import { Order } from "../../models/order.js"
 import Wallet from "../../models/wallet.js"
 
-// Update order payment status
 export const updateOrderPaymentStatus = async (orderId, paymentStatus, adminId) => {
   try {
     const order = await Order.findById(orderId)
@@ -14,7 +13,6 @@ export const updateOrderPaymentStatus = async (orderId, paymentStatus, adminId) 
 
     const oldPaymentStatus = order.paymentStatus
 
-    // Validate status transition
     const isValidTransition = validatePaymentStatusTransition(oldPaymentStatus, paymentStatus)
     if (!isValidTransition) {
       return {
@@ -23,11 +21,9 @@ export const updateOrderPaymentStatus = async (orderId, paymentStatus, adminId) 
       }
     }
 
-    // Update order payment status
     order.paymentStatus = paymentStatus
     order.updatedAt = new Date()
 
-    // Handle specific payment status changes
     switch (paymentStatus) {
       case "Paid":
         order.isPaid = true
@@ -65,7 +61,6 @@ export const updateOrderPaymentStatus = async (orderId, paymentStatus, adminId) 
         break
     }
 
-    // Add to payment history
     if (!order.paymentHistory) {
       order.paymentHistory = []
     }
@@ -79,7 +74,6 @@ export const updateOrderPaymentStatus = async (orderId, paymentStatus, adminId) 
 
     await order.save()
 
-    // Handle wallet refund if payment status is refunded
     if (paymentStatus === "Refunded" && order.userId) {
       await processWalletRefund(order.userId, order.refundedAmount, orderId, "Order refund")
     }
@@ -98,7 +92,6 @@ export const updateOrderPaymentStatus = async (orderId, paymentStatus, adminId) 
   }
 }
 
-// Update item payment status
 export const updateItemPaymentStatus = async (orderId, itemId, paymentStatus, adminId) => {
   try {
     const order = await Order.findById(orderId)
@@ -119,7 +112,6 @@ export const updateItemPaymentStatus = async (orderId, itemId, paymentStatus, ad
 
     const oldPaymentStatus = item.paymentStatus || "Pending"
 
-    // Validate status transition
     const isValidTransition = validatePaymentStatusTransition(oldPaymentStatus, paymentStatus)
     if (!isValidTransition) {
       return {
@@ -128,27 +120,21 @@ export const updateItemPaymentStatus = async (orderId, itemId, paymentStatus, ad
       }
     }
 
-    // Update item payment status
     item.paymentStatus = paymentStatus;
     item.paymentStatusUpdatedAt = new Date();
 
-    // Handle specific payment status changes
     if (paymentStatus === "Refunded") {
       const refundAmount = item.price * item.quantity
 
-      // Add to order refunded amount
       order.refundedAmount = (order.refundedAmount || 0) + refundAmount
 
-      // Process wallet refund
       if (order.userId) {
         await processWalletRefund(order.userId, refundAmount, orderId, `Item refund: ${item.productName}`)
       }
     }
 
-    // Update overall order payment status based on all items
     await updateOrderPaymentStatusBasedOnItems(order)
 
-    // Add to payment history
     if (!order.paymentHistory) {
       order.paymentHistory = []
     }
@@ -178,7 +164,6 @@ export const updateItemPaymentStatus = async (orderId, itemId, paymentStatus, ad
   }
 }
 
-// Get order payment status
 export const getOrderPaymentStatus = async (orderId) => {
   try {
     const order = await Order.findById(orderId)
@@ -216,7 +201,6 @@ export const getOrderPaymentStatus = async (orderId) => {
   }
 }
    
-// Helper function to validate payment status transition
 const validatePaymentStatusTransition = (currentStatus, newStatus) => {
   const invalidTransitions = {
     Paid: ["Pending"],
@@ -225,12 +209,10 @@ const validatePaymentStatusTransition = (currentStatus, newStatus) => {
     Cancelled: ["Pending", "Paid", "Refunded"],
   }
 
-  // Allow transitions from any status to itself (no change)
   if (currentStatus === newStatus) {
     return true
   }
 
-  // Check if transition is invalid
   if (invalidTransitions[currentStatus] && invalidTransitions[currentStatus].includes(newStatus)) {
     return false
   }
@@ -238,7 +220,6 @@ const validatePaymentStatusTransition = (currentStatus, newStatus) => {
   return true
 }
 
-// Helper function to update order payment status based on items
 const updateOrderPaymentStatusBasedOnItems = async (order) => {
   const items = order.items
   const totalItems = items.length
@@ -269,7 +250,6 @@ const updateOrderPaymentStatusBasedOnItems = async (order) => {
   }
 }
 
-// Helper function to process wallet refund
 const processWalletRefund = async (userId, amount, orderId, description) => {
   try {
     let wallet = await Wallet.findOne({ userId: userId })

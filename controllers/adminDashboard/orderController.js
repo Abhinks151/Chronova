@@ -19,7 +19,6 @@ export const getOrders = async (req, res) => {
     const sortBy = req.query.sortBy || "createdAt"
     const sortOrder = req.query.sortOrder || "desc"
 
-    // Build search query
     const searchQuery = {}
     if (search) {
       searchQuery.$or = [
@@ -42,18 +41,14 @@ export const getOrders = async (req, res) => {
       }
     }
 
-    // Build sort object
     const sortObj = {}
     sortObj[sortBy] = sortOrder === "desc" ? -1 : 1
 
-    // Get orders with user population
     const orders = await Order.find(searchQuery).populate("userId", "name email").sort(sortObj).skip(skip).limit(limit)
 
-    // Get total count for pagination
     const totalOrders = await Order.countDocuments(searchQuery)
     const totalPages = Math.ceil(totalOrders / limit)
 
-    // Enhanced status options for the filter dropdown
     const statuses = [
       "Pending",
       "Placed",
@@ -163,7 +158,6 @@ export const getOrderDetails = async (req, res) => {
       return res.status(404).json({ error: "Order not found" })
     }
 
-    // Filter return-requested items
     const returnRequestedItems = order.items.filter((item) => item.status === "Return Requested")
 
     res.json({
@@ -207,7 +201,6 @@ export const updateOrderStatus = async (req, res) => {
       return res.status(404).json({ error: "Order not found" })
     }
 
-    // Sync item statuses based on orderStatus
     if (status === "Shipped" || status === "Delivered") {
       order.items.forEach((item) => {
         if (item.status === "Placed" || item.status === "Shipped") {
@@ -282,10 +275,8 @@ export const updateItemStatus = async (req, res) => {
       return res.status(404).json({ error: "Item not found in order" })
     }
 
-    // Update item status
     item.status = status
 
-    // Add reason for cancellation or return
     if (status === "Cancelled" && reason) {
       item.cancelReason = reason
     }
@@ -295,7 +286,6 @@ export const updateItemStatus = async (req, res) => {
       item.returnRequestedAt = new Date()
     }
 
-    // Auto-update order status based on item statuses
     await updateOrderStatusBasedOnItems(order)
 
     order.updatedAt = new Date()
@@ -438,13 +428,11 @@ export const rejectReturn = async (req, res) => {
       return res.status(400).json({ error: "Item is not in return request state" })
     }
 
-    // Update item status to Return Rejected
     item.status = "Return Rejected"
     item.returnRejectionReason = rejectionReason.trim()
     item.returnProcessedAt = new Date()
     item.returnProcessedBy = "Admin"
 
-    // Update return info
     if (!order.returnInfo) {
       order.returnInfo = {
         totalReturnRequests: 0,
@@ -494,7 +482,6 @@ export const cancelOrder = async (req, res) => {
       return res.status(400).json({ error: "Cannot cancel delivered or already cancelled orders" })
     }
 
-    // Update order status and cancellation info
     order.orderStatus = "Cancelled"
     order.cancellation = {
       cancelledAt: new Date(),
@@ -502,7 +489,6 @@ export const cancelOrder = async (req, res) => {
       reason: reason,
     }
 
-    // Update all items to cancelled
     order.items.forEach((item) => {
       if (item.status !== "Delivered" && !item.status.includes("Return")) {
         item.status = "Cancelled"
@@ -535,7 +521,6 @@ async function updateOrderStatusBasedOnItems(order) {
   const itemStatuses = order.items.map((item) => item.status)
   const totalItems = order.items.length
 
-  // Count different status types
   const statusCounts = {
     placed: itemStatuses.filter((s) => s === "Placed").length,
     cancelled: itemStatuses.filter((s) => s === "Cancelled").length,
@@ -546,9 +531,7 @@ async function updateOrderStatusBasedOnItems(order) {
     returnRejected: itemStatuses.filter((s) => s === "Return Rejected").length,
   }
 
-  // Determine order status based on item statuses
   if (statusCounts.returnApproved === totalItems) {
-    // All items returned and approved
     order.orderStatus = "Return Approved"
     order.returnInfo = {
       ...order.returnInfo,
@@ -557,36 +540,27 @@ async function updateOrderStatusBasedOnItems(order) {
       reason: "All items returned and approved",
     }
   } else if (statusCounts.returnApproved > 0) {
-    // Some items returned and approved
     order.orderStatus = "Partially Return Approved"
   } else if (statusCounts.returnRequested > 0) {
-    // Some items have return requests pending
     if (statusCounts.returnRequested === totalItems) {
       order.orderStatus = "Return Requested"
     } else {
-      order.orderStatus = "Return Requested" // Keep as return requested if any pending
+      order.orderStatus = "Return Requested" 
     }
   } else if (statusCounts.cancelled === totalItems) {
-    // All items cancelled
     order.orderStatus = "Cancelled"
   } else if (statusCounts.cancelled > 0) {
-    // Some items cancelled
     order.orderStatus = "Partially Cancelled"
   } else if (statusCounts.delivered === totalItems) {
-    // All items delivered
     order.orderStatus = "Delivered"
   } else if (statusCounts.delivered > 0) {
-    // Some items delivered, some might be shipped/placed
     order.orderStatus = "Delivered"
   } else if (statusCounts.shipped > 0) {
-    // Some items shipped
     order.orderStatus = "Shipped"
   } else if (statusCounts.placed === totalItems) {
-    // All items still placed
     order.orderStatus = "Placed"
   }
 
-  // Update return info counts
   if (!order.returnInfo) {
     order.returnInfo = {
       totalReturnRequests: 0,
@@ -607,7 +581,6 @@ export const updateOrderPaymentStatus = async (req, res) => {
     const { paymentStatus } = req.body
     const adminId = req.admin?._id || "admin";
 
-    // Validate payment status
     const validStatuses = ["Pending", "Paid", "Failed", "Refunded", "Cancelled"]
     if (!validStatuses.includes(paymentStatus)) {
       return res.status(400).json({
@@ -657,7 +630,6 @@ export const updateItemPaymentStatus = async (req, res) => {
     const { paymentStatus } = req.body
     const adminId = req.admin?._id || "admin"
 
-    // Validate payment status
     const validStatuses = ["Pending", "Paid", "Failed", "Refunded", "Cancelled"]
     if (!validStatuses.includes(paymentStatus)) {
       return res.status(400).json({
