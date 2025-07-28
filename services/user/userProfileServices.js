@@ -69,6 +69,9 @@ export const finduserById = async (userId) => {
   return await User.findById(userId);
 }
 
+export const finduserByEmail = async (email) => {
+  return await User.findOne({ email });
+}
 
 
 export const changeEmail = async (req, userId, newEmail) => {
@@ -101,6 +104,8 @@ export const changeEmail = async (req, userId, newEmail) => {
     message: "OTP sent successfully to your new email."
   };
 };
+
+
 
 
 export const getAllAddress = async (userId) => {

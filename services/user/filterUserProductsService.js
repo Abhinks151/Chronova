@@ -4,7 +4,6 @@ import { findBestPriceForProduct } from "../offers/bestOfferForProductService.js
 
 export const fetchFilteredProducts = async (filters) => {
   const query = { isBlocked: false, isDeleted: false };
-  const sort = {};
 
   if (filters.search) {
     const searchRegex = new RegExp(filters.search, "i");
@@ -19,35 +18,10 @@ export const fetchFilteredProducts = async (filters) => {
     query.brand = filters.brand;
   }
 
-  if (filters.minPrice || filters.maxPrice) {
-    query.salePrice = {};
-    if (filters.minPrice) {
-      query.salePrice.$gte = parseInt(filters.minPrice);
-    }
-    if (filters.maxPrice) {
-      query.salePrice.$lte = parseInt(filters.maxPrice);
-    }
-  }
-
-  if (filters.sort === "price-low") {
-    sort.salePrice = 1;
-  } else if (filters.sort === "price-high") {
-    sort.salePrice = -1;
-  } else if (filters.sort === "name-asc") {
-    sort.productName = 1;
-  } else if (filters.sort === "name-desc") {
-    sort.productName = -1;
-  } else if (filters.sort === "newest") {
-    sort.createdAt = -1;
-  } else {
-    sort.createdAt = -1;
-  }
-
   const page = parseInt(filters.page) || 1;
   const limit = parseInt(filters.limit) || 9;
-  const skip = (page - 1) * limit;
 
-  const products = await Products.aggregate([
+  const rawProducts = await Products.aggregate([
     { $match: query },
     {
       $lookup: {
@@ -80,64 +54,51 @@ export const fetchFilteredProducts = async (filters) => {
         },
       },
     },
-    { $sort: sort },
-    { $skip: skip },
-    { $limit: limit },
   ]);
-  // products.offer = await findBestPriceForProduct
-  for (let key in products) {
-    products[key].offer = await findBestPriceForProduct(products[key]._id);
+
+  const productsWithPrice = await Promise.all(
+    rawProducts.map(async (product) => {
+      const offer = await findBestPriceForProduct(product._id);
+
+      return {
+        ...product,
+        offer
+      };
+    })
+  );
+
+  let filtered = productsWithPrice;
+  if (filters.minPrice || filters.maxPrice) {
+    const min = parseInt(filters.minPrice) || 0;
+    const max = parseInt(filters.maxPrice) || Infinity;
+
+    filtered = filtered.filter((product) => {
+      return product.offer.offerPrice >= min && product.offer.offerPrice <= max
+    });
   }
-  // console.log(products[0]);
 
-  // console.log("Sort", sort);
-  // console.log("Query", query);
-  // console.log("limit", limit);
-  // console.log("page", page);
-  // console.log("skip", skip);
-  // console.log("products", products);
+  // console.log(filtered);
 
-  const totalCountResult = await Products.aggregate([
-    { $match: query },
-    {
-      $lookup: {
-        from: "categories",
-        localField: "category",
-        foreignField: "_id",
-        as: "categoryDetails",
-      },
-    },
-    {
-      $addFields: {
-        validCategories: {
-          $filter: {
-            input: "$categoryDetails",
-            as: "cat",
-            cond: {
-              $and: [
-                { $eq: ["$$cat.isBlocked", false] },
-                { $eq: ["$$cat.isDeleted", false] },
-              ],
-            },
-          },
-        },
-      },
-    },
-    {
-      $match: {
-        $expr: {
-          $eq: [{ $size: "$category" }, { $size: "$validCategories" }],
-        },
-      },
-    },
-    { $count: "total" },
-  ]);
+  const sort = filters.sort;
+  if (sort === "price-low") {
+    filtered.sort((a, b) => a.finalPrice - b.finalPrice);
+  } else if (sort === "price-high") {
+    filtered.sort((a, b) => b.finalPrice - a.finalPrice);
+  } else if (sort === "name-asc") {
+    filtered.sort((a, b) => a.productName.localeCompare(b.productName));
+  } else if (sort === "name-desc") {
+    filtered.sort((a, b) => b.productName.localeCompare(a.productName));
+  } else if (sort === "newest") {
+    filtered.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
+  }
 
-  const totalProducts = totalCountResult[0]?.total || 0;
+  const totalProducts = filtered.length;
   const totalPages = Math.ceil(totalProducts / limit);
+  const skip = (page - 1) * limit;
+  const paginated = filtered.slice(skip, skip + limit);
 
   return {
-    products,
+    products: paginated,
     currentPage: page,
     totalPages,
     totalProducts,

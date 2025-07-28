@@ -3,80 +3,89 @@ import { Order } from '../../models/order.js';
 
 
 export const getAdminDashboardPageDataService = async () => {
-	const userCount = await User.countDocuments({});
+  const userCount = await User.countDocuments({});
 
-	const orderCount = await Order.countDocuments({});
+  const orderCount = await Order.countDocuments({});
 
-	const deliveredOrders = await Order.find({ orderStatus: "Delivered" });
-	const totalSales = deliveredOrders.reduce((acc, curr) => {
-		acc += curr.totalAmount;
-		return acc;
-	}, 0)
-
-
-	const bestTenProducts = await Order.aggregate([
-		{ $match: { orderStatus: "Delivered" } },
-		{ $unwind: "$items" },
-		{ $group: { _id: "$items.productId", productName: { $first: "$items.productName" }, totalQuantity: { $sum: "$items.quantity" } } },
-		{ $sort: { totalQuantity: -1 } },
-		{ $limit: 10 },
-		{ $project: { _id: 0, productName: 1, totalQuantity: 1 } }
-	]);
-
-	const bestTenBrands = await Order.aggregate([
-		{ $match: { orderStatus: "Delivered" } },
-		{ $unwind: "$items" },
-		{ $group: { _id: "$items.brand", brand: { $first: "$items.brand" }, totalQuantity: { $sum: "$items.quantity" } } },
-		{ $sort: { totalQuantity: -1 } },
-		{ $limit: 10 },
-		{ $project: { _id: 0, brand: 1, totalQuantity: 1 } }
-	]);
-
-	const bestTenCategory = await Order.aggregate([
-		{ $match: { orderStatus: "Delivered" } },
-		{ $unwind: "$items" },
-		{ $unwind: "$items.category" },
-		{
-			$group: {
-				_id: "$items.category",
-				totalQuantity: { $sum: "$items.quantity" }
-			}
-		},
-		{
-			$lookup: {
-				from: "categories",
-				localField: "_id",
-				foreignField: "_id",
-				as: "categoryDetails"
-			}
-		},
-		{ $unwind: "$categoryDetails" },
-		{
-			$project: {
-				_id: 0,
-				categoryName: "$categoryDetails.categoryName",
-				totalQuantity: 1
-			}
-		},
-		{ $sort: { totalQuantity: -1 } },
-		{ $limit: 10 }
-	]);
+  const deliveredOrders = await Order.find({ orderStatus: "Delivered" });
+  const totalSales = deliveredOrders.reduce((acc, curr) => {
+    acc += curr.totalAmount;
+    return acc;
+  }, 0)
 
 
+  const bestTenProducts = await Order.aggregate([
+    { $match: { orderStatus: "Delivered" } },
+    { $unwind: "$items" },
+    { $group: { _id: "$items.productId", productName: { $first: "$items.productName" }, totalQuantity: { $sum: "$items.quantity" } } },
+    { $sort: { totalQuantity: -1 } },
+    { $limit: 10 },
+    { $project: { _id: 0, productName: 1, totalQuantity: 1, totalAmount: 1 } }
+  ]);
+
+  // console.log(bestTenProducts);
+
+  // const sum =  bestTenProducts.reduce((acc,curr)=>{
+  //   acc += curr.totalAmount;
+  //   return acc;
+  // },0);
+  // console.log("Sum",sum);
 
 
-	// console.log(bestTenCategory);
+  const bestTenBrands = await Order.aggregate([
+    { $match: { orderStatus: "Delivered" } },
+    { $unwind: "$items" },
+    { $group: { _id: "$items.brand", brand: { $first: "$items.brand" }, totalQuantity: { $sum: "$items.quantity" } } },
+    { $sort: { totalQuantity: -1 } },
+    { $limit: 10 },
+    { $project: { _id: 0, brand: 1, totalQuantity: 1 } }
+  ]);
+
+  const bestTenCategory = await Order.aggregate([
+    { $match: { orderStatus: "Delivered" } },
+    { $unwind: "$items" },
+    { $unwind: "$items.category" },
+    {
+      $group: {
+        _id: "$items.category",
+        totalQuantity: { $sum: "$items.quantity" }
+      }
+    },
+    {
+      $lookup: {
+        from: "categories",
+        localField: "_id",
+        foreignField: "_id",
+        as: "categoryDetails"
+      }
+    },
+    { $unwind: "$categoryDetails" },
+    {
+      $project: {
+        _id: 0,
+        categoryName: "$categoryDetails.categoryName",
+        totalQuantity: 1
+      }
+    },
+    { $sort: { totalQuantity: -1 } },
+    { $limit: 10 }
+  ]);
 
 
-	return {
-		userCount,
-		orderCount,
-		totalSales,
-		bestTenProducts,
-		bestTenProducts,
-		bestTenCategory,
-		bestTenBrands
-	}
+
+
+  // console.log(bestTenCategory);
+
+
+  return {
+    userCount,
+    orderCount,
+    totalSales,
+    bestTenProducts,
+    bestTenProducts,
+    bestTenCategory,
+    bestTenBrands
+  }
 }
 
 

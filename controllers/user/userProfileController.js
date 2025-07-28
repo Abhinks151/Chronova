@@ -1,6 +1,6 @@
 
 import { User } from "../../models/userModels.js";
-import { addAddressService, changeEmail, deleteAddressService, editAddressService, editDefaultByIdService, finduserById, getAllAddress, validateAndUpdateUser } from "../../services/user/userProfileServices.js"
+import { addAddressService, changeEmail, deleteAddressService, editAddressService, editDefaultByIdService, finduserByEmail, finduserById, getAllAddress, validateAndUpdateUser } from "../../services/user/userProfileServices.js"
 import cloudinary from "../../utils/cloudinary.js";
 import httpStatusCode from "../../utils/httpStatusCode.js"
 import { sendResetPasswordToken } from "../../utils/sendVerificationOTP.js";
@@ -69,6 +69,15 @@ export const postChangeEmail = async (req, res) => {
         error: "This email is already in use."
       })
     }
+
+    const emailExist = await finduserByEmail(newEmail);
+    if (emailExist) {
+      return res.status(httpStatusCode.BAD_REQUEST.code).render('Layouts/users/changeEmail', {
+        success: null,
+        error: "This email is already in use by another user."
+      })
+    }
+
     if (!/^[a-zA-Z0-9._-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,4}$/.test(newEmail)) {
       return res.status(httpStatusCode.BAD_REQUEST.code).render('Layouts/users/changeEmail', {
         success: null,

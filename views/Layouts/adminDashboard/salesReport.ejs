@@ -284,7 +284,7 @@
                                 >${order.paymentStatus}</span
                             >
                         </td>
-                        <td>₹${order.subtotal.toLocaleString()}</td>
+                        <td>₹${order.subtotal + order.discount}</td>
                         <td>₹${order.discount.toLocaleString()}</td>
                         <td>₹${order.totalAmount.toLocaleString()}</td>
                         <td>₹${order.refundedAmount.toLocaleString()}</td>
