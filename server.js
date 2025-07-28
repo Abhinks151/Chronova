@@ -62,7 +62,7 @@ app.use((err,req,res,next)=>{
     statusCode: 500,
     message : "Internal Server Error",
     description: "Something went wrong. Please try again later.",
-  });
+  });    
 })
 
 
