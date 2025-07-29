@@ -172,72 +172,79 @@ export const getOrderDetails = async (req, res) => {
 
 export const updateOrderStatus = async (req, res) => {
   try {
-    const { orderId } = req.params
-    const { status } = req.body
+    const { orderId } = req.params;
+    const { status } = req.body;
 
     if (!orderId || !status) {
-      return res.status(400).json({ error: "Order ID and status are required" })
+      return res.status(400).json({ error: "Order ID and status are required" });
     }
 
     const validStatuses = [
-      "Pending",
-      "Placed",
-      "Cancelled",
-      "Partially Cancelled",
-      "Shipped",
-      "Delivered",
-      "Return Requested",
-      "Partially Returned",
-      "Returned",
-      "Return Approved",
-      "Partially Return Approved",
-    ]
+      "Pending", "Placed", "Cancelled", "Partially Cancelled", "Shipped", "Delivered",
+      "Return Requested", "Partially Returned", "Returned",
+      "Return Approved", "Partially Return Approved"
+    ];
     if (!validStatuses.includes(status)) {
-      return res.status(400).json({ error: "Invalid status" })
+      return res.status(400).json({ error: "Invalid status" });
     }
 
-    const order = await Order.findById(orderId)
+    const order = await Order.findById(orderId);
     if (!order) {
-      return res.status(404).json({ error: "Order not found" })
+      return res.status(404).json({ error: "Order not found" });
     }
 
-    if (status === "Shipped" || status === "Delivered") {
-      order.items.forEach((item) => {
-        if (item.status === "Placed" || item.status === "Shipped") {
-          item.status = status
-        }
-      })
-    }
-
-    if (status === "Cancelled") {
-      order.items.forEach((item) => {
-        if (item.status !== "Delivered" && !item.status.includes("Return")) {
-          item.status = "Cancelled"
-          item.cancelReason = "Order cancelled by admin"
-        }
-      })
-
-      order.cancellation = {
-        cancelledAt: new Date(),
-        cancelledBy: "Admin",
-        reason: "Cancelled entire order from admin panel",
+    if (status === "Delivered" ) {
+      const allItemsPaid = order.items.every(item => item.paymentStatus === "Paid");
+      if (!allItemsPaid) {
+        return res.status(400).json({
+          error: "Cannot mark order as Delivered. All items must be Paid before delivery",
+        });
       }
     }
 
-    order.orderStatus = status
-    order.updatedAt = new Date()
-    await order.save()
+    switch (status) {
+      case "Shipped":
+      case "Delivered":
+        order.items.forEach((item) => {
+          if (item.status === "Placed" || item.status === "Shipped") {
+            item.status = status;
+          }
+        });
+        break;
+
+      case "Cancelled":
+        order.items.forEach((item) => {
+          if (item.status !== "Delivered" && !item.status.includes("Return")) {
+            item.status = "Cancelled";
+            item.cancelReason = "Order cancelled by admin";
+          }
+        });
+        order.cancellation = {
+          cancelledAt: new Date(),
+          cancelledBy: "Admin",
+          reason: "Cancelled entire order from admin panel",
+        };
+        break;
+
+    }
+
+    await updateOrderStatusBasedOnItems(order);
+
+    order.updatedAt = new Date();
+    await order.save();
 
     return res.json({
       message: "Order status and items updated successfully",
-      updatedStatus: status,
+      updatedStatus: order.orderStatus,
       order,
-    })
+    });
   } catch (error) {
-    console.error("Error updating order status:", error)
-    return res.status(500).json({ error: "Internal server error while updating order status" })
+    console.error("Error updating order status:", error);
+    return res.status(500).json({ error: "Internal server error while updating order status" });
   }
-}
+};
+
+
 
 export const updateItemStatus = async (req, res) => {
   try {
@@ -516,9 +523,67 @@ export const cancelOrder = async (req, res) => {
 }
 
 
+// async function updateOrderStatusBasedOnItems(order) {
+//   const itemStatuses = order.items.map((item) => item.status)
+//   const totalItems = order.items.length
+
+//   const statusCounts = {
+//     placed: itemStatuses.filter((s) => s === "Placed").length,
+//     cancelled: itemStatuses.filter((s) => s === "Cancelled").length,
+//     shipped: itemStatuses.filter((s) => s === "Shipped").length,
+//     delivered: itemStatuses.filter((s) => s === "Delivered").length,
+//     returnRequested: itemStatuses.filter((s) => s === "Return Requested").length,
+//     returnApproved: itemStatuses.filter((s) => s === "Return Approved").length,
+//     returnRejected: itemStatuses.filter((s) => s === "Return Rejected").length,
+//   }
+
+//   if (statusCounts.returnApproved === totalItems) {
+//     order.orderStatus = "Return Approved"
+//     order.returnInfo = {
+//       ...order.returnInfo,
+//       returnedAt: new Date(),
+//       approved: true,
+//       reason: "All items returned and approved",
+//     }
+//   } else if (statusCounts.returnApproved > 0) {
+//     order.orderStatus = "Partially Return Approved"
+//   } else if (statusCounts.returnRequested > 0) {
+//     if (statusCounts.returnRequested === totalItems) {
+//       order.orderStatus = "Return Requested"
+//     } else {
+//       order.orderStatus = "Return Requested" 
+//     }
+//   } else if (statusCounts.cancelled === totalItems) {
+//     order.orderStatus = "Cancelled"
+//   } else if (statusCounts.cancelled > 0) {
+//     order.orderStatus = "Partially Cancelled"
+//   } else if (statusCounts.delivered === totalItems) {
+//     order.orderStatus = "Delivered"
+//   } else if (statusCounts.delivered > 0) {
+//     order.orderStatus = "Delivered"
+//   } else if (statusCounts.shipped > 0) {
+//     order.orderStatus = "Shipped"
+//   } else if (statusCounts.placed === totalItems) {
+//     order.orderStatus = "Placed"
+//   }
+
+//   if (!order.returnInfo) {
+//     order.returnInfo = {
+//       totalReturnRequests: 0,
+//       approvedReturns: 0,
+//       rejectedReturns: 0,
+//     }
+//   }
+
+//   order.returnInfo.totalReturnRequests =
+//     statusCounts.returnRequested + statusCounts.returnApproved + statusCounts.returnRejected
+// }
+
+
 async function updateOrderStatusBasedOnItems(order) {
-  const itemStatuses = order.items.map((item) => item.status)
-  const totalItems = order.items.length
+  const itemStatuses = order.items.map((item) => item.status);
+  const itemPaymentStatuses = order.items.map((item) => item.paymentStatus);
+  const totalItems = order.items.length;
 
   const statusCounts = {
     placed: itemStatuses.filter((s) => s === "Placed").length,
@@ -528,36 +593,43 @@ async function updateOrderStatusBasedOnItems(order) {
     returnRequested: itemStatuses.filter((s) => s === "Return Requested").length,
     returnApproved: itemStatuses.filter((s) => s === "Return Approved").length,
     returnRejected: itemStatuses.filter((s) => s === "Return Rejected").length,
-  }
+  };
 
   if (statusCounts.returnApproved === totalItems) {
-    order.orderStatus = "Return Approved"
+    order.orderStatus = "Return Approved";
     order.returnInfo = {
       ...order.returnInfo,
       returnedAt: new Date(),
       approved: true,
       reason: "All items returned and approved",
-    }
+    };
   } else if (statusCounts.returnApproved > 0) {
-    order.orderStatus = "Partially Return Approved"
+    order.orderStatus = "Partially Return Approved";
   } else if (statusCounts.returnRequested > 0) {
-    if (statusCounts.returnRequested === totalItems) {
-      order.orderStatus = "Return Requested"
-    } else {
-      order.orderStatus = "Return Requested" 
-    }
+    order.orderStatus = "Return Requested";
   } else if (statusCounts.cancelled === totalItems) {
-    order.orderStatus = "Cancelled"
+    order.orderStatus = "Cancelled";
   } else if (statusCounts.cancelled > 0) {
-    order.orderStatus = "Partially Cancelled"
-  } else if (statusCounts.delivered === totalItems) {
-    order.orderStatus = "Delivered"
+    order.orderStatus = "Partially Cancelled";
+  }
+
+  else if (statusCounts.delivered === totalItems) {
+    if (order.paymentMethod === "COD") {
+      const allItemsPaid = itemPaymentStatuses.every((p) => p === "Paid");
+      if (allItemsPaid) {
+        order.orderStatus = "Delivered";
+      } else {
+        order.orderStatus = "Shipped"; 
+      }
+    } else {
+      order.orderStatus = "Delivered";
+    }
   } else if (statusCounts.delivered > 0) {
-    order.orderStatus = "Delivered"
+    order.orderStatus = "Delivered";
   } else if (statusCounts.shipped > 0) {
-    order.orderStatus = "Shipped"
+    order.orderStatus = "Shipped";
   } else if (statusCounts.placed === totalItems) {
-    order.orderStatus = "Placed"
+    order.orderStatus = "Placed";
   }
 
   if (!order.returnInfo) {
@@ -565,12 +637,18 @@ async function updateOrderStatusBasedOnItems(order) {
       totalReturnRequests: 0,
       approvedReturns: 0,
       rejectedReturns: 0,
-    }
+    };
   }
 
   order.returnInfo.totalReturnRequests =
-    statusCounts.returnRequested + statusCounts.returnApproved + statusCounts.returnRejected
+    statusCounts.returnRequested +
+    statusCounts.returnApproved +
+    statusCounts.returnRejected;
 }
+
+
+
+
 
 
 

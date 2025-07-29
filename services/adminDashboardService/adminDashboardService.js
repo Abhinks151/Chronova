@@ -209,3 +209,150 @@ export const getAdminDashboardChartService = async (req) => {
 
   return { chartLabels, chartValues };
 };
+
+
+export const getAdminPieChartDataService = async (type, startDate, endDate) => {
+  if (!['category', 'brand', 'status'].includes(type)) {
+    throw new Error('Invalid chart type. Use: category, brand, or status.');
+  }
+
+  const dateFilter = {};
+  if (startDate && endDate) {
+    dateFilter.createdAt = {
+      $gte: new Date(startDate),
+      $lte: new Date(endDate),
+    };
+  }
+
+  const baseMatch = {
+    ...dateFilter,
+    orderStatus: { $ne: 'Cancelled' },
+  };
+
+  let pipeline = [];
+
+  if (type === 'category') {
+    pipeline = [
+      { $match: baseMatch },
+      { $unwind: '$items' },
+      { $match: { 'items.status': { $eq: 'Delivered' } } },
+      {
+        $group: {
+          _id: '$items.category',
+          totalRevenue: { $sum: '$items.netItemTotal' },
+        }
+      },
+      {
+        $lookup: {
+          from: 'categories',
+          localField: '_id',
+          foreignField: '_id',
+          as: 'categoryInfo'
+        }
+      },
+      { $unwind: { path: '$categoryInfo', preserveNullAndEmptyArrays: true } },
+      {
+        $project: {
+          name: { $ifNull: ['$categoryInfo.categoryName', 'Unknown'] },
+          totalRevenue: 1
+        }
+      },
+      {
+        $group: {
+          _id: '$name',
+          totalRevenue: { $sum: '$totalRevenue' }
+        }
+      },
+      {
+        $project: {
+          name: '$_id',
+          totalRevenue: 1,
+          _id: 0
+        }
+      },
+      { $sort: { totalRevenue: -1 } },
+      { $limit: 10 }
+    ];
+  }
+
+  if (type === 'brand') {
+    pipeline = [
+      { $match: baseMatch },
+      { $unwind: '$items' },
+      { $match: { 'items.status': { $eq: 'Delivered' } } },
+      {
+        $group: {
+          _id: '$items.brand',
+          totalRevenue: { $sum: '$items.netItemTotal' }
+        }
+      },
+      {
+        $project: {
+          name: { $ifNull: ['$_id', 'Unknown'] },
+          totalRevenue: 1
+        }
+      },
+      {
+        $group: {
+          _id: '$name',
+          totalRevenue: { $sum: '$totalRevenue' }
+        }
+      },
+      {
+        $project: {
+          name: '$_id',
+          totalRevenue: 1,
+          _id: 0
+        }
+      },
+      { $sort: { totalRevenue: -1 } },
+      { $limit: 10 }
+    ];
+  }
+
+  if (type === 'status') {
+    pipeline = [
+      { $match: dateFilter },
+      {
+        $group: {
+          _id: '$orderStatus',
+          totalRevenue: { $sum: '$totalAmount' }
+        }
+      },
+      {
+        $project: {
+          name: { $ifNull: ['$_id', 'Unknown'] },
+          totalRevenue: 1
+        }
+      },
+      {
+        $group: {
+          _id: '$name',
+          totalRevenue: { $sum: '$totalRevenue' }
+        }
+      },
+      {
+        $project: {
+          name: '$_id',
+          totalRevenue: 1,
+          _id: 0
+        }
+      },
+      { $sort: { totalRevenue: -1 } }
+    ];
+  }
+
+  const result = await Order.aggregate(pipeline);
+
+  const labels = result.map(item => item.name);
+  const values = result.map(item => item.totalRevenue);
+  const total = values.reduce((sum, val) => sum + val, 0);
+  const percentages = values.map(val => total > 0 ? ((val / total) * 100).toFixed(1) : 0);
+
+  return {
+    labels,
+    values,
+    percentages,
+    total
+  };
+};

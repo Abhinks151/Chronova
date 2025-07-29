@@ -15,6 +15,7 @@
 
     <script src="https://cdnjs.cloudflare.com/ajax/libs/axios/1.4.0/axios.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
   </head>
 
   <body>
@@ -39,8 +40,7 @@
               <div class="stat-label">Total Users</div>
             </div>
             <div class="stat-value" id="userCount">Loading...</div>
-            <div class="stat-trend trend-up">
-            </div>
+            <div class="stat-trend trend-up"></div>
           </article>
 
           <article class="stat-card">
@@ -49,8 +49,7 @@
               <div class="stat-label">Total Orders</div>
             </div>
             <div class="stat-value" id="orderCount">Loading...</div>
-            <div class="stat-trend trend-up">
-            </div>
+            <div class="stat-trend trend-up"></div>
           </article>
 
           <article class="stat-card">
@@ -59,55 +58,148 @@
               <div class="stat-label">Total Revenue</div>
             </div>
             <div class="stat-value" id="totalSales">Loading...</div>
-            <div class="stat-trend trend-down">
-            </div>
+            <div class="stat-trend trend-down"></div>
           </article>
         </div>
       </section>
 
-      <!-- Revenue Analytics Section -->
-      <section class="chart-section" aria-labelledby="revenue-heading">
-        <div class="chart-header">
-          <h2 class="chart-title" id="revenue-heading">
-            <i class="fas fa-chart-line"></i>
-            Revenue Analytics
-          </h2>
+      <!-- Analytics Grid Section -->
+      <div class="analytics-grid">
+        <!-- Revenue Analytics Section -->
+        <section class="chart-section" aria-labelledby="revenue-heading">
+          <div class="chart-header">
+            <h2 class="chart-title" id="revenue-heading">
+              <i class="fas fa-chart-line"></i>
+              Revenue Analytics
+            </h2>
 
-          <div class="filter-controls">
-            <label for="revenueFilter" class="sr-only"
-              >Select time period</label
-            >
-            <select id="revenueFilter" aria-describedby="filter-help">
-              <option value="monthly">Monthly View</option>
-              <option value="weekly">Weekly View</option>
-              <option value="yearly">Yearly View</option>
-              <option value="daily">Daily View</option>
-              <option value="custom">Custom Range</option>
-            </select>
+            <div class="filter-controls">
+              <label for="revenueFilter" class="sr-only"
+                >Select time period</label
+              >
+              <select id="revenueFilter" aria-describedby="filter-help">
+                <option value="monthly">Monthly View</option>
+                <option value="weekly">Weekly View</option>
+                <option value="yearly">Yearly View</option>
+                <option value="daily">Daily View</option>
+                <option value="custom">Custom Range</option>
+              </select>
+            </div>
           </div>
-        </div>
 
-        <div id="customDateInputs">
-          <label for="customStartDate">
-            <i class="fas fa-calendar-alt"></i>
-            From:
-            <input type="date" id="customStartDate" />
-          </label>
-          <label for="customEndDate">
-            <i class="fas fa-calendar-alt"></i>
-            To:
-            <input type="date" id="customEndDate" />
-          </label>
-          <button id="applyCustomDate" type="button">
-            <i class="fas fa-filter"></i>
-            Apply Filter
-          </button>
-        </div>
+          <div
+            id="customDateInputs"
+            style="
+              display: flex;
+              gap: 1rem;
+              align-items: center;
+              margin: 1rem 0;
+            "
+          >
+            <label
+              for="customStartDate"
+              style="
+                display: flex;
+                flex-direction: row;
+                font-weight: 500;
+                color: #374151;
+              "
+            >
+              Start Date:
+              <input
+                type="date"
+                id="customStartDate"
+                style="
+                  padding: 0.5rem;
+                  border: 1px solid #d1d5db;
+                  border-radius: 6px;
+                  width: 150px;
+                "
+              />
+            </label>
 
-        <div class="chart-container">
-          <canvas id="myChart" aria-label="Revenue analytics chart"></canvas>
-        </div>
-      </section>
+            <label
+              for="customEndDate"
+              style="
+                display: flex;
+                flex-direction: row;
+                font-weight: 500;
+                color: #374151;
+              "
+            >
+              End Date:
+              <input
+                type="date"
+                id="customEndDate"
+                style="
+                  padding: 0.5rem;
+                  border: 1px solid #d1d5db;
+                  border-radius: 6px;
+                  width: 150px;
+                "
+              />
+            </label>
+
+            <button
+              id="applyCustomDate"
+              type="button"
+              style="
+                padding: 0.6rem 1rem;
+                background-color: #2563eb;
+                color: white;
+                border: none;
+                border-radius: 6px;
+                font-weight: 600;
+                cursor: pointer;
+              "
+            >
+              <i class="fas fa-filter"></i> Apply Filter
+            </button>
+          </div>
+
+          <div class="chart-container">
+            <canvas id="myChart" aria-label="Revenue analytics chart"></canvas>
+          </div>
+        </section>
+
+        <!-- Pie Chart Section -->
+        <section class="pie-chart-section" aria-labelledby="pie-heading">
+          <div class="pie-chart-header">
+            <h2 class="pie-chart-title" id="pie-heading">
+              <i class="fas fa-chart-pie"></i>
+              Sales Distribution
+            </h2>
+            <div class="pie-filter-controls">
+              <label for="pieFilter" class="sr-only"
+                >Select distribution type</label
+              >
+              <select id="pieFilter">
+                <option value="category">By Category</option>
+                <option value="brand">By Brand</option>
+                <option value="status">By Status</option>
+              </select>
+            </div>
+          </div>
+
+          <div class="pie-chart-container">
+            <canvas
+              id="pieChart"
+              aria-label="Sales distribution pie chart"
+            ></canvas>
+            <div id="pieLoading" class="pie-loading">
+              <i class="fas fa-spinner"></i>
+              <span>Loading chart...</span>
+            </div>
+          </div>
+
+          <div id="pieError" class="pie-error">
+            <i class="fas fa-exclamation-triangle"></i>
+            <p>Failed to load pie chart data</p>
+          </div>
+
+          <div id="pieLegend" class="pie-chart-legend"></div>
+        </section>
+      </div>
 
       <!-- Top Performers Section -->
       <section class="top-items-section" aria-labelledby="performers-heading">
@@ -172,8 +264,35 @@
       const applyCustomBtn = document.getElementById("applyCustomDate");
       const chartCanvas = document.getElementById("myChart");
 
+      // Pie Chart Elements
+      const pieChartCanvas = document.getElementById("pieChart");
+      const pieFilter = document.getElementById("pieFilter");
+      const pieLoading = document.getElementById("pieLoading");
+      const pieError = document.getElementById("pieError");
+      const pieLegend = document.getElementById("pieLegend");
+
       customDateInputs.style.display = "none";
       let chartInstance;
+      let pieChartInstance;
+
+      // Pie Chart Colors
+      const pieColors = [
+        "#3b82f6",
+        "#ef4444",
+        "#10b981",
+        "#f59e0b",
+        "#8b5cf6",
+        "#ec4899",
+        "#06b6d4",
+        "#84cc16",
+        "#f97316",
+        "#6366f1",
+        "#14b8a6",
+        "#eab308",
+        "#e11d48",
+        "#7c3aed",
+        "#059669",
+      ];
 
       async function getDashboardData() {
         try {
@@ -249,6 +368,113 @@
         }
       }
 
+      async function loadPieChart(type = "category") {
+        try {
+          // Show loading state
+          pieLoading.style.display = "flex";
+          pieError.style.display = "none";
+          pieLegend.innerHTML = "";
+
+          // You'll need to create this endpoint in your backend
+          const res = await axios.get(`/admin/dashboard/sales/pie/data/${type}`);
+          const data = res.data.data;
+
+          if (pieChartInstance) {
+            pieChartInstance.destroy();
+          }
+
+          // Prepare data for pie chart
+          const chartData = {
+            labels: data.labels,
+            datasets: [
+              {
+                data: data.values,
+                backgroundColor: pieColors.slice(0, data.labels.length),
+                borderColor: "#ffffff",
+                borderWidth: 2,
+                hoverBorderWidth: 3,
+                hoverOffset: 10,
+              },
+            ],
+          };
+
+          pieChartInstance = new Chart(pieChartCanvas, {
+            type: "pie",
+            data: chartData,
+            options: {
+              responsive: true,
+              maintainAspectRatio: false,
+              plugins: {
+                legend: {
+                  display: false, // We'll create custom legend
+                },
+                tooltip: {
+                  backgroundColor: "rgba(0, 0, 0, 0.8)",
+                  titleFont: { weight: "600" },
+                  bodyFont: { weight: "500" },
+                  cornerRadius: 8,
+                  callbacks: {
+                    label: function (context) {
+                      const total = context.dataset.data.reduce(
+                        (a, b) => a + b,
+                        0
+                      );
+                      const percentage = (
+                        (context.parsed * 100) /
+                        total
+                      ).toFixed(1);
+                      return `${
+                        context.label
+                      }: ${context.parsed.toLocaleString()} (${percentage}%)`;
+                    },
+                  },
+                },
+              },
+              animation: {
+                animateRotate: true,
+                animateScale: true,
+                duration: 1000,
+                easing: "easeOutQuart",
+              },
+              onHover: (event, elements) => {
+                pieChartCanvas.style.cursor =
+                  elements.length > 0 ? "pointer" : "default";
+              },
+            },
+          });
+
+          // Create custom legend
+          createPieLegend(data.labels, data.values, pieColors);
+
+          pieLoading.style.display = "none";
+        } catch (error) {
+          console.error("Error loading pie chart:", error);
+          pieLoading.style.display = "none";
+          pieError.style.display = "block";
+          pieError.innerHTML = `
+            <i class="fas fa-exclamation-triangle"></i>
+            <p>Failed to load pie chart: ${error.message}</p>
+          `;
+        }
+      }
+
+      function createPieLegend(labels, values, colors) {
+        const total = values.reduce((a, b) => a + b, 0);
+
+        pieLegend.innerHTML = labels
+          .map((label, index) => {
+            const percentage = ((values[index] * 100) / total).toFixed(1);
+            return `
+            <div class="legend-item">
+              <div class="legend-color" style="background-color: ${colors[index]}"></div>
+              <span class="legend-label">${label}</span>
+              <span class="legend-value">${percentage}%</span>
+            </div>
+          `;
+          })
+          .join("");
+      }
+
       async function loadRevenueChart({
         range = "monthly",
         customStart = null,
@@ -272,10 +498,8 @@
           }
 
           const res = await axios.get(url);
-          
+
           const data = res.data.data;
-          // console.log(data.chartLabels.length, data.chartValues.length);
-          // console.log(data.chartLabels, data.chartValues);
 
           if (showMetrics && data.metadata) {
             updateMetricsDisplay(data.metadata);
@@ -302,7 +526,6 @@
               pointHoverRadius: 8,
             },
           ];
-
 
           if (showTrendline && data.chartValues.length > 2) {
             const trendlineData = calculateTrendline(data.chartValues);
@@ -344,7 +567,6 @@
                         Chart.defaults.plugins.legend.labels.generateLabels;
                       const labels = original.call(this, chart);
 
-                      // Add metadata to legend if available
                       if (data.metadata && labels.length > 0) {
                         labels[0].text += ` (Total: ₹${data.metadata.totalRevenue.toLocaleString()})`;
                       }
@@ -380,28 +602,9 @@
 
                       return lines;
                     },
-                    label: () => "", // Clear default label since we're using beforeBody
+                    label: () => "",
                   },
                 },
-                annotation: data.metadata
-                  ? {
-                      annotations: {
-                        averageLine: {
-                          type: "line",
-                          yMin: data.metadata.averageOrderValue,
-                          yMax: data.metadata.averageOrderValue,
-                          borderColor: "rgba(255, 193, 7, 0.8)",
-                          borderWidth: 2,
-                          borderDash: [10, 5],
-                          label: {
-                            content: `Avg: ₹${data.metadata.averageOrderValue.toLocaleString()}`,
-                            enabled: true,
-                            position: "end",
-                          },
-                        },
-                      },
-                    }
-                  : {},
               },
               scales: {
                 y: {
@@ -433,34 +636,11 @@
                 chartCanvas.style.cursor =
                   elements.length > 0 ? "pointer" : "default";
               },
-              onClick: (event, elements) => {
-                if (elements.length > 0) {
-                  const index = elements[0].index;
-                  const label = data.chartLabels[index];
-                  const value = data.chartValues[index];
-
-                  // Trigger custom event for drill-down functionality
-                  window.dispatchEvent(
-                    new CustomEvent("chartPointClick", {
-                      detail: {
-                        index,
-                        label,
-                        value,
-                        range,
-                        customStart,
-                        customEnd,
-                      },
-                    })
-                  );
-                }
-              },
             },
           });
 
-          // Hide loading state
           if (loadingOverlay) loadingOverlay.style.display = "none";
 
-          // Store chart data for export functionality
           window.currentChartData = {
             labels: data.chartLabels,
             values: data.chartValues,
@@ -472,11 +652,9 @@
         } catch (error) {
           console.error("Error loading revenue chart:", error);
 
-          // Hide loading state
           const loadingOverlay = document.getElementById("chart-loading");
           if (loadingOverlay) loadingOverlay.style.display = "none";
 
-          // Show error message
           const errorContainer = document.getElementById("chart-error");
           if (errorContainer) {
             errorContainer.textContent = `Failed to load chart: ${error.message}`;
@@ -485,7 +663,6 @@
         }
       }
 
-      // Helper function to update metrics display
       function updateMetricsDisplay(metadata) {
         const metricsContainer = document.getElementById("chart-metrics");
         if (!metricsContainer) return;
@@ -518,7 +695,6 @@
   `;
       }
 
-      // Helper function to calculate trendline
       function calculateTrendline(data) {
         const n = data.length;
         const indices = Array.from({ length: n }, (_, i) => i);
@@ -534,7 +710,6 @@
         return indices.map((x) => slope * x + intercept);
       }
 
-      // Export functionality
       function exportChartData(format = "csv") {
         if (!window.currentChartData) {
           alert("No chart data available to export");
@@ -568,15 +743,7 @@
         }
       }
 
-      // Add event listener for drill-down functionality
-      window.addEventListener("chartPointClick", (event) => {
-        const { index, label, value, range } = event.detail;
-        console.log(`Clicked on ${label}: ₹${value.toLocaleString()}`);
-
-        // You can implement drill-down logic here
-        // For example, show detailed breakdown for the selected time period
-      });
-
+      // Event Listeners
       revenueFilter.addEventListener("change", (e) => {
         const selected = e.target.value;
 
@@ -586,6 +753,10 @@
           customDateInputs.style.display = "none";
           loadRevenueChart({ range: selected });
         }
+      });
+
+      pieFilter.addEventListener("change", (e) => {
+        loadPieChart(e.target.value);
       });
 
       applyCustomBtn.addEventListener("click", () => {
@@ -610,6 +781,33 @@
       document.addEventListener("DOMContentLoaded", function () {
         getDashboardData();
         loadRevenueChart();
+        loadPieChart(); // Load default pie chart
+
+        const today = new Date().toISOString().split("T")[0];
+        const startInput = document.getElementById("customStartDate");
+        const endInput = document.getElementById("customEndDate");
+
+        startInput.setAttribute("max", today);
+        endInput.setAttribute("max", today);
+
+        startInput.addEventListener("change", () => {
+          const selectedStart = startInput.value;
+          if (selectedStart) {
+            endInput.setAttribute("min", selectedStart);
+            if (endInput.value < selectedStart) {
+              endInput.value = "";
+            }
+          } else {
+            endInput.setAttribute("min", today);
+          }
+        });
+
+        if (startInput.value && startInput.value < today) {
+          startInput.value = "";
+        }
+        if (endInput.value && endInput.value < startInput.value) {
+          endInput.value = "";
+        }
       });
     </script>
   </body>
