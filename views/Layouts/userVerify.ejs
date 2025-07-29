@@ -1,287 +1,323 @@
 <!DOCTYPE html>
 <html lang="en">
-<head>
-	<meta charset="UTF-8" />
-	<meta name="viewport" content="width=device-width, initial-scale=1.0" />
-	<title><%= title %></title>
-	<style>
-		body {
-			font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-			background: #f8f8f8;
-			display: flex;
-			justify-content: center;
-			align-items: center;
-			min-height: 100vh;
-			margin: 0;
-			padding: 20px;
-			box-sizing: border-box;
-		}
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title><%= title %></title>
+    <style>
+      body {
+        font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+        background: #f8f8f8;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        min-height: 100vh;
+        margin: 0;
+        padding: 20px;
+        box-sizing: border-box;
+      }
 
-		.container {
-			background: #fff;
-			padding: 40px;
-			border-radius: 12px;
-			box-shadow: 0 6px 20px rgba(0, 0, 0, 0.1);
-			max-width: 400px;
-			width: 100%;
-			text-align: center;
-		}
+      .container {
+        background: #fff;
+        padding: 40px;
+        border-radius: 12px;
+        box-shadow: 0 6px 20px rgba(0, 0, 0, 0.1);
+        max-width: 400px;
+        width: 100%;
+        text-align: center;
+      }
 
-		h1 {
-			margin-bottom: 24px;
-			font-weight: 600;
-			color: #333;
-		}
+      h1 {
+        margin-bottom: 24px;
+        font-weight: 600;
+        color: #333;
+      }
 
-		.success-message {
-			background: #d4edda;
-			border: 1px solid #c3e6cb;
-			color: #155724;
-			padding: 12px 20px;
-			border-radius: 6px;
-			margin-bottom: 20px;
-		}
+      .success-message {
+        background: #d4edda;
+        border: 1px solid #c3e6cb;
+        color: #155724;
+        padding: 12px 20px;
+        border-radius: 6px;
+        margin-bottom: 20px;
+      }
 
-		.error-message {
-			color: #dc3545;
-			font-size: 14px;
-			margin-bottom: 16px;
-			min-height: 20px;
-			text-align: left;
-		}
+      .error-message {
+        color: #dc3545;
+        font-size: 14px;
+        margin-bottom: 16px;
+        min-height: 20px;
+        text-align: left;
+      }
 
-		.general-error {
-			text-align: center;
-			font-weight: 600;
-			background: #f8d7da;
-			border: 1px solid #f5c6cb;
-			padding: 12px;
-			border-radius: 6px;
-			margin-bottom: 16px;
-			display: none;
-		}
+      .general-error {
+        text-align: center;
+        font-weight: 600;
+        background: #f8d7da;
+        border: 1px solid #f5c6cb;
+        padding: 12px;
+        border-radius: 6px;
+        margin-bottom: 16px;
+        display: none;
+      }
 
-		.toast-message {
-			display: none;
-			padding: 12px 20px;
-			border-radius: 6px;
-			font-size: 14px;
-			text-align: center;
-			margin-bottom: 16px;
-			animation: fadeInOut 4s ease forwards;
-		}
+      .toast-message {
+        display: none;
+        padding: 12px 20px;
+        border-radius: 6px;
+        font-size: 14px;
+        text-align: center;
+        margin-bottom: 16px;
+        animation: fadeInOut 4s ease forwards;
+      }
 
-		.toast-message.success {
-			background-color: #d1e7dd;
-			color: #0f5132;
-			border: 1px solid #badbcc;
-		}
+      .toast-message.success {
+        background-color: #d1e7dd;
+        color: #0f5132;
+        border: 1px solid #badbcc;
+      }
 
-		.toast-message.error {
-			background-color: #f8d7da;
-			color: #842029;
-			border: 1px solid #f5c2c7;
-		}
+      .toast-message.error {
+        background-color: #f8d7da;
+        color: #842029;
+        border: 1px solid #f5c2c7;
+      }
 
-		@keyframes fadeInOut {
-			0% { opacity: 0; transform: translateY(-10px); }
-			10% { opacity: 1; transform: translateY(0); }
-			90% { opacity: 1; }
-			100% { opacity: 0; transform: translateY(-10px); }
-		}
+      @keyframes fadeInOut {
+        0% {
+          opacity: 0;
+          transform: translateY(-10px);
+        }
+        10% {
+          opacity: 1;
+          transform: translateY(0);
+        }
+        90% {
+          opacity: 1;
+        }
+        100% {
+          opacity: 0;
+          transform: translateY(-10px);
+        }
+      }
 
-		label {
-			display: block;
-			text-align: left;
-			margin-bottom: 6px;
-			font-weight: 500;
-			color: #333;
-		}
+      label {
+        display: block;
+        text-align: left;
+        margin-bottom: 6px;
+        font-weight: 500;
+        color: #333;
+      }
 
-		input[type="text"] {
-			width: 100%;
-			padding: 12px;
-			margin-bottom: 6px;
-			border-radius: 6px;
-			border: 1px solid #ccc;
-			font-size: 14px;
-			box-sizing: border-box;
-			transition: border-color 0.3s;
-		}
+      input[type="text"] {
+        width: 100%;
+        padding: 12px;
+        margin-bottom: 6px;
+        border-radius: 6px;
+        border: 1px solid #ccc;
+        font-size: 14px;
+        box-sizing: border-box;
+        transition: border-color 0.3s;
+      }
 
-		input[type="text"]:focus {
-			outline: none;
-			border-color: #007bff;
-		}
+      input[type="text"]:focus {
+        outline: none;
+        border-color: #007bff;
+      }
 
-		input.error {
-			border-color: #dc3545;
-			background-color: #ffe6e6;
-		}
+      input.error {
+        border-color: #dc3545;
+        background-color: #ffe6e6;
+      }
 
-		button {
-			background: #000;
-			color: #fff;
-			border: none;
-			padding: 12px;
-			border-radius: 6px;
-			font-size: 14px;
-			cursor: pointer;
-			width: 100%;
-			transition: background-color 0.3s;
-		}
+      button {
+        background: #000;
+        color: #fff;
+        border: none;
+        padding: 12px;
+        border-radius: 6px;
+        font-size: 14px;
+        cursor: pointer;
+        width: 100%;
+        transition: background-color 0.3s;
+      }
 
-		button:hover:not(:disabled) {
-			background: #222;
-		}
+      button:hover:not(:disabled) {
+        background: #222;
+      }
 
-		button:disabled {
-			background: #888;
-			cursor: not-allowed;
-		}
+      button:disabled {
+        background: #888;
+        cursor: not-allowed;
+      }
 
-		.signin-link {
-			margin-top: 24px;
-			font-size: 13px;
-		}
+      .signin-link {
+        margin-top: 24px;
+        font-size: 13px;
+      }
 
-		.signin-link a {
-			color: #000;
-			font-weight: 600;
-			text-decoration: none;
-		}
+      .signin-link a {
+        color: #000;
+        font-weight: 600;
+        text-decoration: none;
+      }
 
-		.signin-link a:hover {
-			text-decoration: underline;
-		}
-	</style>
-</head>
-<body>
-	<div class="container">
-		<h1>Verify Your Account</h1>
+      .signin-link a:hover {
+        text-decoration: underline;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="container">
+      <h1>Verify Your Account</h1>
 
-		<div id="toast-message" class="toast-message"></div>
-		<div id="general-error" class="general-error"></div>
+      <div id="toast-message" class="toast-message"></div>
+      <div id="general-error" class="general-error"></div>
 
-		<form id="verifyForm" novalidate>
-			<label for="otp">6-digit OTP</label>
-			<input
-				type="text"
-				id="otp"
-				name="otp"
-				maxlength="6"
-				placeholder="Enter OTP"
-				value="<%= formData?.otp || '' %>"
-				required
-			/>
-			<div id="otp-error" class="error-message"></div>
+      <form id="verifyForm" novalidate>
+        <label for="otp">6-digit OTP</label>
+        <input
+          type="text"
+          id="otp"
+          name="otp"
+          maxlength="6"
+          placeholder="Enter OTP"
+          value="<%= formData?.otp || '' %>"
+          required
+        />
+        <div id="otp-error" class="error-message"></div>
 
-			<button type="submit">Verify Account</button>
-		</form>
+        <button type="submit">Verify Account</button>
+      </form>
 
-		<button
-			id="resendBtn"
-			disabled
-			style="margin-top: 16px; background: none; border: none; color: #888; font-weight: 600; cursor: not-allowed; text-decoration: underline; padding: 0;"
-		>
-			Didn't receive the code? Resend OTP (<span id="countdown">60</span>s)
-		</button>
+      <button
+        id="resendBtn"
+        disabled
+        style="
+          margin-top: 16px;
+          background: none;
+          border: none;
+          color: #888;
+          font-weight: 600;
+          cursor: not-allowed;
+          text-decoration: underline;
+          padding: 0;
+        "
+      >
+        Didn't receive the code? Resend OTP (<span id="countdown">60</span>s)
+      </button>
 
-		<div class="signin-link">
-			Need help? <a href="/user/login">Sign in</a>
-		</div>
-	</div>
+      <div class="signin-link">
+        Need help? <a href="/user/login">Sign in</a>
+      </div>
+    </div>
 
-	<script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
-	<script>
-		const verifyForm = document.getElementById('verifyForm');
-		const resendBtn = document.getElementById('resendBtn');
-		const otpInput = document.getElementById('otp');
-		const otpError = document.getElementById('otp-error');
-		const generalError = document.getElementById('general-error');
-		const countdownSpan = document.getElementById('countdown');
-		const toast = document.getElementById('toast-message');
+    <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
+    <script>
+      const verifyForm = document.getElementById("verifyForm");
+      const resendBtn = document.getElementById("resendBtn");
+      const otpInput = document.getElementById("otp");
+      const otpError = document.getElementById("otp-error");
+      const generalError = document.getElementById("general-error");
+      const countdownSpan = document.getElementById("countdown");
+      const toast = document.getElementById("toast-message");
 
-		document.addEventListener('DOMContentLoaded', function () {
-			let timeLeft = 60;
-			const timer = setInterval(() => {
-				timeLeft--;
-				countdownSpan.textContent = timeLeft;
+      let timer; // Store interval globally to clear later
 
-				if (timeLeft <= 0) {
-					clearInterval(timer);
-					resendBtn.disabled = false;
-					resendBtn.style.color = '#000';
-					resendBtn.style.cursor = 'pointer';
-					resendBtn.innerHTML = "Didn't receive the code? Resend OTP";
-				}
-			}, 1000);
-		});
+      const startResendCooldown = () => {
+        let timeLeft = 60;
+        resendBtn.disabled = true;
+        resendBtn.style.color = "#888";
+        resendBtn.style.cursor = "not-allowed";
+        resendBtn.innerHTML = `Didn't receive the code? Resend OTP (<span id="countdown">${timeLeft}</span>s)`;
 
-		const clearErrors = () => {
-			otpError.textContent = '';
-			generalError.style.display = 'none';
-			generalError.textContent = '';
-		};
+        clearInterval(timer); // clear previous timer if any
 
-		const showGeneralError = (message) => {
-			generalError.textContent = message;
-			generalError.style.display = 'block';
-		};
+        timer = setInterval(() => {
+          timeLeft--;
+          const countdownElement = document.getElementById("countdown");
+          if (countdownElement) countdownElement.textContent = timeLeft;
 
-		const showToastMessage = (message, type = 'success') => {
-			toast.textContent = message;
-			toast.className = `toast-message ${type}`;
-			toast.style.display = 'block';
+          if (timeLeft <= 0) {
+            clearInterval(timer);
+            resendBtn.disabled = false;
+            resendBtn.style.color = "#000";
+            resendBtn.style.cursor = "pointer";
+            resendBtn.textContent = "Didn't receive the code? Resend OTP";
+          }
+        }, 1000);
+      };
 
-			// Force reflow to restart animation
-			toast.classList.remove('fade');
-			void toast.offsetWidth;
-			toast.classList.add('fade');
+      document.addEventListener("DOMContentLoaded", startResendCooldown);
 
-			setTimeout(() => {
-				toast.style.display = 'none';
-			}, 4000);
-		};
+      const clearErrors = () => {
+        otpError.textContent = "";
+        generalError.style.display = "none";
+        generalError.textContent = "";
+      };
 
-		verifyForm.addEventListener('submit', async (e) => {
-			e.preventDefault();
-			clearErrors();
+      const showGeneralError = (message) => {
+        generalError.textContent = message;
+        generalError.style.display = "block";
+      };
 
-			const otp = otpInput.value.trim();
+      const showToastMessage = (message, type = "success") => {
+        toast.textContent = message;
+        toast.className = `toast-message ${type}`;
+        toast.style.display = "block";
 
-			try {
-				const res = await axios.post('/user/verify-otp', { otp });
+        toast.classList.remove("fade");
+        void toast.offsetWidth;
+        toast.classList.add("fade");
 
-				if (res.data.redirect) {
-					window.location.href = res.data.redirect;
-				}
-			} catch (err) {
-				const res = err.response;
-				if (!res) return showGeneralError('Network error. Try again later.');
+        setTimeout(() => {
+          toast.style.display = "none";
+        }, 4000);
+      };
 
-				const message = res.data.message || '';
-				if (message.includes('OTP') || message.includes('code')) {
-					otpError.textContent = message;
-				} else {
-					showGeneralError(message);
-				}
-			}
-		});
+      verifyForm.addEventListener("submit", async (e) => {
+        e.preventDefault();
+        clearErrors();
 
-		resendBtn.addEventListener('click', async (e) => {
-			e.preventDefault();
-			clearErrors();
+        const otp = otpInput.value.trim();
 
-			try {
-				const res = await axios.post('/user/resend-otp');
-				showToastMessage(res.data.message || 'OTP sent! Check your inbox.', 'success');
-			} catch (err) {
-				const res = err.response;
-				const message = res?.data?.message || 'Something went wrong. Try again.';
-				showToastMessage(message, 'error');
-			}
-		});
-	</script>
-</body>
+        try {
+          const res = await axios.post("/user/verify-otp", { otp });
+
+          if (res.data.redirect) {
+            window.location.href = res.data.redirect;
+          }
+        } catch (err) {
+          const res = err.response;
+          if (!res) return showGeneralError("Network error. Try again later.");
+
+          const message = res.data.message || "";
+          if (message.includes("OTP") || message.includes("code")) {
+            otpError.textContent = message;
+          } else {
+            showGeneralError(message);
+          }
+        }
+      });
+
+      resendBtn.addEventListener("click", async (e) => {
+        e.preventDefault();
+        clearErrors();
+
+        try {
+          const res = await axios.post("/user/resend-otp");
+          showToastMessage(
+            res.data.message || "OTP sent! Check your inbox.",
+            "success"
+          );
+          startResendCooldown(); 
+        } catch (err) {
+          const res = err.response;
+          const message =
+            res?.data?.message || "Something went wrong. Try again.";
+          showToastMessage(message, "error");
+        }
+      });
+    </script>
+  </body>
 </html>
