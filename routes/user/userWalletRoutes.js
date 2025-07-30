@@ -4,7 +4,7 @@ import {
   getFilteredWalletHistory,
   getWalletHistory,
   getWalletPage
-} from '../../controllers/user/walletmanagement.js';
+} from '../../controllers/user/walletManagement.js';
 
 const userWalletRoutes = express.Router();
 
