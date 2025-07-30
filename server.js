@@ -24,14 +24,18 @@ const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
 connection();
-
 app.use(
   helmet.contentSecurityPolicy({
     directives: {
       defaultSrc: ["'self'"],
       styleSrc: ["'self'", "'unsafe-inline'", "https:", "data:"],
       scriptSrc: ["'self'", "'unsafe-inline'", "https:"],
-      imgSrc: ["'self'", "data:", "https://images.unsplash.com"],
+      imgSrc: [
+        "'self'",
+        "data:",
+        "https://images.unsplash.com",
+        "https://res.cloudinary.com"
+      ],
       connectSrc: ["'self'", "https://api.unsplash.com"],
       fontSrc: ["'self'", "https:"],
       objectSrc: ["'none'"],
