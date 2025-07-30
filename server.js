@@ -28,15 +28,27 @@ app.use(
   helmet.contentSecurityPolicy({
     directives: {
       defaultSrc: ["'self'"],
-      styleSrc: ["'self'", "'unsafe-inline'", "https:", "data:"],
-      scriptSrc: ["'self'", "'unsafe-inline'", "https:"],
-      scriptSrc: ["'self'", "'unsafe-inline'"],
+      styleSrc: [
+        "'self'",
+        "'unsafe-inline'",
+        "https:",
+        "data:",
+        "https://cdnjs.cloudflare.com",
+        "https://cdn.jsdelivr.net"
+      ],
+      scriptSrc: [
+        "'self'",
+        "'unsafe-inline'",
+        "https://cdn.jsdelivr.net",
+        "https://cdnjs.cloudflare.com"
+      ],
       scriptSrcAttr: ["'self'", "'unsafe-inline'"],
       imgSrc: [
         "'self'",
         "data:",
         "https://images.unsplash.com",
-        "https://res.cloudinary.com"
+        "https://res.cloudinary.com",
+        "https://lh3.googleusercontent.com"
       ],
       connectSrc: ["'self'", "https://api.unsplash.com"],
       fontSrc: ["'self'", "https:"],
@@ -45,6 +57,7 @@ app.use(
     },
   })
 );
+
 
 
 app.use(express.static(path.join(__dirname, "public")));
@@ -56,14 +69,32 @@ app.use(nocache());
 app.use(cookieParser());
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
+
+const isProduction = process.env.NODE_ENV === 'production';
+
 app.use(
   session({
-    secret: "Abhin is the batman",
+    secret: process.env.SESSION_SECRET,
     resave: false,
-    saveUninitialized: true,
-    cookie: { secure: false },
+    saveUninitialized: false,
+    cookie: {
+      httpOnly: true,
+      secure: isProduction, 
+      sameSite: isProduction ? 'lax' : 'strict',
+    },
   })
 );
+
+// app.use(
+//   session({
+//     secret: "Abhin is the batman",
+//     resave: false,
+//     saveUninitialized: true,
+//     cookie: {
+//       secure: false
+//     },
+//   })
+// );
 
 // csurf
 // app.use(csurf());
@@ -76,6 +107,10 @@ app.use(
 // app.use(errorMiddleware);
 
 // app.use(requestLogger);
+
+
+
+
 app.use("/", indexRoutes);
 
 app.get("/error", (req, res, next) => {
