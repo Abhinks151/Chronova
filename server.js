@@ -30,6 +30,8 @@ app.use(
       defaultSrc: ["'self'"],
       styleSrc: ["'self'", "'unsafe-inline'", "https:", "data:"],
       scriptSrc: ["'self'", "'unsafe-inline'", "https:"],
+      scriptSrc: ["'self'", "'unsafe-inline'"],
+      scriptSrcAttr: ["'self'", "'unsafe-inline'"],
       imgSrc: [
         "'self'",
         "data:",
@@ -83,13 +85,13 @@ app.get("/error", (req, res, next) => {
 
 
 //Error
-app.use((err,req,res,next)=>{
+app.use((err, req, res, next) => {
   console.log(err);
   res.status(500).render("Layouts/error", {
     statusCode: 500,
-    message : "Internal Server Error",
+    message: "Internal Server Error",
     description: "Something went wrong. Please try again later.",
-  });    
+  });
 })
 
 
