@@ -75,7 +75,7 @@ const isProduction = process.env.NODE_ENV === "production";
 app.set("trust proxy", 1);
 app.use(
   session({
-    secret: process.env.SESSION_SECRET,
+    secret: "Abhin is the batman",
     resave: false,
     saveUninitialized: false,
     cookie: {
