@@ -29,7 +29,7 @@ app.use(
   helmet.contentSecurityPolicy({
     directives: {
       defaultSrc: ["'self'"],
-      styleSrc: ["'self'", "'unsafe-inline'", "https:"],
+      styleSrc: ["'self'", "'unsafe-inline'", "https:", "data:"],
       scriptSrc: ["'self'", "'unsafe-inline'", "https:"],
       imgSrc: ["'self'", "data:", "https://images.unsplash.com"],
       connectSrc: ["'self'", "https://api.unsplash.com"],
@@ -39,6 +39,7 @@ app.use(
     },
   })
 );
+
 
 app.use(express.static(path.join(__dirname, "public")));
 app.set("view engine", "ejs");
