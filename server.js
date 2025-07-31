@@ -72,6 +72,7 @@ app.use(
       httpOnly: true,
       secure: isProduction, // true in production with HTTPS
       sameSite: isProduction ? "none" : "lax", // None for cross-site on HTTPS
+      domain: isProduction ? ".abhin.site" : undefined 
     },
   })
 );
@@ -91,7 +92,7 @@ app.get("/test", (req, res) => {
       return res.status(500).send("Session save failed");
     }
     console.log("✅ Session saved:", req.session);
-    res.send("Session test successful");
+    res.send(req.session);
   });
 });
 
