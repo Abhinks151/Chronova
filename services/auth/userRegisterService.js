@@ -83,7 +83,7 @@ export const registerUser = async (req, userData) => {
   }
 
   req.session.emailForVerification = newUser.email;
-
+  req.session.save();
   await sendVerificationOTP(newUser, newUser.email);
 
   return {

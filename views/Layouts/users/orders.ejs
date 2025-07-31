@@ -148,7 +148,7 @@
     <div class="wrapper">
       <!-- Sidebar placeholder -->
       <div class="sidebar-container">
-        <%- include('../../partials/user-profile-Sidebar') %>
+        <%- include('../../partials/user-profile-sidebar') %>
       </div>
 
       <div class="container">
@@ -470,7 +470,7 @@
         } else if (filteredOrders.length === 0) {
           showEmptyState();
         } else {
-          hideEmptyState()
+          hideEmptyState();
           displayOrders();
         }
       }
@@ -1244,7 +1244,7 @@
         hideLoading();
         const emptyMessage = document.getElementById("empty-message");
         if (customMessage) {
-          emptyMessage.textContent = '';
+          emptyMessage.textContent = "";
         } else {
           emptyMessage.textContent =
             "You haven't placed any orders yet. Start shopping to see your orders here!";

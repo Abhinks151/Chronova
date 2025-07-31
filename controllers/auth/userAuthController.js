@@ -97,7 +97,7 @@ export const postUserRegister = async (req, res) => {
 
 export const getVerifyUserOTP = async (req, res) => {
   const email = req.session.emailForVerification || 'dsfs';
-  console.log(email);
+  // console.log(email);
   try {
     res.status(httpStatusCode.OK.code).render('Layouts/userVerify', {
       title: "Verify account",

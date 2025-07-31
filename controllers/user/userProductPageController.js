@@ -13,7 +13,7 @@ export const getProductListingPage = async (req, res) => {
 
     let wishedProductIds = await findWishlistByUserId(req.user.id);
     
-    res.status(HttpStatusCode.OK.code).render('Layouts/users/ProductListing', {
+    res.status(HttpStatusCode.OK.code).render('Layouts/users/productListing', {
       title: 'Chronova',
       products,
       categories,

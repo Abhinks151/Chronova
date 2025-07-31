@@ -57,7 +57,7 @@ export const welcomeTemplate = (firstname) => {
   </p>
 
   <div style="text-align: center; margin: 30px 0;">
-    <a href="https://yourwebsite.com" style="text-decoration: none; background-color: #0a58ca; color: #fff; padding: 12px 24px; border-radius: 6px; font-weight: bold; display: inline-block;">
+    <a href="https://chronova.abhin.site/user/home" style="text-decoration: none; background-color: #0a58ca; color: #fff; padding: 12px 24px; border-radius: 6px; font-weight: bold; display: inline-block;">
       Start Exploring
     </a>
   </div>

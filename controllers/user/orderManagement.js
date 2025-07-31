@@ -132,7 +132,7 @@ export const getConformPage = (req, res) => {
 
 export const getOrderMangementPage = (req, res) => {
   try {
-    res.render("Layouts/users/orders");
+    res.render("Layouts/users/orders",{ orders: [] });
   } catch (error) {
     logger.error('Error rendering order management page:', error);
     console.error("Error rendering order management page:", error);
