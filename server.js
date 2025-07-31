@@ -108,7 +108,7 @@ app.get("/test", (req, res) => {
       sameSite: "None",
       domain: ".abhin.site",
     });
-    res.send(req.session);
+    res.send({'ck' : res.cookie, 'sess' : res.session});
   });
 });
 
