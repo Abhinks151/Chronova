@@ -15,7 +15,6 @@ import indexRoutes from "./routes/index.js";
 import cors from 'cors';
 
 
-app.use(cors());;
 
 
 dotenv.config();
@@ -25,11 +24,16 @@ const PORT = process.env.PORT || 3000;
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
+
+
 // 🧠 Connect Mongo
 connection();
+
 const isProduction = process.env.NODE_ENV === "production";
 app.set("trust proxy", 1); // 🔐 Must be BEFORE session if behind proxy
 
+
+app.use(cors());
 // 🛡 Helmet CSP
 app.use(helmet({
   contentSecurityPolicy: {
