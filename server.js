@@ -53,13 +53,15 @@ app.use(express.urlencoded({ extended: true }));
 app.use(cookieParser());
 app.use(nocache());
 
+app.set("trust proxy", 1);
+
 // ✅ Session Setup — FINAL WORKING CONFIG
 app.use(
   session({
     name: "chronova.sid",
     secret: process.env.SESSION_SECRET || "chronovaSuperSecret",
     resave: false,
-    saveUninitialized: false,
+    saveUninitialized: true,
     store: MongoStore.create({
       mongoUrl: process.env.MONGO_URI,
       collectionName: "sessions",
@@ -88,13 +90,19 @@ app.get("/test", (req, res) => {
   req.session.hello = "world";
   req.session.save((err) => {
     if (err) {
-      console.error("❌ Session Save Error:", err);
-      return res.status(500).send("Session save failed");
+      console.error("❌ Session save failed:", err);
+      return res.status(500).send("Session error");
     }
-    console.log("✅ Session saved:", req.session);
+    res.cookie("manual-cookie", "test", {
+      httpOnly: true,
+      secure: true,
+      sameSite: "None",
+      domain: ".abhin.site",
+    });
     res.send(req.session);
   });
 });
+
 
 // 🧱 Error handling
 app.use((err, req, res, next) => {
