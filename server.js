@@ -54,23 +54,27 @@ app.use(cookieParser());
 app.use(nocache());
 
 // ✅ Session Setup — FINAL WORKING CONFIG
-app.use(session({
-  name: "connect.sid",
-  secret: process.env.SESSION_SECRET || "Abhin is the batman",
-  resave: false,
-  saveUninitialized: false,
-  store: MongoStore.create({
-    mongoUrl: process.env.MONGO_URI,
-    collectionName: "sessions",
-    ttl: 24 * 60 * 60
-  }),
-  cookie: {
-    httpOnly: true,
-    secure: isProduction, // ⛔ will silently fail if false in prod
-    sameSite: isProduction ? "none" : "lax",
-    maxAge: 24 * 60 * 60 * 1000
-  }
-}));
+app.use(
+  session({
+    name: "chronova.sid",
+    secret: process.env.SESSION_SECRET || "chronovaSuperSecret",
+    resave: false,
+    saveUninitialized: false,
+    store: MongoStore.create({
+      mongoUrl: process.env.MONGO_URI,
+      collectionName: "sessions",
+      ttl: 60 * 60 * 24 * 7, // 7 days
+      autoRemove: "interval",
+      autoRemoveInterval: 10, // every 10 minutes
+    }),
+    cookie: {
+      maxAge: 1000 * 60 * 60 * 24 * 7, // 7 days
+      httpOnly: true,
+      secure: isProduction, // true in production with HTTPS
+      sameSite: isProduction ? "none" : "lax", // None for cross-site on HTTPS
+    },
+  })
+);
 
 // 🧠 Passport + Sessions (Required)
 app.use(passport.initialize());
