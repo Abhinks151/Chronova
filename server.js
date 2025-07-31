@@ -9,6 +9,7 @@ import nocache from "nocache";
 import session from "express-session";
 // import csurf from "csurf";
 import helmet from "helmet";
+import MongoStore from "connect-mongo";
 
 import connection from "./config/dbConnection.js";
 // import { errorMiddleware } from "./middlewares/errorMiddleware.js";
@@ -111,21 +112,28 @@ app.use(express.urlencoded({ extended: true }));
 
 const isProduction = process.env.NODE_ENV === "production";
 console.log("production", isProduction);
-app.set("trust proxy", 1); 
+
+app.set("trust proxy", 1);
 
 app.use(
   session({
     secret: "Abhin is the batman",
     resave: false,
     saveUninitialized: false,
+    store: MongoStore.create({
+      mongoUrl: process.env.MONGO_URI,
+      collectionName: "sessions",
+      ttl: 24 * 60 * 60,
+    }),
     cookie: {
       httpOnly: true,
       secure: isProduction,
-      sameSite: "lax",
+      sameSite: isProduction ? "none" : "lax",
       maxAge: 24 * 60 * 60 * 1000,
     },
   })
 );
+
 
 
 // csurf
