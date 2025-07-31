@@ -31,7 +31,7 @@ export const productDetails = async (req, res) => {
       .redirect("/user/products");
     }
 
-    res.status(httpStatusCode.OK.code).render("Layouts/users/ProductDetails", {
+    res.status(httpStatusCode.OK.code).render("Layouts/users/productDetails", {
       product: result.data,
       isInWishlist,
       price

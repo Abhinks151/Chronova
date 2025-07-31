@@ -70,22 +70,22 @@ app.use(cookieParser());
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
-const isProduction = process.env.NODE_ENV === "production";
+// const isProduction = process.env.NODE_ENV === "production";
 
-app.set("trust proxy", 1);
-app.use(
-  session({
-    secret: "Abhin is the batman",
-    resave: false,
-    saveUninitialized: false,
-    cookie: {
-      httpOnly: true,
-      secure: isProduction,
-      sameSite: isProduction ? "none" : "lax",
-      maxAge: 24 * 60 * 60 * 1000,
-    },
-  })
-);
+// app.set("trust proxy", 1);
+// app.use(
+//   session({
+//     secret: "Abhin is the batman",
+//     resave: false,
+//     saveUninitialized: false,
+//     cookie: {
+//       httpOnly: true,
+//       secure: isProduction,
+//       sameSite: "lax",
+//       maxAge: 24 * 60 * 60 * 1000,
+//     },
+//   })
+// );
 
 
 // app.use(
@@ -98,6 +98,35 @@ app.use(
 //     },
 //   })
 // );
+
+
+// app.use(
+//   session({
+//     secret: "Abhin is the batman",
+//     resave: false,
+//     saveUninitialized: true,
+//     cookie: { secure: false },
+//   })
+// );
+
+const isProduction = process.env.NODE_ENV === "production";
+console.log("production", isProduction);
+app.set("trust proxy", 1); 
+
+app.use(
+  session({
+    secret: "Abhin is the batman",
+    resave: false,
+    saveUninitialized: false,
+    cookie: {
+      httpOnly: true,
+      secure: isProduction,
+      sameSite: "lax",
+      maxAge: 24 * 60 * 60 * 1000,
+    },
+  })
+);
+
 
 // csurf
 // app.use(csurf());
@@ -115,6 +144,10 @@ app.use(
 
 
 app.use("/", indexRoutes);
+
+app.get("/", (req, res) => {
+  res.status(200).render("Layouts/users/products");
+})
 
 app.get("/error", (req, res, next) => {
   next(new Error("This is a test error"));

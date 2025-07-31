@@ -24,7 +24,7 @@ export const sendResetPasswordToken = async (user) => {
   user.resetPasswordExpire = expiry;
   await user.save();
 
-  const resetLink = `http://localhost:3000/user/reset-password/${hashedToken}`;
+  const resetLink = `https://choronova.abhin.site/user/reset-password/${hashedToken}`;
   await sendResetPasswordEmail(user.email, resetLink, user.firstname);
 };
 
