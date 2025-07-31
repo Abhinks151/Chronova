@@ -1,4 +1,4 @@
-// ⚙️ Dependencies & Setup
+// Dependencies & Setup
 import express from "express";
 import dotenv from "dotenv";
 import cookieParser from "cookie-parser";
@@ -20,12 +20,12 @@ const PORT = process.env.PORT || 3000;
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
-// 🧠 Connect Mongo
+// Connect Mongo
 connection();
 const isProduction = process.env.NODE_ENV === "production";
-app.set("trust proxy", 1); // 🔐 Must be BEFORE session if behind proxy
+app.set("trust proxy", 1); // Must be BEFORE session if behind proxy
 
-// 🛡 Helmet CSP
+// Helmet CSP
 app.use(helmet({
   contentSecurityPolicy: {
     directives: {
@@ -42,12 +42,12 @@ app.use(helmet({
   }
 }));
 
-// ⚙️ View & Static
+// View & Static
 app.set("view engine", "ejs");
 app.set("views", path.join(__dirname, "views"));
 app.use(express.static(path.join(__dirname, "public")));
 
-// 🧩 Core Middlewares
+// Core Middlewares
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 app.use(cookieParser());
@@ -55,13 +55,13 @@ app.use(nocache());
 
 app.set("trust proxy", 1);
 
-// ✅ Session Setup — FINAL WORKING CONFIG
+// Session Setup — FINAL WORKING CONFIG
 app.use(
   session({
     name: "chronova.sid",
     secret: process.env.SESSION_SECRET || "chronovaSuperSecret",
     resave: false,
-    saveUninitialized: true,
+    saveUninitialized: false,
     store: MongoStore.create({
       mongoUrl: process.env.MONGO_URI,
       collectionName: "sessions",
@@ -79,18 +79,18 @@ app.use(
   })
 );
 
-// 🧠 Passport + Sessions (Required)
+// Passport + Sessions (Required)
 app.use(passport.initialize());
-app.use(passport.session()); // ✅ REQUIRED for working sessions
+app.use(passport.session()); // REQUIRED for working sessions
 
-// 🧭 Routes
+// Routes
 app.use("/", indexRoutes);
 
 app.get("/test", (req, res) => {
   req.session.hello = "world";
   req.session.save((err) => {
     if (err) {
-      console.error("❌ Session save failed:", err);
+      console.error("Session save failed:", err);
       return res.status(500).send("Session error");
     }
     res.cookie("manual-cookie", "test", {
@@ -104,9 +104,9 @@ app.get("/test", (req, res) => {
 });
 
 
-// 🧱 Error handling
+// Error handling
 app.use((err, req, res, next) => {
-  console.error("🔴 Error:", err);
+  console.error("Error:", err);
   res.status(500).render("Layouts/error", {
     statusCode: 500,
     message: "Internal Server Error",
@@ -114,7 +114,8 @@ app.use((err, req, res, next) => {
   });
 });
 
-// 🚀 Start Server
+// Start Server
 app.listen(PORT, () => {
   console.log(`Server running: https://chronova.abhin.site`);
 });
+
