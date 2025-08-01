@@ -30,7 +30,7 @@ app.use(helmet({
     directives: {
       defaultSrc: ["'self'"],
       styleSrc: ["'self'", "'unsafe-inline'", "https:", "data:", "https://cdnjs.cloudflare.com", "https://cdn.jsdelivr.net"],
-      scriptSrc: ["'self'", "'unsafe-inline'", "https://cdn.jsdelivr.net", "https://cdnjs.cloudflare.com"],
+      scriptSrc: ["'self'", "'unsafe-inline'", "https://cdn.jsdelivr.net", "https://cdnjs.cloudflare.com", "https://code.jquery.com"],
       scriptSrcAttr: ["'self'", "'unsafe-inline'"],
       imgSrc: ["'self'", "data:", "https://images.unsplash.com", "https://res.cloudinary.com", "https://lh3.googleusercontent.com"],
       connectSrc: ["'self'", "https://api.unsplash.com"],
@@ -75,13 +75,13 @@ app.get("/error", (req, res, next) => {
 
 
 //Error
-app.use((err,req,res,next)=>{
+app.use((err, req, res, next) => {
   console.log(err);
   res.status(500).render("Layouts/error", {
     statusCode: 500,
-    message : "Internal Server Error",
+    message: "Internal Server Error",
     description: "Something went wrong. Please try again later.",
-  });    
+  });
 })
 
 
