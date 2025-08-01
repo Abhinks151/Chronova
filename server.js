@@ -8,7 +8,6 @@ import passport from "passport";
 import nocache from "nocache";
 import session from "express-session";
 // import csurf from "csurf";
-import helmet from "helmet";
 
 import connection from "./config/dbConnection.js";
 // import { errorMiddleware } from "./middlewares/errorMiddleware.js";
@@ -24,66 +23,7 @@ const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
 connection();
-app.use(
-  helmet({
-    contentSecurityPolicy: {
-      directives: {
-        defaultSrc: ["'self'"],
-        scriptSrc: [
-          "'self'",
-          "'unsafe-inline'",
-          "https://cdn.jsdelivr.net",
-          "https://cdnjs.cloudflare.com",
-          "https://code.jquery.com",
-          "https://checkout.razorpay.com",
-          "https://checkout-static.razorpay.com",
-          "https://checkout-static-next.razorpay.com",
-          "https://api.razorpay.com",
-        ],
-        scriptSrcAttr: ["'unsafe-inline'"], // fixed
-        styleSrc: [
-          "'self'",
-          "'unsafe-inline'",
-          "https:",
-          "data:",
-          "https://cdnjs.cloudflare.com",
-          "https://cdn.jsdelivr.net",
-          "https://checkout-static.razorpay.com",
-          "https://checkout-static-next.razorpay.com",
-          "https://fonts.googleapis.com",
-        ],
-        imgSrc: [
-          "'self'",
-          "data:",
-          "https://images.unsplash.com",
-          "https://res.cloudinary.com",
-          "https://lh3.googleusercontent.com",
-          "https://*.razorpay.com",
-        ],
-        connectSrc: [
-          "'self'",
-          "https://api.unsplash.com",
-          "https://lumberjack.razorpay.com",
-          "https://api.razorpay.com",
-          "https://*.razorpay.com",
-        ],
-        frameSrc: [
-          "'self'",
-          "https://api.razorpay.com",
-          "https://checkout.razorpay.com",
-          "https://*.razorpay.com",
-        ],
-        fontSrc: [
-          "'self'",
-          "https://fonts.gstatic.com",
-          "https://checkout-static-next.razorpay.com",
-        ],
-        objectSrc: ["'none'"],
-        upgradeInsecureRequests: [],
-      },
-    },
-  })
-);
+
 
 
 
