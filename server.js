@@ -24,22 +24,50 @@ const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
 connection();
-
 app.use(helmet({
   contentSecurityPolicy: {
     directives: {
       defaultSrc: ["'self'"],
-      styleSrc: ["'self'", "'unsafe-inline'", "https:", "data:", "https://cdnjs.cloudflare.com", "https://cdn.jsdelivr.net"],
-      scriptSrc: ["'self'", "'unsafe-inline'", "https://cdn.jsdelivr.net", "https://cdnjs.cloudflare.com", "https://code.jquery.com", "https://checkout.razorpay.com"],
+      styleSrc: [
+        "'self'",
+        "'unsafe-inline'",
+        "https:",
+        "data:",
+        "https://cdnjs.cloudflare.com",
+        "https://cdn.jsdelivr.net"
+      ],
+      scriptSrc: [
+        "'self'",
+        "'unsafe-inline'",
+        "https://cdn.jsdelivr.net",
+        "https://cdnjs.cloudflare.com",
+        "https://code.jquery.com",
+        "https://checkout.razorpay.com"
+      ],
       scriptSrcAttr: ["'self'", "'unsafe-inline'"],
-      imgSrc: ["'self'", "data:", "https://images.unsplash.com", "https://res.cloudinary.com", "https://lh3.googleusercontent.com"],
-      connectSrc: ["'self'", "https://api.unsplash.com"],
+      imgSrc: [
+        "'self'",
+        "data:",
+        "https://images.unsplash.com",
+        "https://res.cloudinary.com",
+        "https://lh3.googleusercontent.com"
+      ],
+      connectSrc: [
+        "'self'",
+        "https://api.unsplash.com",
+        "https://lumberjack.razorpay.com"
+      ],
+      frameSrc: [
+        "'self'",
+        "https://api.razorpay.com"
+      ],
       fontSrc: ["'self'", "https:"],
       objectSrc: ["'none'"],
-      upgradeInsecureRequests: [],
-    },
+      upgradeInsecureRequests: []
+    }
   }
 }));
+
 
 
 app.use(express.static("public"));

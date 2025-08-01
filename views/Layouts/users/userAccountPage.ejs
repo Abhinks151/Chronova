@@ -136,8 +136,7 @@
             </div>
             <div class="avatar-info">
               <h2>
-                <%= user.firstname || `${user.firstname || ''} ${user.lastname
-                || ''}`.trim() || 'User' %>
+                <%= user.firstname || `${user.firstname ` || 'User' %>
               </h2>
               <p><%= user.email %></p>
               <div
