@@ -31,35 +31,38 @@ app.use(
         defaultSrc: ["'self'"],
         scriptSrc: [
           "'self'",
-          "'unsafe-inline'",
+          "'unsafe-inline'", // Needed for Razorpay
           "https://cdn.jsdelivr.net",
           "https://cdnjs.cloudflare.com",
           "https://code.jquery.com",
-          "https://checkout.razorpay.com"
+          "https://checkout.razorpay.com",
         ],
-        frameSrc: [
-          "'self'",
-          "https://api.razorpay.com"
-        ],
-        connectSrc: [
-          "'self'",
-          "https://api.unsplash.com",
-          "https://lumberjack.razorpay.com"
-        ],
+        scriptSrcAttr: ["'self'", "'unsafe-inline'"],
         styleSrc: [
           "'self'",
           "'unsafe-inline'",
           "https:",
           "data:",
           "https://cdnjs.cloudflare.com",
-          "https://cdn.jsdelivr.net"
+          "https://cdn.jsdelivr.net",
         ],
         imgSrc: [
           "'self'",
           "data:",
           "https://images.unsplash.com",
           "https://res.cloudinary.com",
-          "https://lh3.googleusercontent.com"
+          "https://lh3.googleusercontent.com",
+        ],
+        connectSrc: [
+          "'self'",
+          "https://api.unsplash.com",
+          "https://lumberjack.razorpay.com",
+          "https://api.razorpay.com",
+        ],
+        frameSrc: [
+          "'self'",
+          "https://api.razorpay.com",
+          "https://checkout.razorpay.com",
         ],
         fontSrc: ["'self'", "https:"],
         objectSrc: ["'none'"],
