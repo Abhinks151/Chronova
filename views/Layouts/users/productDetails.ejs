@@ -228,7 +228,6 @@
     let cartCount = 0;
     let wishlistCount = 0;
     let driftInstance = null;
-
     // FIXED ZOOM FUNCTIONALITY
     $(document).ready(function() {
         // Initialize zoom for the first image
@@ -291,10 +290,8 @@
                     injectBaseStyles: true,
                     handleTouch: true,
                     onShow: function() {
-                        console.log('Zoom activated');
                     },
                     onHide: function() {
-                        console.log('Zoom deactivated');
                     }
                 });
             } catch (error) {
@@ -626,10 +623,19 @@
                     ` : ''}
                 </div>
                 <div class="featured-actions">
-                    <button class="featured-btn featured-btn-primary" onclick="event.stopPropagation(); addFeaturedToCart('${product._id}')">
-                        <i class="fas fa-shopping-cart"></i>
-                        Add to Cart
-                    </button>
+                    ${
+                        product.stockQuantity > 0 ? `
+                        <button class="featured-btn featured-btn-primary" onclick="event.stopPropagation(); addFeaturedToCart('${product._id}')">
+                            <i class="fas fa-shopping-cart"></i>
+                            Add to Cart
+                        </button>
+                            
+                        ` : `
+                        <button class="featured-btn featured-btn-secondary"  onclick="event.stopPropagation(); addFeaturedToCart('${product._id}')">
+                            Out of stock
+                        </button>
+                        `
+                    }
                     <button class="featured-btn featured-btn-secondary" onclick="event.stopPropagation(); toggleFeaturedWishlist('${product._id}')">
                         <i id="featured-heart-${product._id}" class="${heartClass} fa-heart" style="${heartStyle}"></i>
                     </button>
