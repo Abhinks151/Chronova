@@ -95,7 +95,7 @@ export const placeOrderService = async (userId, orderData, req, isVerifiedOnline
     }
 
     const productIds = orderData.items.map((item) => {
-      return item.productId?._id?.toString() || item.productId?.toString()
+      return item.productId?._id?.toString() || item.productId?.toString();
     });
 
     const products = await Products.find({
@@ -105,12 +105,11 @@ export const placeOrderService = async (userId, orderData, req, isVerifiedOnline
     }).lean().session(session);
 
     if (!products.length) {
-      throw new Error("No valid products found")
-    };
+      throw new Error("No valid products found");
+    }
 
     const items = [];
 
-    //error add fallback
     const grossTotal = orderData.items.reduce((acc, item) => {
       const price = Number(item.offerPrice || item.price || 0);
       const quantity = Number(item.quantity || 0);
@@ -150,6 +149,13 @@ export const placeOrderService = async (userId, orderData, req, isVerifiedOnline
       const perUnitDiscount = +(offerPrice * discountRatio).toFixed(2);
       const netPrice = Number(offerPrice - perUnitDiscount).toFixed(2);
 
+      let status;
+      if (orderData.paymentMethod === 'cod') {
+        status = 'Pending';
+      } else {
+        status = 'Paid';
+      }
+
       for (let i = 0; i < itemQty; i++) {
         items.push({
           productId: product._id,
@@ -162,7 +168,8 @@ export const placeOrderService = async (userId, orderData, req, isVerifiedOnline
             url: product.images?.[0]?.url || "",
             public_id: product.images?.[0]?.public_id || "",
           },
-          status: "Placed",
+          status : "Placed",
+          paymentStatus:status,
           discount: item.offer?.discount || 0,
           finalPrice: offerPrice,
           couponDiscountPerItem: isNaN(perUnitDiscount) ? 0 : perUnitDiscount,
@@ -230,11 +237,11 @@ export const placeOrderService = async (userId, orderData, req, isVerifiedOnline
       paymentStatus: isVerifiedOnline ? "Paid" : "Pending",
       paymentDetails: isVerifiedOnline
         ? {
-          paymentProvider: "Razorpay",
-          razorpay_payment_id: orderData.paymentDetails?.razorpay_payment_id,
-          razorpay_order_id: orderData.paymentDetails?.razorpay_order_id,
-          razorpay_signature: orderData.paymentDetails?.razorpay_signature,
-        }
+            paymentProvider: "Razorpay",
+            razorpay_payment_id: orderData.paymentDetails?.razorpay_payment_id,
+            razorpay_order_id: orderData.paymentDetails?.razorpay_order_id,
+            razorpay_signature: orderData.paymentDetails?.razorpay_signature,
+          }
         : {},
     });
 
@@ -288,6 +295,8 @@ export const placeOrderService = async (userId, orderData, req, isVerifiedOnline
     session.endSession();
   }
 };
+
+
 
 
 
