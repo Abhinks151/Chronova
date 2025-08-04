@@ -7,13 +7,15 @@ import './config/passport.js';
 import passport from "passport";
 import nocache from "nocache";
 import session from "express-session";
+// import MongoStore from 'connect-mongo';
+
 // import csurf from "csurf";
-import helmet from "helmet";
 
 import connection from "./config/dbConnection.js";
 // import { errorMiddleware } from "./middlewares/errorMiddleware.js";
 
 import indexRoutes from "./routes/index.js";
+import { authenticateUser } from "./middlewares/userAuthMiddleware.js";
 // import { requestLogger } from "./middlewares/requestLogger.js";
 
 dotenv.config();
@@ -25,21 +27,7 @@ const __dirname = path.dirname(__filename);
 
 connection();
 
-app.use(helmet({
-  contentSecurityPolicy: {
-    directives: {
-      defaultSrc: ["'self'"],
-      styleSrc: ["'self'", "'unsafe-inline'", "https:", "data:", "https://cdnjs.cloudflare.com", "https://cdn.jsdelivr.net"],
-      scriptSrc: ["'self'", "'unsafe-inline'", "https://cdn.jsdelivr.net", "https://cdnjs.cloudflare.com"],
-      scriptSrcAttr: ["'self'", "'unsafe-inline'"],
-      imgSrc: ["'self'", "data:", "https://images.unsplash.com", "https://res.cloudinary.com", "https://lh3.googleusercontent.com"],
-      connectSrc: ["'self'", "https://api.unsplash.com"],
-      fontSrc: ["'self'", "https:"],
-      objectSrc: ["'none'"],
-      upgradeInsecureRequests: [],
-    },
-  }
-}));
+
 
 
 app.use(express.static("public"));
@@ -61,6 +49,23 @@ app.use(
 );
 
 
+// const isProduction = process.env.NODE_ENV === "production";
+// app.set("trust proxy", 1);
+// app.use(
+//   session({
+//     secret: "Abhin is the batman",
+//     resave: false,
+//     saveUninitialized: false, // Don't save empty sessions
+//     cookie: {
+//       secure: isProduction,         // True in production
+//       httpOnly: true,
+//       sameSite: isProduction ? "none" : "lax", // Allows cross-origin in prod
+//     },
+//   })
+// );
+
+
+
 
 // Error handler
 // app.use(errorMiddleware);
@@ -68,20 +73,28 @@ app.use(
 // app.use(requestLogger);
 app.use("/", indexRoutes);
 
+app.get('/',authenticateUser,(req,res)=>{
+  res.redirect('/user/home')
+})
+
 app.get("/error", (req, res, next) => {
   next(new Error("This is a test error"));
 });
 
 
+app.use((req, res) => {
+  res.status(404).render('Layouts/404');
+});
+
 
 //Error
-app.use((err,req,res,next)=>{
+app.use((err, req, res, next) => {
   console.log(err);
   res.status(500).render("Layouts/error", {
     statusCode: 500,
-    message : "Internal Server Error",
+    message: "Internal Server Error",
     description: "Something went wrong. Please try again later.",
-  });    
+  });
 })
 
 

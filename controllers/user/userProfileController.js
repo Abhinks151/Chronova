@@ -135,7 +135,7 @@ export const updateUserData = async (req, res) => {
 
 export const getAddressMangemnt = async (req, res) => {
   try {
-    res.render('Layouts/users/userAddressManagement');
+    res.render('Layouts/users/userAddressmanagement');
   } catch (error) {
     console.error("Error loading user address management page:", error);
     res.status(500).json({
