@@ -9,9 +9,7 @@ body {
 		sans-serif;
 	background: #f8fafc;
 	color: #1f2937;
-	line-height: 1.6;
 }
-featured-btn-primary
 /* Navbar Styles */
 .navbar {
 	background: #fff;
@@ -26,7 +24,7 @@ featured-btn-primary
 .nav-container {
 	max-width: 1400px;
 	margin: 0 auto;
-	padding: 0 24px;
+	padding: 5px 30px;
 	display: flex;
 	align-items: center;
 	justify-content: space-between;
