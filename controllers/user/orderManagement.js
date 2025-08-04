@@ -300,7 +300,6 @@ export const viewInvoiceController = async (req, res) => {
   try {
     const userId = req.user._id || req.user.id;
     const { orderId } = req.params;
-
     const order = await viewInvoiceService(userId, orderId);
 
     return res
@@ -308,7 +307,7 @@ export const viewInvoiceController = async (req, res) => {
       .render("Layouts/PDFs/userOrderInvoice", { order });
   } catch (error) {
     logger.error("View Invoice Controller Error:", error);
-
+    console.log(error)
     const status = error.statusCode || httpStatusCode.INTERNAL_SERVER_ERROR.code;
     return res.status(status).json({
       success: false,
@@ -330,6 +329,7 @@ export const downloadInvoiceController = async (req, res) => {
     res.status(httpStatusCode.OK.code).send(pdfBuffer);
   } catch (error) {
     logger.error("Download Invoice Controller Error:", error);
+    console.log(error);
     res
       .status(httpStatusCode.INTERNAL_SERVER_ERROR.code)
       .send("Error generating invoice");

@@ -569,6 +569,8 @@ export const viewInvoiceService = async (userId, orderId) => {
 };
 
 
+
+
 export const generateInvoiceService = async (userId, orderId) => {
   const order = await Order.findOne({ userId, orderId });
 
@@ -578,17 +580,18 @@ export const generateInvoiceService = async (userId, orderId) => {
   }
 
   order.invoiceGenerated = true;
-  order.save();
+  await order.save();
 
-  const templatePath = path.join(
-    __dirname,
-    "../../views/Layouts/PDFs/userOrderInvoice.ejs"
-  );
+  const templatePath = path.join(__dirname, "../../views/Layouts/PDFs/userOrderInvoice.ejs");
   const html = await ejs.renderFile(templatePath, { order });
 
-  const browser = await puppeteer.launch();
-  const page = await browser.newPage();
+  const browser = await puppeteer.launch({
+    headless: true,
+    executablePath: "/usr/bin/chromium-browser",
+    args: ["--no-sandbox", "--disable-setuid-sandbox"],
+  });
 
+  const page = await browser.newPage();
   await page.setContent(html, { waitUntil: "networkidle0" });
 
   const pdfBuffer = await page.pdf({
@@ -596,8 +599,8 @@ export const generateInvoiceService = async (userId, orderId) => {
     printBackground: true,
   });
 
-  logger.info(`Invoice PDF generated for orderId=${orderId}`);
   await browser.close();
+  logger.info(`Invoice PDF generated for orderId=${orderId}`);
 
   return pdfBuffer;
 };
