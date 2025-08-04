@@ -7,7 +7,7 @@ import './config/passport.js';
 import passport from "passport";
 import nocache from "nocache";
 import session from "express-session";
-import MongoStore from 'connect-mongo';
+// import MongoStore from 'connect-mongo';
 
 // import csurf from "csurf";
 
@@ -16,7 +16,7 @@ import connection from "./config/dbConnection.js";
 
 import indexRoutes from "./routes/index.js";
 import { authenticateUser } from "./middlewares/userAuthMiddleware.js";
-// import { requestLogger } from "./middlewares/requestLogger.js";
+import { requestLogger } from "./middlewares/requestLogger.js";
 
 dotenv.config();
 const PORT = process.env.PORT || 3000;
@@ -39,34 +39,22 @@ app.use(nocache());
 app.use(cookieParser());
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
-// app.use(
-//   session({
-//     secret: "Abhin is the batman",
-//     resave: false,
-//     saveUninitialized: true,
-//     cookie: { secure: false },
-//   })
-// );
+app.use(
+  session({
+    secret: "Abhin is the batman",
+    resave: false,
+    saveUninitialized: true,
+    cookie: { secure: false },
+  })
+);
 
-
-app.use(session({
-  secret: "Abhin is batman",
-  resave: false,
-  saveUninitialized: false,
-  store: MongoStore.create({ mongoUrl: process.env.MONGO_URI }),
-  cookie: {
-    secure: process.env.NODE_ENV === "production",
-    httpOnly: true,
-    sameSite: "lax"
-  }
-}));
 
 
 
 // Error handler
 // app.use(errorMiddleware);
 
-// app.use(requestLogger);
+app.use(requestLogger);
 app.use("/", indexRoutes);
 
 app.get('/',authenticateUser,(req,res)=>{
