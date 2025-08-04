@@ -39,30 +39,30 @@ app.use(nocache());
 app.use(cookieParser());
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
-// app.use(
-//   session({
-//     secret: "Abhin is the batman",
-//     resave: false,
-//     saveUninitialized: true,
-//     cookie: { secure: false },
-//   })
-// );
-
-
-const isProduction = process.env.NODE_ENV === "production";
-app.set("trust proxy", 1);
 app.use(
   session({
     secret: "Abhin is the batman",
     resave: false,
-    saveUninitialized: false, // Don't save empty sessions
-    cookie: {
-      secure: isProduction,         // True in production
-      httpOnly: true,
-      sameSite: isProduction ? "none" : "lax", // Allows cross-origin in prod
-    },
+    saveUninitialized: true,
+    cookie: { secure: false },
   })
 );
+
+
+// const isProduction = process.env.NODE_ENV === "production";
+// app.set("trust proxy", 1);
+// app.use(
+//   session({
+//     secret: "Abhin is the batman",
+//     resave: false,
+//     saveUninitialized: false, // Don't save empty sessions
+//     cookie: {
+//       secure: isProduction,         // True in production
+//       httpOnly: true,
+//       sameSite: isProduction ? "none" : "lax", // Allows cross-origin in prod
+//     },
+//   })
+// );
 
 
 
