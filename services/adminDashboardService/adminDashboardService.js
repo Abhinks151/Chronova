@@ -343,7 +343,7 @@ export const getAdminPieChartDataService = async (type, startDate, endDate) => {
   }
 
   const result = await Order.aggregate(pipeline);
-  console.log(result);
+  // console.log(result);
   const labels = result.map(item => item.name);
   const values = result.map(item => item.totalRevenue);
   const total = values.reduce((acc, curr) => acc + curr, 0);
