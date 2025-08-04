@@ -16,7 +16,7 @@ import connection from "./config/dbConnection.js";
 
 import indexRoutes from "./routes/index.js";
 import { authenticateUser } from "./middlewares/userAuthMiddleware.js";
-import { requestLogger } from "./middlewares/requestLogger.js";
+// import { requestLogger } from "./middlewares/requestLogger.js";
 
 dotenv.config();
 const PORT = process.env.PORT || 3000;
@@ -39,12 +39,28 @@ app.use(nocache());
 app.use(cookieParser());
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
+// app.use(
+//   session({
+//     secret: "Abhin is the batman",
+//     resave: false,
+//     saveUninitialized: true,
+//     cookie: { secure: false },
+//   })
+// );
+
+
+const isProduction = process.env.NODE_ENV === "production";
+
 app.use(
   session({
     secret: "Abhin is the batman",
     resave: false,
-    saveUninitialized: true,
-    cookie: { secure: false },
+    saveUninitialized: false, // Don't save empty sessions
+    cookie: {
+      secure: isProduction,         // True in production
+      httpOnly: true,
+      sameSite: isProduction ? "none" : "lax", // Allows cross-origin in prod
+    },
   })
 );
 
@@ -54,7 +70,7 @@ app.use(
 // Error handler
 // app.use(errorMiddleware);
 
-app.use(requestLogger);
+// app.use(requestLogger);
 app.use("/", indexRoutes);
 
 app.get('/',authenticateUser,(req,res)=>{
