@@ -396,7 +396,7 @@ export const cancelEntireOrderService = async (userId, orderId) => {
 };
 
 
-
+import {ProductOffer} from '../../models/productOffer.js';
 
 export const cancelSingleItemService = async (userId, orderId, itemId) => {
   const order = await Order.findOne({ userId, orderId });
@@ -423,9 +423,18 @@ export const cancelSingleItemService = async (userId, orderId, itemId) => {
     throw error;
   }
 
-  await Products.findByIdAndUpdate(item.productId, {
+  const product = await Products.findByIdAndUpdate(item.productId, {
     $inc: { stockQuantity: item.quantity },
   });
+
+  
+  const hasOffer = await ProductOffer.find({products:{$in:product._id}});
+
+  if(product.stockQuantity < 5 && hasOffer){
+    console.log("low");
+    
+  }
+
 
   item.status = "Cancelled";
   item.cancelReason = "Cancelled by user";

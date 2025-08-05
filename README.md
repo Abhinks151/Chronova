@@ -7,15 +7,15 @@ Chronova is a full-featured e-commerce platform for selling watches, crafted wit
 ## 🚀 Tech Stack
 
 - **Backend:** Node.js, Express.js  
-- **Database:** MongoDB + Mongoose  
+- **Database:** MongoDB + Mongoose(ODM)  
 - **Frontend:** EJS, CSS, JavaScript (ES Modules)  
-- **Auth:** Session-based Auth + Google OAuth (Passport.js)  
+- **Auth:** Local + Google OAuth (Passport.js)  
 - **Email/OTP:** Nodemailer  
-- **Image Hosting:** Cloudinary  
+- **Image Hosting:** Cloudinary, Multer
 - **Payment Gateway:** Razorpay  
 - **Logging:** Winston with Daily Rotate File  
 - **Reports:** Puppeteer (PDF), ExcelJS (Excel)  
-- **Extras:** Cropper.js, Pincode API, MongoDB Transactions
+- **Extras:**  JWT, Cropper.js, Pincode API, MongoDB Transactions
 
 ---
 
@@ -27,7 +27,7 @@ Chronova is a full-featured e-commerce platform for selling watches, crafted wit
   - OTP verification (signup, login, password reset)
   - Google OAuth (Passport.js)
   - Secure session management
-  - Razorpay payment verification (HMAC + Webhook fallback)
+  - Razorpay payment verification (HMAC)
   - Route protection & data sanitization
 
 - **Profile & Account**
@@ -127,15 +127,15 @@ Chronova is a full-featured e-commerce platform for selling watches, crafted wit
 
 ## 📈 Development Status
 
-✅ Complete user + admin modules  
-✅ End-to-end Razorpay integration with fallback  
+🙍 Complete user + admin authentication
+💳 End-to-end Razorpay integration with fallback  
 ✅ OTP-based auth flow, Google OAuth  
-✅ Admin sales report export (PDF/Excel)  
+📈 Admin sales report export (PDF/Excel)  
 ✅ Robust stock/coupon/order validation using MongoDB transactions  
-✅ Wishlist, Cart, Return & Refund Logic  
-✅ Wallet & Refund display 
-✅ Dashboard and analytics in admin side 
-🎯 **Next Goal:** Hosting
+🛒 Wishlist, Cart, Return & Refund Logic  
+💵 Wallet & Refund display 
+📈 Dashboard and analytics in admin side 
+🖥️ Hosted in AWS EC2 instance with ngnix for revese proxy and loadbalancing and pm2 as process manager
 
 ---
 
