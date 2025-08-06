@@ -223,7 +223,7 @@ export const addAddress = async (req, res) => {
       });
     }
 
-    if (phone.length < 10) {
+    if (phone.length != 10) {
       return res.status(httpStatusCode.BAD_REQUEST.code).json({
         success: false,
         message: 'Phone number can not be less than 10 numbers',
@@ -440,7 +440,7 @@ export const editAddress = async (req, res) => {
       });
     }
 
-    if (phone.length < 10) {
+    if (phone.length != 10) {
       return res.status(httpStatusCode.BAD_REQUEST.code).json({
         success: false,
         message: 'Phone number can not be less than 10 numbers',

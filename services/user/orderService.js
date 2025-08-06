@@ -4,6 +4,7 @@ import { Cart } from "../../models/cart.js";
 import { Order } from "../../models/order.js";
 import { Category } from "../../models/category.js";
 import { Coupon } from "../../models/coupon.js";
+import Wallet from '../../models/wallet.js';
 
 import mongoose from "mongoose";
 import puppeteer from "puppeteer";
@@ -266,7 +267,7 @@ export const placeOrderService = async (userId, orderData, req, isVerifiedOnline
       if (coupon.minimumCartAmount > totalAmount) {
         throw new Error(`Minimum cart value of ₹${coupon.minimumCartAmount} is required to apply this coupon.`);
       }
-      
+
 
 
 
@@ -476,6 +477,42 @@ export const cancelEntireOrderService = async (userId, orderId) => {
     throw error;
   }
 
+
+  //refund for entire order cancel
+  const itemStaus = order.items.every((item) => {
+    return item.paymentStatus === "Paid";
+  })
+
+  if (order.paymentStatus === "Paid" && itemStaus) {
+    const refundAmount = order.totalAmount;
+    let wallet = await Wallet.findOne({ userId });
+
+    const transaction = {
+      amount: refundAmount,
+      type: "credit",
+      description: `Refund for cancelled order: ${order.orderId}`,
+      timestamp: new Date(),
+    };
+
+    if (!wallet) {
+      wallet = new Wallet({
+        userId,
+        balance: refundAmount,
+        transactions: [transaction],
+      });
+    } else {
+      wallet.balance += refundAmount;
+      wallet.transactions.push(transaction);
+    }
+
+    await wallet.save();
+  }
+
+
+
+
+  
+
   for (const item of order.items) {
     await Products.findByIdAndUpdate(item.productId, {
       $inc: { stockQuantity: item.quantity },
@@ -541,6 +578,32 @@ export const cancelSingleItemService = async (userId, orderId, itemId) => {
 
   item.status = "Cancelled";
   item.cancelReason = "Cancelled by user";
+
+  //Refund for user if the item is paid;
+  if (item.paymentStatus === "Paid") {
+    const refundAmount = item.netItemTotal * item.quantity;
+    let wallet = await Wallet.findOne({ userId });
+
+    const transaction = {
+      amount: refundAmount,
+      type: "credit",
+      description: `Refund for cancelled item: ${item.productName} (Order: ${order.orderId})`,
+      timestamp: new Date(),
+    };
+
+    if (!wallet) {
+      wallet = new Wallet({
+        userId,
+        balance: refundAmount,
+        transactions: [transaction],
+      });
+    } else {
+      wallet.balance += refundAmount;
+      wallet.transactions.push(transaction);
+    }
+
+    await wallet.save();
+  }
 
   await logStockChange({
     productId: item.productId,
