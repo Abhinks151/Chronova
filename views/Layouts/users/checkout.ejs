@@ -552,12 +552,14 @@
 
           // Filter coupons based on cart amount and active status
           const cartSubtotal = calculateSubtotal();
+          const today = new Date();
+          today.setHours(0,0,0,0);
           const validCoupons = availableCoupons.filter(
             (coupon) =>
               coupon.isActive &&
               !coupon.isDeleted &&
               cartSubtotal >= coupon.minimumCartAmount &&
-              new Date(coupon.expiryTime) > new Date()
+              new Date(coupon.expiryTime) > today
           );
 
           if (validCoupons.length === 0) {

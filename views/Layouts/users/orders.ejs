@@ -679,7 +679,7 @@
                                 <span class="product-quantity"><i class="fas fa-cubes"></i> Qty: ${
                                   item.quantity
                                 }</span>
-                                <span class="product-price"><i class="fas fa-rupee-sign"></i> ₹${item.finalPrice?.toLocaleString()} each</span>
+                                <span class="product-price"><i class="fas fa-rupee-sign"></i> ₹${item.netItemTotal.toLocaleString()} each</span>
                             </div>
                             ${
                               item.returnReason
@@ -742,7 +742,7 @@
                         </div>
                         <div class="product-total">
                             ₹${(
-                              item.finalPrice * item.quantity
+                              item.netItemTotal * item.quantity
                             ).toLocaleString()}
                         </div>
                         <div class="item-actions">
@@ -1086,7 +1086,7 @@
                                         `
                                             : ""
                                         }
-                                    </div>
+                                    </div>netItemTotal
                                     <span>${item.brand}</span>
                                     <span>${item.quantity}</span>
                                     <span>₹${item.price?.toLocaleString()}</span>
@@ -1100,7 +1100,7 @@
                                         </div>
                                     </span>
                                     <span class="item-total">₹${(
-                                      item.price * item.quantity
+                                      item.netItemTotal * item.quantity
                                     ).toLocaleString()}</span>
                                 </div>
                             `

@@ -48,6 +48,17 @@ export const createCouponService = async (data) => {
     throw new Error("Expiry time must be a valid date.");
   }
 
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+
+  const expiryDateOnly = new Date(parsedExpiryTime);
+  expiryDateOnly.setHours(0, 0, 0, 0);
+
+  if (expiryDateOnly < today) {
+    throw new Error("Expiry date cannot be in the past.");
+  }
+
+  // Coupon code validation
   if (coupon && typeof coupon === "string" && coupon.trim() !== "") {
     coupon = coupon.trim();
 
@@ -65,6 +76,7 @@ export const createCouponService = async (data) => {
   } else {
     coupon = undefined;
   }
+
 
   const newCoupon = await Coupon.create({
     coupon,
@@ -95,6 +107,16 @@ export const editCouponService = async (couponId, updateData) => {
 
   if (isNaN(parsedExpiryTime.getTime())) {
     throw new Error("Expiry time must be a valid date.");
+  }
+
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+
+  const expiryDateOnly = new Date(parsedExpiryTime);
+  expiryDateOnly.setHours(0, 0, 0, 0);
+
+  if (expiryDateOnly < today) {
+    throw new Error("Expiry date cannot be in the past.");
   }
 
   const updatePayload = {
@@ -172,8 +194,9 @@ export const deleteCouponService = async (couponId) => {
 export const getAllActiveCouponsService = async (userId) => {
   // console.log(userId)
   const now = new Date();
+  now.setHours(0, 0, 0, 0);
   const id = new mongoose.Types.ObjectId(userId);
-  
+
   const data = await Coupon.find({
     isActive: true,
     isDeleted: false,

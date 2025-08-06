@@ -63,8 +63,8 @@ export const addProductOfferService = async (offerData) => {
     throw new Error("Product offer name already exist");
   }
 
-  if (discountPercentage <= 0 || discountPercentage > 100) {
-    throw new Error("Discount percent must be between 1 and 100");
+  if (discountPercentage <= 0 || discountPercentage > 99) {
+    throw new Error("Discount percent must be between 1 and 99");
   }
 
   const start = new Date(startDate);
