@@ -246,7 +246,9 @@ export const placeOrderService = async (userId, orderData, req, isVerifiedOnline
         expiryTime: { $gte: today },
       }).session(session);
 
-      if (!coupon) throw new Error("Invalid coupon code");
+      if (!coupon) {
+        throw new Error("Invalid coupon code")
+      };
 
       const userIdStr = req.user.id || req.user._id;
       if (coupon.applicableFor.usedBy.includes(userIdStr)) {
@@ -256,6 +258,16 @@ export const placeOrderService = async (userId, orderData, req, isVerifiedOnline
       if (coupon.applicableFor.usageCount >= coupon.applicableFor.limit) {
         throw new Error("Coupon usage limit exceeded");
       }
+
+      if (coupon.minimumCartAmount > totalAmount) {
+        throw new Error(`Minimum cart value of ₹${coupon.minimumCartAmount} is required to apply this coupon.`);
+      }
+      
+
+      if (coupon.discountAmount >= totalAmount / 2) {
+        throw new Error("Coupon discount is greater than 50% of total amount.");
+      }
+
 
       coupon.applicableFor.usedBy.push(userIdStr);
       coupon.applicableFor.usageCount += 1;

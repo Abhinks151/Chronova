@@ -3,12 +3,15 @@ import { Category } from "../../models/category.js";
 import { Products } from "../../models/products.js";
 
 export const getActiveProducts = async () => {
-  return await Products.aggregate([
+  const products = await Products.aggregate([
     {
       $match: {
         isBlocked: false,
         isDeleted: false
       }
+    },
+    {
+      $unwind: "$category"
     },
     {
       $lookup: {
@@ -19,22 +22,39 @@ export const getActiveProducts = async () => {
       }
     },
     {
+      $unwind: "$categoryDetails"
+    },
+    {
       $match: {
-        "categoryDetails.isBlocked": { $ne: true },
-        "categoryDetails.isDeleted": { $ne: true }
+        "categoryDetails.isBlocked": false,
+        "categoryDetails.isDeleted": false
       }
+    },
+    {
+      $group: {
+        _id: "$_id",
+        doc: { $first: "$$ROOT" }
+      }
+    },
+    {
+      $replaceRoot: { newRoot: "$doc" }
     }
   ]);
+
+  return products;
 };
+
 
 export const getProductByCategoryId = async (categoryId) => {
   try {
     const products = await Products.aggregate([
-      { $match: {
-        isBlocked: false,
-        isDeleted: false,
-        category:{$in:[new mongoose.Types.ObjectId(categoryId)]}
-      } },
+      {
+        $match: {
+          isBlocked: false,
+          isDeleted: false,
+          category: { $in: [new mongoose.Types.ObjectId(categoryId)] }
+        }
+      },
       {
         $lookup: {
           from: "categories",

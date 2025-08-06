@@ -58,6 +58,10 @@ export const addProductOfferService = async (offerData) => {
     throw new Error("All fields are required and at least one product must be selected");
   }
 
+  if (/[^a-zA-Z0-9\s-_]/.test(name)) {
+    throw new Error("Category offer name can only include letters, numbers, spaces, hyphens, and underscores");
+  }
+
   const isExist = await ProductOffer.findOne({ name });
   if (isExist) {
     throw new Error("Product offer name already exist");
@@ -103,6 +107,10 @@ export const editProductOfferService = async (offerId, data) => {
   if (!name || !discountPercentage || !startDate || !endDate || !Array.isArray(products) || products.length === 0) {
     logger.warn("Invalid product offer payload during edit");
     throw new Error("All fields are required and at least one product must be selected");
+  }
+
+  if (/[^a-zA-Z0-9\s-_]/.test(name)) {
+    throw new Error("Category offer name can only include letters, numbers, spaces, hyphens, and underscores");
   }
 
 
