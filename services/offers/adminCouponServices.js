@@ -58,12 +58,18 @@ export const createCouponService = async (data) => {
     throw new Error("Expiry date cannot be in the past.");
   }
 
+  
+
   // Coupon code validation
   if (coupon && typeof coupon === "string" && coupon.trim() !== "") {
     coupon = coupon.trim();
 
     if (coupon.length != 8) {
       throw new Error("Coupon code must be 8 characters long.");
+    }
+
+    if (!/^[a-zA-Z0-9,-_]+$/.test(coupon)) {
+      throw new Error("Coupon code can only contain letters, numbers, hyphens, commas and underscores.");
     }
 
     const modifiedCoupon = "COUPON-" + coupon.toUpperCase();
@@ -109,6 +115,8 @@ export const editCouponService = async (couponId, updateData) => {
     throw new Error("Expiry time must be a valid date.");
   }
 
+  
+
   const today = new Date();
   today.setHours(0, 0, 0, 0);
 
@@ -131,6 +139,10 @@ export const editCouponService = async (couponId, updateData) => {
     if (coupon.length !== 8) {
       throw new Error("Coupon code must be 8 characters long.");
     }
+    if (!/^[a-zA-Z0-9,-_]+$/.test(coupon)) {
+      throw new Error("Coupon code can only contain letters, numbers, hyphens, commas and underscores.");
+    }
+    // console.log(coupon);
 
     const formattedCoupon = `COUPON-${coupon}`;
 

@@ -259,14 +259,15 @@ export const placeOrderService = async (userId, orderData, req, isVerifiedOnline
         throw new Error("Coupon usage limit exceeded");
       }
 
+      if (coupon.discountAmount >= totalAmount / 2) {
+        throw new Error("Coupon discount is greater than 50% of total amount. Select another coupon.");
+      }
+
       if (coupon.minimumCartAmount > totalAmount) {
         throw new Error(`Minimum cart value of ₹${coupon.minimumCartAmount} is required to apply this coupon.`);
       }
       
 
-      if (coupon.discountAmount >= totalAmount / 2) {
-        throw new Error("Coupon discount is greater than 50% of total amount.");
-      }
 
 
       coupon.applicableFor.usedBy.push(userIdStr);
