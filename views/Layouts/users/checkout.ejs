@@ -235,6 +235,99 @@
               <!-- Items will be dynamically loaded here -->
             </div>
 
+            <div class="botton-section">
+              <div class="address-section">
+                <div class="address-section-header">
+                  <h3 class="section-title">Shipping Address</h3>
+                  <button
+                    class="add-address-btn-header"
+                    onclick="openAddressModal()"
+                  >
+                    <i class="fas fa-plus"></i>
+                    Add New Address
+                  </button>
+                </div>
+
+                <!-- Address Loading -->
+                <div id="addressLoading" class="address-loading">
+                  <div class="spinner"></div>
+                  <span>Loading addresses...</span>
+                </div>
+
+                <!-- Address Grid -->
+                <div
+                  id="addressGrid"
+                  class="address-grid"
+                  style="display: none"
+                >
+                  <!-- Addresses will be loaded here -->
+                </div>
+
+                <!-- Empty Address State -->
+                <div
+                  id="emptyAddress"
+                  class="address-empty"
+                  style="display: none"
+                >
+                  <div class="address-empty-icon">
+                    <i class="fas fa-map-marker-alt"></i>
+                  </div>
+                  <h4>No addresses found</h4>
+                  <p>Add your first address to continue</p>
+                  <button class="add-address-btn" onclick="openAddressModal()">
+                    <i class="fas fa-plus"></i>
+                    Add Address
+                  </button>
+                </div>
+              </div>
+
+
+              <div class="payment-section">
+                <h3 class="section-title">Payment Method</h3>
+                <div class="payment-options">
+                  <div class="payment-option">
+                    <input
+                      type="radio"
+                      id="cod"
+                      name="paymentMethod"
+                      value="cod"
+                      checked
+                    />
+                    <label for="cod" class="payment-label">
+                      <div class="payment-icon">
+                        <i class="fas fa-money-bill-wave"></i>
+                      </div>
+                      <div class="payment-details">
+                        <span class="payment-title">Cash on Delivery</span>
+                        <span class="payment-description"
+                          >Pay when you receive your order</span
+                        >
+                      </div>
+                    </label>
+                  </div>
+                  <div class="payment-option">
+                    <input
+                      type="radio"
+                      id="online"
+                      name="paymentMethod"
+                      value="online"
+                    />
+                    <label for="online" class="payment-label">
+                      <div class="payment-icon">
+                        <i class="fas fa-credit-card"></i>
+                      </div>
+                      <div class="payment-details">
+                        <span class="payment-title">Online Payment</span>
+                        <span class="payment-description"
+                          >Pay securely with card/UPI</span
+                        >
+                      </div>
+                    </label>
+                  </div>
+                </div>
+              </div>
+            </div>
+
             <!-- Empty Cart State -->
             <div id="emptyCart" class="empty-cart" style="display: none">
               <div class="empty-cart-icon">🛒</div>
@@ -248,47 +341,9 @@
 
           <!-- Checkout Summary -->
           <div class="checkout-summary">
+            
+
             <!-- Address Selection -->
-            <div class="address-section">
-              <div class="address-section-header">
-                <h3 class="section-title">Shipping Address</h3>
-                <button
-                  class="add-address-btn-header"
-                  onclick="openAddressModal()"
-                >
-                  <i class="fas fa-plus"></i>
-                  Add New Address
-                </button>
-              </div>
-
-              <!-- Address Loading -->
-              <div id="addressLoading" class="address-loading">
-                <div class="spinner"></div>
-                <span>Loading addresses...</span>
-              </div>
-
-              <!-- Address Grid -->
-              <div id="addressGrid" class="address-grid" style="display: none">
-                <!-- Addresses will be loaded here -->
-              </div>
-
-              <!-- Empty Address State -->
-              <div
-                id="emptyAddress"
-                class="address-empty"
-                style="display: none"
-              >
-                <div class="address-empty-icon">
-                  <i class="fas fa-map-marker-alt"></i>
-                </div>
-                <h4>No addresses found</h4>
-                <p>Add your first address to continue</p>
-                <button class="add-address-btn" onclick="openAddressModal()">
-                  <i class="fas fa-plus"></i>
-                  Add Address
-                </button>
-              </div>
-            </div>
 
             <!-- Coupon Section -->
             <div class="coupon-section">
@@ -329,53 +384,7 @@
               </div>
             </div>
 
-            <!-- Payment Method -->
-            <div class="payment-section">
-              <h3 class="section-title">Payment Method</h3>
-              <div class="payment-options">
-                <div class="payment-option">
-                  <input
-                    type="radio"
-                    id="cod"
-                    name="paymentMethod"
-                    value="cod"
-                    checked
-                  />
-                  <label for="cod" class="payment-label">
-                    <div class="payment-icon">
-                      <i class="fas fa-money-bill-wave"></i>
-                    </div>
-                    <div class="payment-details">
-                      <span class="payment-title">Cash on Delivery</span>
-                      <span class="payment-description"
-                        >Pay when you receive your order</span
-                      >
-                    </div>
-                  </label>
-                </div>
-                <div class="payment-option">
-                  <input
-                    type="radio"
-                    id="online"
-                    name="paymentMethod"
-                    value="online"
-                  />
-                  <label for="online" class="payment-label">
-                    <div class="payment-icon">
-                      <i class="fas fa-credit-card"></i>
-                    </div>
-                    <div class="payment-details">
-                      <span class="payment-title">Online Payment</span>
-                      <span class="payment-description"
-                        >Pay securely with card/UPI</span
-                      >
-                    </div>
-                  </label>
-                </div>
-              </div>
-            </div>
 
-            <!-- Order Summary -->
             <div class="order-summary">
               <h3 class="section-title">Order Summary</h3>
               <div class="summary-row">
@@ -413,6 +422,11 @@
                 Place Order
               </button>
             </div>
+
+            <!-- Payment Method -->
+            
+
+            <!-- Order Summary -->
           </div>
         </div>
       </div>
@@ -553,7 +567,7 @@
           // Filter coupons based on cart amount and active status
           const cartSubtotal = calculateSubtotal();
           const today = new Date();
-          today.setHours(0,0,0,0);
+          today.setHours(0, 0, 0, 0);
           const validCoupons = availableCoupons.filter(
             (coupon) =>
               coupon.isActive &&
