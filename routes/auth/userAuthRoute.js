@@ -15,23 +15,22 @@ import {
 } from "../../controllers/auth/userAuthController.js";
 
 import validate from '../../utils/validationRules.js';
-import { authenticateUser, preventLoggedInAccess } from '../../middlewares/userAuthMiddleware.js';
-import httpStatusCode from "../../utils/httpStatusCode.js"
+import { preventLoggedInAccess } from '../../middlewares/userAuthMiddleware.js';
 
 
 
 const userAuthRouter = express.Router();
 
-userAuthRouter.get('/register', getUserRegister);
+userAuthRouter.get('/register',preventLoggedInAccess, getUserRegister);
 userAuthRouter.post('/register', validate(['firstname', 'lastname', 'email', 'password', 'confirmPassword']), postUserRegister);
 
-userAuthRouter.get('/verify-otp', getVerifyUserOTP);
+userAuthRouter.get('/verify-otp', preventLoggedInAccess, getVerifyUserOTP);
 userAuthRouter.post('/verify-otp', postVerifyUserOTP);
 
 userAuthRouter.get('/resend-otp', getVerifyUserOTP);
 userAuthRouter.post('/resend-otp', validate(['email']), resendVerificationCode);
 
-userAuthRouter.get('/login',preventLoggedInAccess, getUserLogin);
+userAuthRouter.get('/login', preventLoggedInAccess, getUserLogin);
 userAuthRouter.post('/login', validate(['email', 'password']), postUserLogin);
 
 userAuthRouter.get('/forgot-password', getForgotPassord);

@@ -88,13 +88,17 @@ export const authenticateUser = async (req, res, next) => {
 
 export const preventLoggedInAccess = (req, res, next) => {
   const token = req.cookies?.token;
+
   if (!token) return next();
 
   try {
     const decoded = jwt.verify(token, process.env.JWT_SECRET_KEY);
-    if (decoded) return res.redirect('/user/home');
+
+    if (decoded) {
+      return res.redirect('/user/home');
+    }
   } catch (err) {
-    
-    return next();
   }
+
+  next();
 };
