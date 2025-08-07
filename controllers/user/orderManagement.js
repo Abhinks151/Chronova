@@ -357,7 +357,7 @@ export const retryPaymentController = async (req, res) => {
     }
 
     if (order.isPaid) {
-      return res.status(400).json({ success: false, message: "Order already paid" });
+      return res.status(httpStatusCode.BAD_REQUEST.code).json({ success: false, message: "Order already paid" });
     }
 
     const razorpayOrder = await razorpay.orders.create({
@@ -372,7 +372,7 @@ export const retryPaymentController = async (req, res) => {
     };
     await order.save();
 
-    res.status(200).json({
+    res.status(httpStatusCode.OK.code).json({
       success: true,
       order: {
         orderId: order.orderId,
@@ -389,6 +389,6 @@ export const retryPaymentController = async (req, res) => {
     });
   } catch (err) {
     console.error("Retry Payment Error:", err);
-    res.status(500).json({ success: false, message: "Something went wrong" });
+    res.status(httpStatusCode.INTERNAL_SERVER_ERROR.code).json({ success: false, message: "Something went wrong" });
   }
 };

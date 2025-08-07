@@ -7,6 +7,7 @@ import {
   updateItemPaymentStatus as updateItemPaymentStatusService,
   getOrderPaymentStatus as getOrderPaymentStatusService,
 } from '../../services/adminOrderManagementService/orderService.js';
+import httpStatusCode from "../../utils/httpStatusCode.js"
 
 
 export const getOrders = async (req, res) => {
@@ -77,7 +78,7 @@ export const getOrders = async (req, res) => {
     })
   } catch (error) {
     console.error("Error fetching orders:", error)
-    res.status(500).render("error", { message: "Error fetching orders" })
+    res.status(httpStatusCode.INTERNAL_SERVER_ERROR.code).render("error", { message: "Error fetching orders" })
   }
 }
 
@@ -125,7 +126,7 @@ export const getOrdersData = async (req, res) => {
     const totalOrders = await Order.countDocuments(searchQuery);
     const totalPages = Math.ceil(totalOrders / limit);
 
-    res.status(200).json({
+    res.status(httpStatusCode.OK.code).json({
       orders,
       totalOrders,
       currentPage: page,
@@ -134,7 +135,7 @@ export const getOrdersData = async (req, res) => {
     });
   } catch (error) {
     console.error("Error fetching orders (API):", error);
-    res.status(500).json({ error: "Failed to fetch orders" });
+    res.status(httpStatusCode.INTERNAL_SERVER_ERROR.code).json({ error: "Failed to fetch orders" });
   }
 };
 
@@ -146,7 +147,7 @@ export const getOrderDetails = async (req, res) => {
     const { orderId } = req.params
 
     if (!orderId) {
-      return res.status(400).json({ error: "Order ID is required" })
+      return res.status(httpStatusCode.BAD_REQUEST.code).json({ error: "Order ID is required" })
     }
 
     const order = await Order.findById(orderId)
@@ -166,7 +167,7 @@ export const getOrderDetails = async (req, res) => {
     })
   } catch (error) {
     console.error("Error fetching order details:", error)
-    res.status(500).json({ error: "Error fetching order details" })
+    res.status(httpStatusCode.INTERNAL_SERVER_ERROR.code).json({ error: "Error fetching order details" })
   }
 }
 
@@ -176,7 +177,7 @@ export const updateOrderStatus = async (req, res) => {
     const { status } = req.body;
 
     if (!orderId || !status) {
-      return res.status(400).json({ error: "Order ID and status are required" });
+      return res.status(httpStatusCode.BAD_REQUEST.code).json({ error: "Order ID and status are required" });
     }
 
     const validStatuses = [
@@ -185,7 +186,7 @@ export const updateOrderStatus = async (req, res) => {
       "Return Approved", "Partially Return Approved"
     ];
     if (!validStatuses.includes(status)) {
-      return res.status(400).json({ error: "Invalid status" });
+      return res.status(httpStatusCode.BAD_REQUEST.code).json({ error: "Invalid status" });
     }
 
     const order = await Order.findById(orderId);
@@ -196,7 +197,7 @@ export const updateOrderStatus = async (req, res) => {
     if (status === "Delivered" ) {
       const allItemsPaid = order.items.every(item => item.paymentStatus === "Paid");
       if (!allItemsPaid) {
-        return res.status(400).json({
+        return res.status(httpStatusCode.BAD_REQUEST.code).json({
           error: "Cannot mark order as Delivered. All items must be Paid before delivery",
         });
       }
@@ -240,7 +241,7 @@ export const updateOrderStatus = async (req, res) => {
     });
   } catch (error) {
     console.error("Error updating order status:", error);
-    return res.status(500).json({ error: "Internal server error while updating order status" });
+    return res.status(httpStatusCode.INTERNAL_SERVER_ERROR.code).json({ error: "Internal server error while updating order status" });
   }
 };
 
@@ -252,11 +253,11 @@ export const updateItemStatus = async (req, res) => {
     const { status, reason } = req.body
 
     if (!orderId || !itemId) {
-      return res.status(400).json({ error: "Order ID and Item ID are required" })
+      return res.status(httpStatusCode.BAD_REQUEST.code).json({ error: "Order ID and Item ID are required" })
     }
 
     if (!status) {
-      return res.status(400).json({ error: "Status is required" })
+      return res.status(httpStatusCode.BAD_REQUEST.code).json({ error: "Status is required" })
     }
 
     const validItemStatuses = [
@@ -269,7 +270,7 @@ export const updateItemStatus = async (req, res) => {
       "Return Rejected",
     ]
     if (!validItemStatuses.includes(status)) {
-      return res.status(400).json({ error: "Invalid item status" })
+      return res.status(httpStatusCode.BAD_REQUEST.code).json({ error: "Invalid item status" })
     }
 
     const order = await Order.findById(orderId)
@@ -301,7 +302,7 @@ export const updateItemStatus = async (req, res) => {
     res.json({ message: "Item status updated successfully", order })
   } catch (error) {
     console.error("Error updating item status:", error)
-    res.status(500).json({ error: "Error updating item status" })
+    res.status(httpStatusCode.INTERNAL_SERVER_ERROR.code).json({ error: "Error updating item status" })
   }
 }
 
@@ -312,7 +313,7 @@ export const approveReturn = async (req, res) => {
     // console.log("Incoming orderId:", orderId, "| itemId:", itemId);
 
     if (!orderId || !itemId) {
-      return res.status(400).json({ error: "Order ID and Item ID are required" });
+      return res.status(httpStatusCode.BAD_REQUEST.code).json({ error: "Order ID and Item ID are required" });
     }
 
     const order = await Order.findById(orderId).populate("userId", "name email");
@@ -326,7 +327,7 @@ export const approveReturn = async (req, res) => {
     }
 
     if (item.status !== "Return Requested") {
-      return res.status(400).json({ error: "Item is not in return request state" });
+      return res.status(httpStatusCode.BAD_REQUEST.code).json({ error: "Item is not in return request state" });
     }
 
     await Products.findByIdAndUpdate(item.productId, {
@@ -403,7 +404,7 @@ export const approveReturn = async (req, res) => {
     });
   } catch (error) {
     console.error("Error approving return:", error);
-    return res.status(500).json({ error: "Internal server error during return approval" });
+    return res.status(httpStatusCode.INTERNAL_SERVER_ERROR.code).json({ error: "Internal server error during return approval" });
   }
 };
 
@@ -414,11 +415,11 @@ export const rejectReturn = async (req, res) => {
     const { rejectionReason } = req.body
 
     if (!orderId || !itemId) {
-      return res.status(400).json({ error: "Order ID and Item ID are required" })
+      return res.status(httpStatusCode.BAD_REQUEST.code).json({ error: "Order ID and Item ID are required" })
     }
 
     if (!rejectionReason || rejectionReason.trim().length === 0) {
-      return res.status(400).json({ error: "Rejection reason is required" })
+      return res.status(httpStatusCode.BAD_REQUEST.code).json({ error: "Rejection reason is required" })
     }
 
     const order = await Order.findById(orderId).populate("userId", "name email")
@@ -432,7 +433,7 @@ export const rejectReturn = async (req, res) => {
     }
 
     if (item.status !== "Return Requested") {
-      return res.status(400).json({ error: "Item is not in return request state" })
+      return res.status(httpStatusCode.BAD_REQUEST.code).json({ error: "Item is not in return request state" })
     }
 
     item.status = "Return Rejected"
@@ -462,7 +463,7 @@ export const rejectReturn = async (req, res) => {
     })
   } catch (error) {
     console.error("Error rejecting return:", error)
-    return res.status(500).json({ error: "Internal server error during return rejection" })
+    return res.status(httpStatusCode.INTERNAL_SERVER_ERROR.code).json({ error: "Internal server error during return rejection" })
   }
 }
 
@@ -472,11 +473,11 @@ export const cancelOrder = async (req, res) => {
     const { reason } = req.body
 
     if (!orderId) {
-      return res.status(400).json({ error: "Order ID is required" })
+      return res.status(httpStatusCode.BAD_REQUEST.code).json({ error: "Order ID is required" })
     }
 
     if (!reason) {
-      return res.status(400).json({ error: "Cancellation reason is required" })
+      return res.status(httpStatusCode.BAD_REQUEST.code).json({ error: "Cancellation reason is required" })
     }
 
     const order = await Order.findById(orderId)
@@ -485,7 +486,7 @@ export const cancelOrder = async (req, res) => {
     }
 
     if (order.orderStatus === "Delivered" || order.orderStatus === "Cancelled") {
-      return res.status(400).json({ error: "Cannot cancel delivered or already cancelled orders" })
+      return res.status(httpStatusCode.BAD_REQUEST.code).json({ error: "Cannot cancel delivered or already cancelled orders" })
     }
 
     order.orderStatus = "Cancelled"
@@ -518,7 +519,7 @@ export const cancelOrder = async (req, res) => {
     res.json({ message: "Order cancelled successfully", order })
   } catch (error) {
     console.error("Error cancelling order:", error)
-    res.status(500).json({ error: "Error cancelling order" })
+    res.status(httpStatusCode.INTERNAL_SERVER_ERROR.code).json({ error: "Error cancelling order" })
   }
 }
 
@@ -660,14 +661,14 @@ export const updateOrderPaymentStatus = async (req, res) => {
 
     const validStatuses = ["Pending", "Paid", "Failed", "Refunded", "Cancelled"]
     if (!validStatuses.includes(paymentStatus)) {
-      return res.status(400).json({
+      return res.status(httpStatusCode.BAD_REQUEST.code).json({
         success: false,
         error: "Invalid payment status provided",
       })
     }
 
     if (!orderId || !paymentStatus) {
-      return res.status(400).json({
+      return res.status(httpStatusCode.BAD_REQUEST.code).json({
         success: false,
         error: "Order ID and payment status are required",
       })
@@ -676,13 +677,13 @@ export const updateOrderPaymentStatus = async (req, res) => {
     const result = await updateOrderPaymentStatusService(orderId, paymentStatus, adminId)
 
     if (!result.success) {
-      return res.status(400).json({
+      return res.status(httpStatusCode.BAD_REQUEST.code).json({
         success: false,
         error: result.error,
       })
     }
 
-    res.status(200).json({
+    res.status(httpStatusCode.OK.code).json({
       success: true,
       message: result.message,
       data: {
@@ -694,7 +695,7 @@ export const updateOrderPaymentStatus = async (req, res) => {
     })
   } catch (error) {
     console.error("Error updating order payment status:", error)
-    res.status(500).json({
+    res.status(httpStatusCode.INTERNAL_SERVER_ERROR.code).json({
       success: false,
       error: "Internal server error while updating payment status",
     })
@@ -709,14 +710,14 @@ export const updateItemPaymentStatus = async (req, res) => {
 
     const validStatuses = ["Pending", "Paid", "Failed", "Refunded", "Cancelled"]
     if (!validStatuses.includes(paymentStatus)) {
-      return res.status(400).json({
+      return res.status(httpStatusCode.BAD_REQUEST.code).json({
         success: false,
         error: "Invalid payment status provided",
       })
     }
 
     if (!orderId || !itemId || !paymentStatus) {
-      return res.status(400).json({
+      return res.status(httpStatusCode.BAD_REQUEST.code).json({
         success: false,
         error: "Order ID, item ID, and payment status are required",
       })
@@ -725,13 +726,13 @@ export const updateItemPaymentStatus = async (req, res) => {
     const result = await updateItemPaymentStatusService(orderId, itemId, paymentStatus, adminId)
 
     if (!result.success) {
-      return res.status(400).json({
+      return res.status(httpStatusCode.BAD_REQUEST.code).json({
         success: false,
         error: result.error,
       })
     }
 
-    res.status(200).json({
+    res.status(httpStatusCode.OK.code).json({
       success: true,
       message: result.message,
       data: {
@@ -744,7 +745,7 @@ export const updateItemPaymentStatus = async (req, res) => {
     })
   } catch (error) {
     console.error("Error updating item payment status:", error)
-    res.status(500).json({
+    res.status(httpStatusCode.INTERNAL_SERVER_ERROR.code).json({
       success: false,
       error: "Internal server error while updating item payment status",
     })
@@ -756,7 +757,7 @@ export const getOrderPaymentStatusController = async (req, res) => {
     const { orderId } = req.params
 
     if (!orderId) {
-      return res.status(400).json({
+      return res.status(httpStatusCode.BAD_REQUEST.code).json({
         success: false,
         error: "Order ID is required",
       })
@@ -771,13 +772,13 @@ export const getOrderPaymentStatusController = async (req, res) => {
       })
     }
 
-    res.status(200).json({
+    res.status(httpStatusCode.OK.code).json({
       success: true,
       data: result.data,
     })
   } catch (error) {
     console.error("Error fetching order payment status:", error)
-    res.status(500).json({
+    res.status(httpStatusCode.INTERNAL_SERVER_ERROR.code).json({
       success: false,
       error: "Internal server error while fetching payment status",
     })

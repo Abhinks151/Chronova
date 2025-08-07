@@ -53,7 +53,7 @@ export const getCategoryOfferManagementPageData = async (req, res) => {
     const categories = await getActiveCategories();
     // console.log('Data::',data)
     // console.log('Category::',categories)
-    return res.status(200).json({
+    return res.status(httpStatusCode.OK.code).json({
       success: true,
       ...data,
       categories
@@ -61,7 +61,7 @@ export const getCategoryOfferManagementPageData = async (req, res) => {
 
   } catch (error) {
     console.error("Error in getCategoryOfferManagementPageData:", error.message);
-    return res.status(500).json({
+    return res.status(httpStatusCode.INTERNAL_SERVER_ERROR.code).json({
       success: false,
       message: error.message || "Something went wrong"
     });

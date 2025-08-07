@@ -8,6 +8,7 @@ import passport from "passport";
 import nocache from "nocache";
 import session from "express-session";
 // import MongoStore from 'connect-mongo';
+import httpStatusCode from "./utils/httpStatusCode.js"
 
 // import csurf from "csurf";
 
@@ -90,7 +91,7 @@ app.use((req, res) => {
 //Error
 app.use((err, req, res, next) => {
   console.log(err);
-  res.status(500).render("Layouts/error", {
+  res.status(httpStatusCode.INTERNAL_SERVER_ERROR.code).render("Layouts/error", {
     statusCode: 500,
     message: "Internal Server Error",
     description: "Something went wrong. Please try again later.",

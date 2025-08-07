@@ -16,6 +16,9 @@ import {
 
 import validate from '../../utils/validationRules.js';
 import { authenticateUser, preventLoggedInAccess } from '../../middlewares/userAuthMiddleware.js';
+import httpStatusCode from "../../utils/httpStatusCode.js"
+
+
 
 const userAuthRouter = express.Router();
 
@@ -42,8 +45,8 @@ userAuthRouter.get('/logout', userLogout);
 
 
 
-// userAuthRouter.get('/home', authenticateUser, (req, res) => res.status(200).render('Layouts/home'));
-// userAuthRouter.get('/', (req, res) => res.status(200).render('Layouts/home'));
+// userAuthRouter.get('/home', authenticateUser, (req, res) => res.status(httpStatusCode.OK.code).render('Layouts/home'));
+// userAuthRouter.get('/', (req, res) => res.status(httpStatusCode.OK.code).render('Layouts/home'));
 
 export default userAuthRouter;
 
