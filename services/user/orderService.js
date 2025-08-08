@@ -15,6 +15,7 @@ import * as crypto from "crypto";
 
 import { logger } from "../../config/logger.js";
 import { logStockChange } from "../../utils/logStockRegistry.js";
+// import { ProductOffer } from "../../models/productOffer.js";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -511,7 +512,7 @@ export const cancelEntireOrderService = async (userId, orderId) => {
 
 
 
-  
+
 
   for (const item of order.items) {
     await Products.findByIdAndUpdate(item.productId, {
@@ -575,6 +576,40 @@ export const cancelSingleItemService = async (userId, orderId, itemId) => {
   await Products.findByIdAndUpdate(item.productId, {
     $inc: { stockQuantity: item.quantity },
   });
+
+
+
+  // //
+  // // practicing anpins questions
+
+  // const now = new Date();
+  // const product = await Products.findOne({ _id: itemId, stockQuantity: { $lt: 5 } });
+  // const offer = await ProductOffer.findOne({
+  //   products: { $in: [itemId] },
+  //   startDate: { $lte: now },
+  //   endDate: { $gte: now },
+  //   isActive: true,
+  //   isDeleted: false
+  // });
+
+  // const refundAmount = product && offer ?
+  //   item.netTotalAmount * item.quantity * (25 / 100)
+  //   : item.netTotalAmount * item.quantity
+
+  // //
+
+
+
+
+
+
+
+
+
+
+
+
+
 
   item.status = "Cancelled";
   item.cancelReason = "Cancelled by user";

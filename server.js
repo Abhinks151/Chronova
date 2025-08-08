@@ -84,7 +84,7 @@ app.get("/error", (req, res, next) => {
 
 
 app.use((req, res) => {
-  res.status(404).render('Layouts/404');
+  res.status(httpStatusCode.NOT_FOUND.code).render('Layouts/404');
 });
 
 
@@ -92,7 +92,7 @@ app.use((req, res) => {
 app.use((err, req, res, next) => {
   console.log(err);
   res.status(httpStatusCode.INTERNAL_SERVER_ERROR.code).render("Layouts/error", {
-    statusCode: 500,
+    statusCode: httpStatusCode.INTERNAL_SERVER_ERROR.code,
     message: "Internal Server Error",
     description: "Something went wrong. Please try again later.",
   });

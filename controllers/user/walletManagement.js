@@ -1,12 +1,15 @@
 import { getFilteredWalletHistoryService, getWalletHistoryService } from "../../services/user/walletService.js";
-import httpStatusCOde from '../../utils/httpStatusCode.js';
+import httpStatusCode from '../../utils/httpStatusCode.js';
 
 export const getWalletPage = (req, res) => {
   try {
     res.render('Layouts/users/wallet');
   } catch (error) {
     console.error("Error in getWalletPage:", error);
-    res.status(httpStatusCOde.INTERNAL_SERVER_ERROR.code).json({ message: "Internal Server Error" });
+    res.status(httpStatusCode.INTERNAL_SERVER_ERROR.code).json({ 
+      message: "Internal Server Error",
+      success: false 
+    });
   }
 }
 
@@ -14,8 +17,8 @@ export const getWalletHistory = async (req, res) => {
   try {
     const userId = req.user._id || req.user.id;
 
-    if(!userId) {
-      return res.status(httpStatusCOde.BAD_REQUEST.code).json({
+    if (!userId) {
+      return res.status(httpStatusCode.BAD_REQUEST.code).json({
         message: "User ID is required",
         success: false,
         data: null
@@ -25,55 +28,87 @@ export const getWalletHistory = async (req, res) => {
     const data = await getWalletHistoryService(userId);
 
     if (!data) {
-      return res.status(httpStatusCOde.NOT_FOUND.code).json({
-        message: "Wallet is empty",
+      return res.status(httpStatusCode.NOT_FOUND.code).json({
+        message: "Wallet not found",
         success: false,
-        data: [],
+        data: {
+          balance: 0,
+          transactions: []
+        },
       });
     }
-    res.json({
+
+    res.status(httpStatusCode.OK.code).json({
       message: "Wallet history retrieved successfully",
       data,
       success: true
-    })
+    });
   } catch (error) {
     console.error("Error in getWalletHistory:", error);
-    res.status(httpStatusCOde.INTERNAL_SERVER_ERROR.code).json({ message: "Internal Server Error" });
-
+    res.status(httpStatusCode.INTERNAL_SERVER_ERROR.code).json({ 
+      message: "Internal Server Error",
+      success: false,
+      data: null
+    });
   }
 }
-
 
 export const getFilteredWalletHistory = async (req, res) => {
   try {
     const userId = req.user._id || req.user.id;
-    const { page = 1, limit = 10, search = '', type = '', sort = 'desc' } = req.query;
+    const { 
+      page = 1, 
+      limit = 10, 
+      search = '', 
+      type = '', 
+      sort = 'desc' 
+    } = req.query;
 
     if (!userId) {
-      return res.status(httpStatusCOde.BAD_REQUEST.code).json({
+      return res.status(httpStatusCode.BAD_REQUEST.code).json({
         message: "User ID is required",
         success: false,
         data: null
       });
     }
 
+    // Validate pagination parameters
+    const pageNum = Math.max(1, parseInt(page) || 1);
+    const limitNum = Math.min(100, Math.max(1, parseInt(limit) || 10));
+
+    // Validate sort parameter
+    const sortOrder = ['asc', 'desc'].includes(sort) ? sort : 'desc';
+
+    // Validate type parameter
+    const typeFilter = ['credit', 'debit', ''].includes(type) ? type : '';
+
     const filters = {
-      page: parseInt(page),
-      limit: parseInt(limit),
-      search,
-      type,
-      sort
+      page: pageNum,
+      limit: limitNum,
+      search: search.trim(),
+      type: typeFilter,
+      sort: sortOrder
     };
 
     const data = await getFilteredWalletHistoryService(userId, filters);
 
-    res.status(httpStatusCOde.OK.code).json({
+    res.status(httpStatusCode.OK.code).json({
       message: "Filtered wallet transactions fetched successfully",
       success: true,
       data
     });
   } catch (error) {
     console.error("Error in getFilteredWalletHistory:", error);
-    res.status(httpStatusCOde.INTERNAL_SERVER_ERROR.code).json({ message: "Internal Server Error" });
+    res.status(httpStatusCode.INTERNAL_SERVER_ERROR.code).json({ 
+      message: error.message || "Internal Server Error",
+      success: false,
+      data: {
+        transactions: [],
+        total: 0,
+        currentPage: 1,
+        totalPages: 0,
+        balance: 0
+      }
+    });
   }
 };
