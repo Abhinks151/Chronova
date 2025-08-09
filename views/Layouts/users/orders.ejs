@@ -227,6 +227,14 @@
         <div id="orders-container" class="orders-list" style="display: none">
           <!-- Orders will be dynamically populated here -->
         </div>
+        <!-- Pagination Container -->
+        <div
+          id="pagination-container"
+          class="pagination-container"
+          style="display: none"
+        >
+          <!-- Pagination controls will be dynamically populated here -->
+        </div>
       </div>
     </div>
 
@@ -318,6 +326,10 @@
       let currentReturnOrder = null;
       let currentReturnItem = null;
       let isEntireOrderReturn = false;
+      let currentPage = 1;
+      let totalPages = 1;
+      let isLoading = false;
+      const itemsPerPage = 10;
 
       // Enhanced status configuration for badges
       const statusConfig = {
@@ -416,17 +428,46 @@
       }
 
       // Load orders from server
-      async function loadOrders() {
+      async function loadOrders(page = 1, preserveFilters = false) {
+        if (isLoading) return;
+
         try {
+          isLoading = true;
           showLoading();
-          const response = await axios.get("/user/orders/data");
-          orders = response.data.orders || [];
+
+          const searchTerm = preserveFilters
+            ? document.getElementById("search-input").value
+            : "";
+          const statusFilter = preserveFilters
+            ? document.getElementById("status-filter").value
+            : "all";
+
+          const params = new URLSearchParams({
+            page: page.toString(),
+            limit: itemsPerPage.toString(),
+            status: statusFilter,
+            search: searchTerm,
+          });
+
+          const response = await axios.get(
+            `/user/orders/data?${params.toString()}`
+          );
+          const data = response.data;
+
+          orders = data.orders || [];
           filteredOrders = [...orders];
+          currentPage = data.pagination.currentPage;
+          totalPages = data.pagination.totalPages;
 
           if (orders.length === 0) {
-            showEmptyState();
+            showEmptyState(
+              searchTerm || statusFilter !== "all"
+                ? "No orders match your current filters."
+                : null
+            );
           } else {
             displayOrders();
+            updatePaginationControls(data.pagination);
           }
         } catch (error) {
           console.error("Error loading orders:", error);
@@ -434,45 +475,94 @@
             error.response?.data?.message ||
               "Failed to load orders. Please try again."
           );
+        } finally {
+          isLoading = false;
         }
       }
 
       // Filter orders based on search and status
       function filterOrders() {
-        const searchTerm = document
-          .getElementById("search-input")
-          .value.toLowerCase();
-        const statusFilter = document.getElementById("status-filter").value;
+        // Reset to page 1 when filtering
+        currentPage = 1;
+        loadOrders(1, true);
+      }
 
-        filteredOrders = orders.filter((order) => {
-          const matchesSearch =
-            !searchTerm ||
-            order.orderId.toLowerCase().includes(searchTerm) ||
-            order.items.some(
-              (item) =>
-                item.productName.toLowerCase().includes(searchTerm) ||
-                item.brand.toLowerCase().includes(searchTerm)
-            );
+      function updatePaginationControls(pagination) {
+        const container = document.getElementById("pagination-container");
+        if (!container) return;
 
-          const matchesStatus =
-            statusFilter === "all" ||
-            order.orderStatus === statusFilter ||
-            order.items.some((item) => item.status === statusFilter);
-
-          return matchesSearch && matchesStatus;
-        });
-
-        if (
-          filteredOrders.length === 0 &&
-          (searchTerm || statusFilter !== "all")
-        ) {
-          showEmptyState("No orders match your current filters.");
-        } else if (filteredOrders.length === 0) {
-          showEmptyState();
-        } else {
-          hideEmptyState();
-          displayOrders();
+        if (pagination.totalPages <= 1) {
+          container.style.display = "none";
+          return;
         }
+
+        container.style.display = "flex";
+        container.innerHTML = createPaginationHTML(pagination);
+      }
+
+      function createPaginationHTML(pagination) {
+        const { currentPage, totalPages, hasPrev, hasNext } = pagination;
+
+        let html = `
+    <div class="pagination-info">
+      Page ${currentPage} of ${totalPages}
+    </div>
+    <div class="pagination-controls">
+  `;
+
+        // Previous button
+        html += `
+    <button class="pagination-btn ${!hasPrev ? "disabled" : ""}" 
+            onclick="changePage(${currentPage - 1})" 
+            ${!hasPrev ? "disabled" : ""}>
+      <i class="fas fa-chevron-left"></i>
+    </button>
+  `;
+
+        // Page numbers
+        const startPage = Math.max(1, currentPage - 2);
+        const endPage = Math.min(totalPages, currentPage + 2);
+
+        if (startPage > 1) {
+          html += `<button class="pagination-btn" onclick="changePage(1)">1</button>`;
+          if (startPage > 2) {
+            html += `<span class="pagination-dots">...</span>`;
+          }
+        }
+
+        for (let i = startPage; i <= endPage; i++) {
+          html += `
+      <button class="pagination-btn ${i === currentPage ? "active" : ""}" 
+              onclick="changePage(${i})">
+        ${i}
+      </button>
+    `;
+        }
+
+        if (endPage < totalPages) {
+          if (endPage < totalPages - 1) {
+            html += `<span class="pagination-dots">...</span>`;
+          }
+          html += `<button class="pagination-btn" onclick="changePage(${totalPages})">${totalPages}</button>`;
+        }
+
+        // Next button
+        html += `
+    <button class="pagination-btn ${!hasNext ? "disabled" : ""}" 
+            onclick="changePage(${currentPage + 1})" 
+            ${!hasNext ? "disabled" : ""}>
+      <i class="fas fa-chevron-right"></i>
+    </button>
+  `;
+
+        html += `</div>`;
+        return html;
+      }
+
+      function changePage(page) {
+        if (page < 1 || page > totalPages || page === currentPage || isLoading)
+          return;
+        loadOrders(page, true);
       }
 
       // Clear all filters
@@ -487,7 +577,8 @@
         const container = document.getElementById("orders-container");
         container.innerHTML = "";
 
-        filteredOrders.forEach((order) => {
+        // Use orders directly since backend handles filtering now
+        orders.forEach((order) => {
           const orderElement = createOrderElement(order);
           container.appendChild(orderElement);
         });

@@ -147,7 +147,7 @@ export const getOrderMangementPage = (req, res) => {
 export const getOrderMangementPageData = async (req, res) => {
   try {
     const userId = req.user._id || req.user.id;
-
+    
     if (!userId) {
       return res.status(httpStatusCode.UNAUTHORIZED.code).json({
         success: false,
@@ -155,11 +155,16 @@ export const getOrderMangementPageData = async (req, res) => {
       });
     }
 
-    const orders = await orderListByUserId(userId);
+    const page = parseInt(req.query.page) || 1;
+    const limit = parseInt(req.query.limit) || 10;
+    const statusFilter = req.query.status || 'all';
+    const searchTerm = req.query.search || '';
+
+    const result = await orderListByUserId(userId, page, limit, statusFilter, searchTerm);
 
     res.json({
       success: true,
-      orders,
+      ...result,
       returnReason,
     });
   } catch (error) {

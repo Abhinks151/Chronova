@@ -415,28 +415,51 @@ export const placeOrderService = async (userId, orderData, req, isVerifiedOnline
 
 
 
-
-export const orderListByUserId = async (userId) => {
+export const orderListByUserId = async (userId, page = 1, limit = 10, statusFilter = 'all', searchTerm = '') => {
   try {
-    const orders = await Order.find({ userId })
-      .populate(
-        "items.productId",
-        "productName brand images finalPrice salePrice price"
-      )
-      .populate("shippingAddress")
+    const skip = (page - 1) * limit;
+    
+    let query = { userId };
+    
+    if (statusFilter !== 'all') {
+      query.$or = [
+        { orderStatus: statusFilter },
+        { 'items.status': statusFilter }
+      ];
+    }
+    
+    if (searchTerm) {
+      query.$or = [
+        ...(query.$or || []),
+        { orderId: { $regex: searchTerm, $options: 'i' } },
+        { 'items.productName': { $regex: searchTerm, $options: 'i' } },
+        { 'items.brand': { $regex: searchTerm, $options: 'i' } }
+      ];
+    }
+
+    const totalOrders = await Order.countDocuments(query);
+    
+    const orders = await Order.find(query)
       .sort({ createdAt: -1 })
+      .skip(skip)
+      .limit(limit)
+      .populate("userId", "name email")
+      .populate("items.productId", "productName images brand category")
       .lean();
 
-    return orders.map((order) => ({
-      ...order,
-      items: order.items.map((item) => ({
-        ...item,
-        productId: item.productId?._id || item.productId,
-      })),
-    }));
+    return {
+      orders,
+      pagination: {
+        currentPage: page,
+        totalPages: Math.ceil(totalOrders / limit),
+        totalOrders,
+        limit,
+        hasNext: page < Math.ceil(totalOrders / limit),
+        hasPrev: page > 1
+      }
+    };
   } catch (error) {
-    console.error("Error fetching orders:", error);
-    throw new Error("Failed to fetch orders");
+    throw new Error(`Error fetching orders: ${error.message}`);
   }
 };
 
