@@ -132,17 +132,29 @@ export const getEditProducts = async (req, res) => {
     const product = await getProduct(id);
 
     const brands = [
-      { _id: 'Fossil', name: 'Fossil' },
-      { _id: 'Casio', name: 'Casio' },
-      { _id: 'Titan', name: 'Titan' },
-      { _id: 'Timex', name: 'Timex' },
       { _id: 'Rolex', name: 'Rolex' },
+      { _id: "Omega", name: "Omega" },
       { _id: 'Seiko', name: 'Seiko' },
+      { _id: 'Casio', name: 'Casio' },
       { _id: 'Tissot', name: 'Tissot' },
-      { _id: 'Michael Kors', name: 'Michael Kors' }
+      { _id: 'Citizen', name: 'Citizen' },
+      { _id: 'TAG Heuer', name: 'TAG Heuer' },
+      { _id: 'Fossil', name: 'Fossil' },
+      { _id: 'Apple', name: 'Apple' },
+      { _id: 'Samsung', name: 'Samsung' },
     ];
 
-    const types = ['Analog', 'Digital', 'Smart', 'Chronograph'];
+    const types = [
+      'Analog',
+      'Digital',
+      'Smart',
+      'Hybrid',
+      'Automatic',
+      'Mechanical',
+      'Quartz',
+      'Chronograph',
+      'Skeleton'
+    ];
 
     if (!product) {
       return res.status(httpStatusCode.NOT_FOUND.code).json({

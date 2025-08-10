@@ -53,11 +53,11 @@
       </div>
 
       <!-- Price Range Filter Inputs -->
-      <div class="filter-group">
+      <!-- <div class="filter-group">
         <label class="filter-label">Price Range:</label>
         <input type="number" id="minPrice" class="price-input" placeholder="Min ₹" />
         <input type="number" id="maxPrice" class="price-input" placeholder="Max ₹" />
-      </div>
+      </div> -->
 
       <!-- Sort Buttons for different sorting options -->
       <div class="sort-group">
@@ -495,8 +495,8 @@ function viewProductDetails(productId) {
 
   const specifications = product.specifications || {};
 
-  const discount = product.price !== product.salePrice
-    ? `${Math.round(((product.price - product.salePrice) / product.price) * 100)}%`
+  const discount = product.price !== product.offer.offerPrice
+    ? `${Math.round(((product.price - product.offer.offerPrice) / product.price) * 100)}%`
     : '0%';
 
   modalBody.innerHTML = `
@@ -519,8 +519,8 @@ function viewProductDetails(productId) {
 
 
           <div class="price-info">
-            <span class="detail-sale-price">₹${formatPrice(product.salePrice)}</span>
-            ${product.price !== product.salePrice ? 
+            <span class="detail-sale-price">₹${formatPrice(product.offer.offerPrice)}</span>
+            ${product.price !== product.offer.offerPrice ? 
               `<span class="detail-original-price">₹${formatPrice(product.price)}</span>` : ''}
           </div>
 
@@ -564,7 +564,7 @@ function viewProductDetails(productId) {
           </div>
           <div class="detail-item">
             <span class="detail-label">Sale Price:</span>
-            <span class="detail-value">₹${formatPrice(product.salePrice)}</span>
+            <span class="detail-value">₹${formatPrice(product.offer.offerPrice)}</span>
           </div>
           <div class="detail-item">
             <span class="detail-label">Discount:</span>

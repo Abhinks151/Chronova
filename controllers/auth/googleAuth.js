@@ -1,5 +1,8 @@
 import passport from "passport";
 import { generateToken } from "../../utils/generateToken.js";
+import httpStatusCode from "../../utils/httpStatusCode.js"
+
+
 
 export const googleAuth = passport.authenticate('google', {
   scope: ['profile', 'email'],
@@ -11,7 +14,7 @@ export const googleCallback = async (req, res, next) => {
     try {
       if (err) {
         console.error('Passport error:', err);
-        return res.status(500).render('Layouts/userLogin', {
+        return res.status(httpStatusCode.INTERNAL_SERVER_ERROR.code).render('Layouts/userLogin', {
           title: "Login",
           success: false,
           errors: 'Something went wrong. Please try again.'
@@ -19,7 +22,7 @@ export const googleCallback = async (req, res, next) => {
       }
 
       if (!user) {
-        return res.status(400).render('Layouts/userLogin', {
+        return res.status(httpStatusCode.BAD_REQUEST.code).render('Layouts/userLogin', {
           title: "Login",
           success: false,
           errors: {email : 'user is blocked by admin'}
@@ -38,7 +41,7 @@ export const googleCallback = async (req, res, next) => {
       res.redirect('/user/products');
     } catch (err) {
       console.error('OAuth error:', err);
-      res.status(500).render('Layouts/userLogin', {
+      res.status(httpStatusCode.INTERNAL_SERVER_ERROR.code).render('Layouts/userLogin', {
         title: "Login",
         success: false,
         errors: 'Something went wrong. Please try again.'

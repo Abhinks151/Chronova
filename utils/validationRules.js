@@ -14,15 +14,21 @@ const validationSchemas = {
   email: body('email')
     .notEmpty().withMessage('Email is required')
     .isEmail().withMessage('Invalid email address'),
-
+    
   password: body('password')
     .notEmpty().withMessage('Password is required')
-    .isLength({ min: 6 }).withMessage('Password must be at least 6 characters'),
+    .isLength({ min: 6 }).withMessage('Password must be at least 6 characters')
+    .isAlphanumeric().withMessage('Password must contain only letters and numbers'),
 
   confirmPassword: body('confirmPassword')
     .notEmpty().withMessage('Confirm password is required')
-    .custom((value, { req }) => value === req.body.password)
-    .withMessage('Passwords do not match'),
+    .custom((value, { req }) => {
+      if (value !== req.body.password) {
+        throw new Error('Passwords do not match');
+      }
+      return true;
+    })
+
 };
 
 function validate(fields = []) {

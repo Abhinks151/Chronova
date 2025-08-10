@@ -3,12 +3,15 @@ import { Category } from "../../models/category.js";
 import { Products } from "../../models/products.js";
 
 export const getActiveProducts = async () => {
-  return await Products.aggregate([
+  const products = await Products.aggregate([
     {
       $match: {
         isBlocked: false,
         isDeleted: false
       }
+    },
+    {
+      $unwind: "$category"
     },
     {
       $lookup: {
@@ -19,54 +22,36 @@ export const getActiveProducts = async () => {
       }
     },
     {
+      $unwind: "$categoryDetails"
+    },
+    {
       $match: {
-        "categoryDetails.isBlocked": { $ne: true },
-        "categoryDetails.isDeleted": { $ne: true }
+        "categoryDetails.isBlocked": false,
+        "categoryDetails.isDeleted": false
       }
+    },
+    {
+      $group: {
+        _id: "$_id",
+        doc: { $first: "$$ROOT" }
+      }
+    },
+    {
+      $replaceRoot: { newRoot: "$doc" }
     }
   ]);
+
+  return products;
 };
+
 
 export const getProductByCategoryId = async (categoryId) => {
   try {
-    const products = await Products.aggregate([
-      { $match: {
-        isBlocked: false,
-        isDeleted: false,
-        category:{$in:[new mongoose.Types.ObjectId(categoryId)]}
-      } },
-      {
-        $lookup: {
-          from: "categories",
-          localField: "category",
-          foreignField: "_id",
-          as: "categoryDetails",
-        },
-      },
-      {
-        $addFields: {
-          validCategories: {
-            $filter: {
-              input: "$categoryDetails",
-              as: "cat",
-              cond: {
-                $and: [
-                  { $eq: ["$$cat.isBlocked", false] },
-                  { $eq: ["$$cat.isDeleted", false] },
-                ],
-              },
-            },
-          },
-        },
-      },
-      {
-        $match: {
-          $expr: {
-            $eq: [{ $size: "$category" }, { $size: "$validCategories" }],
-          },
-        },
-      },
-    ]);
+    const products = await Products.find({
+      isDeleted: false,
+      isBlocked: false,
+      category: { $in: [categoryId] }
+    }).lean();
 
     return products;
   } catch (error) {

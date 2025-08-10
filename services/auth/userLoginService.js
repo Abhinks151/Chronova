@@ -6,18 +6,20 @@ export const loginUserService = async (email, password) => {
   try {
     const user = await User.findOne({ email: email.toLowerCase() });
 
-    if (user.isGoogleUser) {
-      return {
-        success: false,
-        errors: { email: 'Please login with Google' }
-      };
-    }
     if (!user) {
       return {
         success: false,
         errors: { email: 'Invalid email or password' }
       };
     }
+
+    if (user.isGoogleUser) {
+      return {
+        success: false,
+        errors: { email: 'Please login with Google' }
+      };
+    }
+
 
     if (!user.isVerified) {
       return {
@@ -46,7 +48,7 @@ export const loginUserService = async (email, password) => {
     await user.save();
 
     // console.log(user);
-    
+
     return {
       success: true,
       token,

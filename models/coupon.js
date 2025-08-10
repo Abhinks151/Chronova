@@ -1,7 +1,7 @@
 import mongoose from "mongoose";
 import { customAlphabet } from "nanoid";
 
-const nanoid = customAlphabet("ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789", 6);
+const nanoid = customAlphabet("ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789", 8);
 
 const applicableForSchema = new mongoose.Schema(
   {

@@ -58,13 +58,17 @@ export const addProductOfferService = async (offerData) => {
     throw new Error("All fields are required and at least one product must be selected");
   }
 
+  if (/[^a-zA-Z0-9\s-_]/.test(name)) {
+    throw new Error("Category offer name can only include letters, numbers, spaces, hyphens, and underscores");
+  }
+
   const isExist = await ProductOffer.findOne({ name });
   if (isExist) {
     throw new Error("Product offer name already exist");
   }
 
-  if (discountPercentage <= 0 || discountPercentage > 100) {
-    throw new Error("Discount percent must be between 1 and 100");
+  if (discountPercentage <= 0 || discountPercentage > 99) {
+    throw new Error("Discount percent must be between 1 and 99");
   }
 
   const start = new Date(startDate);
@@ -103,6 +107,10 @@ export const editProductOfferService = async (offerId, data) => {
   if (!name || !discountPercentage || !startDate || !endDate || !Array.isArray(products) || products.length === 0) {
     logger.warn("Invalid product offer payload during edit");
     throw new Error("All fields are required and at least one product must be selected");
+  }
+
+  if (/[^a-zA-Z0-9\s-_]/.test(name)) {
+    throw new Error("Category offer name can only include letters, numbers, spaces, hyphens, and underscores");
   }
 
 

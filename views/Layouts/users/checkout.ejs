@@ -235,6 +235,98 @@
               <!-- Items will be dynamically loaded here -->
             </div>
 
+            <div class="botton-section">
+              <div class="address-section">
+                <div class="address-section-header">
+                  <h3 class="section-title">Shipping Address</h3>
+                  <button
+                    class="add-address-btn-header"
+                    onclick="openAddressModal()"
+                  >
+                    <i class="fas fa-plus"></i>
+                    Add New Address
+                  </button>
+                </div>
+
+                <!-- Address Loading -->
+                <div id="addressLoading" class="address-loading">
+                  <div class="spinner"></div>
+                  <span>Loading addresses...</span>
+                </div>
+
+                <!-- Address Grid -->
+                <div
+                  id="addressGrid"
+                  class="address-grid"
+                  style="display: none"
+                >
+                  <!-- Addresses will be loaded here -->
+                </div>
+
+                <!-- Empty Address State -->
+                <div
+                  id="emptyAddress"
+                  class="address-empty"
+                  style="display: none"
+                >
+                  <div class="address-empty-icon">
+                    <i class="fas fa-map-marker-alt"></i>
+                  </div>
+                  <h4>No addresses found</h4>
+                  <p>Add your first address to continue</p>
+                  <button class="add-address-btn" onclick="openAddressModal()">
+                    <i class="fas fa-plus"></i>
+                    Add Address
+                  </button>
+                </div>
+              </div>
+
+              <div class="payment-section">
+                <h3 class="section-title">Payment Method</h3>
+                <div class="payment-options">
+                  <div class="payment-option">
+                    <input
+                      type="radio"
+                      id="cod"
+                      name="paymentMethod"
+                      value="cod"
+                      checked
+                    />
+                    <label for="cod" class="payment-label">
+                      <div class="payment-icon">
+                        <i class="fas fa-money-bill-wave"></i>
+                      </div>
+                      <div class="payment-details">
+                        <span class="payment-title">Cash on Delivery</span>
+                        <span class="payment-description"
+                          >Pay when you receive your order</span
+                        >
+                      </div>
+                    </label>
+                  </div>
+                  <div class="payment-option">
+                    <input
+                      type="radio"
+                      id="online"
+                      name="paymentMethod"
+                      value="online"
+                    />
+                    <label for="online" class="payment-label">
+                      <div class="payment-icon">
+                        <i class="fas fa-credit-card"></i>
+                      </div>
+                      <div class="payment-details">
+                        <span class="payment-title">Online Payment</span>
+                        <span class="payment-description"
+                          >Pay securely with card/UPI</span
+                        >
+                      </div>
+                    </label>
+                  </div>
+                </div>
+              </div>
+            </div>
+
             <!-- Empty Cart State -->
             <div id="emptyCart" class="empty-cart" style="display: none">
               <div class="empty-cart-icon">🛒</div>
@@ -249,46 +341,6 @@
           <!-- Checkout Summary -->
           <div class="checkout-summary">
             <!-- Address Selection -->
-            <div class="address-section">
-              <div class="address-section-header">
-                <h3 class="section-title">Shipping Address</h3>
-                <button
-                  class="add-address-btn-header"
-                  onclick="openAddressModal()"
-                >
-                  <i class="fas fa-plus"></i>
-                  Add New Address
-                </button>
-              </div>
-
-              <!-- Address Loading -->
-              <div id="addressLoading" class="address-loading">
-                <div class="spinner"></div>
-                <span>Loading addresses...</span>
-              </div>
-
-              <!-- Address Grid -->
-              <div id="addressGrid" class="address-grid" style="display: none">
-                <!-- Addresses will be loaded here -->
-              </div>
-
-              <!-- Empty Address State -->
-              <div
-                id="emptyAddress"
-                class="address-empty"
-                style="display: none"
-              >
-                <div class="address-empty-icon">
-                  <i class="fas fa-map-marker-alt"></i>
-                </div>
-                <h4>No addresses found</h4>
-                <p>Add your first address to continue</p>
-                <button class="add-address-btn" onclick="openAddressModal()">
-                  <i class="fas fa-plus"></i>
-                  Add Address
-                </button>
-              </div>
-            </div>
 
             <!-- Coupon Section -->
             <div class="coupon-section">
@@ -329,53 +381,6 @@
               </div>
             </div>
 
-            <!-- Payment Method -->
-            <div class="payment-section">
-              <h3 class="section-title">Payment Method</h3>
-              <div class="payment-options">
-                <div class="payment-option">
-                  <input
-                    type="radio"
-                    id="cod"
-                    name="paymentMethod"
-                    value="cod"
-                    checked
-                  />
-                  <label for="cod" class="payment-label">
-                    <div class="payment-icon">
-                      <i class="fas fa-money-bill-wave"></i>
-                    </div>
-                    <div class="payment-details">
-                      <span class="payment-title">Cash on Delivery</span>
-                      <span class="payment-description"
-                        >Pay when you receive your order</span
-                      >
-                    </div>
-                  </label>
-                </div>
-                <div class="payment-option">
-                  <input
-                    type="radio"
-                    id="online"
-                    name="paymentMethod"
-                    value="online"
-                  />
-                  <label for="online" class="payment-label">
-                    <div class="payment-icon">
-                      <i class="fas fa-credit-card"></i>
-                    </div>
-                    <div class="payment-details">
-                      <span class="payment-title">Online Payment</span>
-                      <span class="payment-description"
-                        >Pay securely with card/UPI</span
-                      >
-                    </div>
-                  </label>
-                </div>
-              </div>
-            </div>
-
-            <!-- Order Summary -->
             <div class="order-summary">
               <h3 class="section-title">Order Summary</h3>
               <div class="summary-row">
@@ -413,6 +418,10 @@
                 Place Order
               </button>
             </div>
+
+            <!-- Payment Method -->
+
+            <!-- Order Summary -->
           </div>
         </div>
       </div>
@@ -552,12 +561,14 @@
 
           // Filter coupons based on cart amount and active status
           const cartSubtotal = calculateSubtotal();
+          const today = new Date();
+          today.setHours(0, 0, 0, 0);
           const validCoupons = availableCoupons.filter(
             (coupon) =>
               coupon.isActive &&
               !coupon.isDeleted &&
               cartSubtotal >= coupon.minimumCartAmount &&
-              new Date(coupon.expiryTime) > new Date()
+              new Date(coupon.expiryTime) > today
           );
 
           if (validCoupons.length === 0) {
@@ -585,38 +596,40 @@
             const expiryDate = new Date(coupon.expiryTime).toLocaleDateString();
 
             return `
-            <div class="coupon-card ${isSelected ? "selected" : ""}"
-                 data-coupon-id="${coupon._id}"
-                 onclick="selectCouponInModal('${coupon._id}')">
-              <div class="coupon-header">
-                <div class="coupon-code-display">
-                  <i class="fas fa-ticket-alt"></i>
-                  <span class="coupon-code-text">${coupon.coupon}</span>
-                </div>
-                <div class="coupon-radio">
-                  <input type="radio" name="selectedCoupon" value="${
-                    coupon._id
-                  }" ${isSelected ? "checked" : ""}>
-                </div>
-              </div>
-              <div class="coupon-details">
-                <div class="coupon-discount-info">
-                  <span class="discount-label">Save</span>
-                  <span class="discount-value">₹${coupon.discountAmount}</span>
-                </div>
-                <div class="coupon-conditions">
-                  <div class="condition-item">
-                    <i class="fas fa-shopping-cart"></i>
-                    <span>Min. order ₹${coupon.minimumCartAmount}</span>
+                  <div class="coupon-card ${isSelected ? "selected" : ""}"
+                       data-coupon-id="${coupon._id}"
+                       onclick="selectCouponInModal('${coupon._id}')">
+                    <div class="coupon-header">
+                      <div class="coupon-code-display">
+                        <i class="fas fa-ticket-alt"></i>
+                        <span class="coupon-code-text">${coupon.coupon}</span>
+                      </div>
+                      <div class="coupon-radio">
+                        <input type="radio" name="selectedCoupon" value="${
+                          coupon._id
+                        }" ${isSelected ? "checked" : ""}>
+                      </div>
+                    </div>
+                    <div class="coupon-details">
+                      <div class="coupon-discount-info">
+                        <span class="discount-label">Save</span>
+                        <span class="discount-value">₹${
+                          coupon.discountAmount
+                        }</span>
+                      </div>
+                      <div class="coupon-conditions">
+                        <div class="condition-item">
+                          <i class="fas fa-shopping-cart"></i>
+                          <span>Min. order ₹${coupon.minimumCartAmount}</span>
+                        </div>
+                        <div class="condition-item">
+                          <i class="fas fa-calendar"></i>
+                          <span>Valid till ${expiryDate}</span>
+                        </div>
+                      </div>
+                    </div>
                   </div>
-                  <div class="condition-item">
-                    <i class="fas fa-calendar"></i>
-                    <span>Valid till ${expiryDate}</span>
-                  </div>
-                </div>
-              </div>
-            </div>
-          `;
+                `;
           })
           .join("");
 
@@ -775,50 +788,55 @@
           .map((address) => {
             const isDefault = address.isDefault;
             return `
-              <div class="address-card ${
-                selectedAddressId === address._id ? "selected" : ""
-              }" data-address-id="${address._id}" onclick="selectAddress('${
+                    <div class="address-card ${
+                      selectedAddressId === address._id ? "selected" : ""
+                    }" data-address-id="${
               address._id
-            }')">
-                <div class="address-card-header">
-                  <div class="address-type">
-                    <i class="${
-                      iconMap[address.addressName] || "fas fa-map-marker-alt"
-                    }"></i>
-                    <span>${address.addressName}</span>
-                  </div>
-                  <div class="address-card-actions">
-                    <button class="address-action-btn edit-btn" onclick="event.stopPropagation(); editAddress('${
-                      address._id
-                    }')">
-                      Edit
-                    </button>
-                  </div>
-                </div>
-                <div class="address-info">
-                  <div class="address-name">${address.fullName}</div>
-                  <div class="address-details">
-                    ${address.addressLine}<br>
-                    ${address.city}, ${address.state} - ${address.pincode}<br>
-                    ${address.country}
-                    ${
-                      address.landmark
-                        ? `<br><span class="landmark">Near: ${address.landmark}</span>`
-                        : ""
-                    }
-                  </div>
-                  <div class="address-phone">
-                    <i class="fas fa-phone"></i>
-                    ${address.phone}
-                  </div>
-                </div>
-                <div class="address-radio">
-                  <input type="radio" name="selectedAddress" value="${
-                    address._id
-                  }" ${selectedAddressId === address._id ? "checked" : ""}>
-                </div>
-              </div>
-            `;
+            }" onclick="selectAddress('${address._id}')">
+                      <div class="address-card-header">
+                        <div class="address-type">
+                          <i class="${
+                            iconMap[address.addressName] ||
+                            "fas fa-map-marker-alt"
+                          }"></i>
+                          <span>${address.addressName}</span>
+                        </div>
+                        <div class="address-card-actions">
+                          <button class="address-action-btn edit-btn" onclick="event.stopPropagation(); editAddress('${
+                            address._id
+                          }')">
+                            Edit
+                          </button>
+                        </div>
+                      </div>
+                      <div class="address-info">
+                        <div class="address-name">${address.fullName}</div>
+                        <div class="address-details">
+                          ${address.addressLine}<br>
+                          ${address.city}, ${address.state} - ${
+              address.pincode
+            }<br>
+                          ${address.country}
+                          ${
+                            address.landmark
+                              ? `<br><span class="landmark">Near: ${address.landmark}</span>`
+                              : ""
+                          }
+                        </div>
+                        <div class="address-phone">
+                          <i class="fas fa-phone"></i>
+                          ${address.phone}
+                        </div>
+                      </div>
+                      <div class="address-radio">
+                        <input type="radio" name="selectedAddress" value="${
+                          address._id
+                        }" ${
+              selectedAddressId === address._id ? "checked" : ""
+            }>
+                      </div>
+                    </div>
+                  `;
           })
           .join("");
         addressGrid.innerHTML = addressCards;
@@ -986,10 +1004,14 @@
             selectAddress(editingAddressId);
           }
         } catch (error) {
-          const errorMessage = editingAddressId
-            ? "Failed to update address"
-            : "Failed to save address";
-          showNotification(errorMessage, "error");
+          const backendMessage =
+            error?.response?.data?.message || 
+            error?.message || 
+            (editingAddressId
+              ? "Failed to update address"
+              : "Failed to save address");
+
+          showNotification(backendMessage, "error");
         } finally {
           saveBtn.disabled = false;
           btnText.style.display = "inline";
@@ -1019,28 +1041,30 @@
             const imageUrl =
               product.images?.[0]?.url || "/images/placeholder-product.jpg";
             return `
-              <div class="order-item">
-                <img src="${imageUrl}" alt="${
+                    <div class="order-item">
+                      <img src="${imageUrl}" alt="${
               product.productName
             }" class="product-image"
-                     onerror="this.src='/images/placeholder-product.jpg'">
-                <div class="product-details">
-                  <h3 class="product-name">${product.productName}</h3>
-                  <p class="product-brand">${product.brand || "ChronoVa"}</p>
-                  <p class="product-price">₹${item.offer.offerPrice}</p>
-                </div>
-                <div class="quantity-info">
-                  <span class="quantity-label">Qty:</span>
-                  <span class="quantity-value">${item.quantity}</span>
-                </div>
-                <div class="item-total">
-                  <span class="item-total-label">Total:</span>
-                  <span class="item-total-value">₹${(
-                    item.offer.offerPrice * item.quantity
-                  ).toLocaleString()}</span>
-                </div>
-              </div>
-            `;
+                           onerror="this.src='/images/placeholder-product.jpg'">
+                      <div class="product-details">
+                        <h3 class="product-name">${product.productName}</h3>
+                        <p class="product-brand">${
+                          product.brand || "ChronoVa"
+                        }</p>
+                        <p class="product-price">₹${item.offer.offerPrice}</p>
+                      </div>
+                      <div class="quantity-info">
+                        <span class="quantity-label">Qty:</span>
+                        <span class="quantity-value">${item.quantity}</span>
+                      </div>
+                      <div class="item-total">
+                        <span class="item-total-label">Total:</span>
+                        <span class="item-total-value">₹${(
+                          item.offer.offerPrice * item.quantity
+                        ).toLocaleString()}</span>
+                      </div>
+                    </div>
+                  `;
           })
           .join("");
         updateSummary(cart.items);

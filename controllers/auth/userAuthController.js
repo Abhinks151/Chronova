@@ -167,7 +167,7 @@ export const resendVerificationCode = async (req, res) => {
 
 export const getForgotPassord = async (req, res) => {
   // const renderData = createRenderData('Forgot Password');
-  // res.status(200).render('Layouts/userForgotPassword', renderData);
+  // res.status(httpStatusCode.OK.code).render('Layouts/userForgotPassword', renderData);
 
   try {
     res.status(httpStatusCode.OK.code).render('Layouts/userForgotPassword', {
@@ -189,7 +189,7 @@ export const postForgotPassword = async (req, res) => {
     console.log(email)
     await forgotPassword(email);
 
-    return res.status(500).render('Layouts/userLogin', {
+    return res.status(httpStatusCode.INTERNAL_SERVER_ERROR.code).render('Layouts/userLogin', {
       title: 'Login',
       formData: req.body || {},
       errors: { general: "check your email" }
@@ -210,7 +210,7 @@ export const getResetPassword = async (req, res) => {
     const token = req.params.token;
 
     if (!token) {
-      return res.status(400).render("Layouts/userResetPassword", {
+      return res.status(httpStatusCode.BAD_REQUEST.code).render("Layouts/userResetPassword", {
         token: '',
         error: "Invalid or missing token."
       });
@@ -225,14 +225,14 @@ export const getResetPassword = async (req, res) => {
       });
     }
 
-    return res.status(200).render("Layouts/userResetPassword", {
+    return res.status(httpStatusCode.OK.code).render("Layouts/userResetPassword", {
       token, 
       error: null
     });
 
   } catch (error) {
     console.error("Error in getResetPassword:", error);
-    return res.status(500).render("Layouts/userResetPassword", {
+    return res.status(httpStatusCode.INTERNAL_SERVER_ERROR.code).render("Layouts/userResetPassword", {
       token: '',
       error: "Internal server error."
     });
@@ -296,10 +296,10 @@ export const postUserLogin = async (req, res) => {
       });
 
       if (req.xhr || req.headers['x-requested-with'] === 'XMLHttpRequest') {
-        return res.status(400).json({ success: false, errors: extracted });
+        return res.status(httpStatusCode.BAD_REQUEST.code).json({ success: false, errors: extracted });
       }
 
-      return res.status(400).render('Layouts/userLogin', {
+      return res.status(httpStatusCode.BAD_REQUEST.code).render('Layouts/userLogin', {
         title: 'Login',
         formData: { email },
         errors: extracted
@@ -329,7 +329,7 @@ export const postUserLogin = async (req, res) => {
     });
 
     if (req.xhr || req.headers['x-requested-with'] === 'XMLHttpRequest') {
-      return res.status(200).json({ success: true, redirect: '/user/products' });
+      return res.status(httpStatusCode.OK.code).json({ success: true, redirect: '/user/products' });
     }
 
     return res.redirect('/user/products');
@@ -343,10 +343,10 @@ export const postUserLogin = async (req, res) => {
     };
 
     if (req.xhr || req.headers['x-requested-with'] === 'XMLHttpRequest') {
-      return res.status(500).json(fallback);
+      return res.status(httpStatusCode.INTERNAL_SERVER_ERROR.code).json(fallback);
     }
 
-    return res.status(500).render('Layouts/userLogin', {
+    return res.status(httpStatusCode.INTERNAL_SERVER_ERROR.code).render('Layouts/userLogin', {
       title: 'Login',
       formData: req.body || {},
       errors: fallback.errors

@@ -337,14 +337,12 @@ body {
 /* Order Items Section */
 .order-items {
 	flex: 2;
-	background: white;
 	border-radius: 12px;
 	box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
 	overflow: hidden;
 }
 
 .order-items-header {
-	background: #f1f5f9;
 	padding: 20px 25px;
 	border-bottom: 1px solid #e2e8f0;
 }
@@ -386,6 +384,8 @@ body {
 	padding: 20px 25px;
 	border-bottom: 1px solid #f1f5f9;
 	transition: background-color 0.2s ease;
+	box-shadow: 0 1px 10px rgba(0, 0, 0, 0.1);
+	border-radius: 12px;
 }
 
 .order-item:hover {
@@ -526,6 +526,24 @@ body {
 	position: sticky;
 	top: 20px;
 }
+
+
+
+/* bottom section */
+.botton-section{
+	margin-top: 30px;
+	/* border-top: #1e293b 1px solid; */
+	display:grid;
+	grid-template-columns: 1fr 1fr;
+	gap: 20px;
+	padding-top: 20px;
+	box-shadow: 0 2px 10px rgba(0, 0, 0, 0.3);
+	border-radius: 12px;
+	padding: 10px;
+}
+
+
+
 
 /* Address Section */
 .address-section {
