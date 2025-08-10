@@ -46,7 +46,6 @@ export const getOrders = async (req, res) => {
     sortObj[sortBy] = sortOrder === "desc" ? -1 : 1
 
     const orders = await Order.find(searchQuery).populate("userId", "name email").sort(sortObj).skip(skip).limit(limit)
-
     const totalOrders = await Order.countDocuments(searchQuery)
     const totalPages = Math.ceil(totalOrders / limit)
 
