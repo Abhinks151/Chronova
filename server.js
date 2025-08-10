@@ -8,10 +8,7 @@ import passport from "passport";
 import nocache from "nocache";
 import session from "express-session";
 // import MongoStore from 'connect-mongo';
-<<<<<<< HEAD
-=======
 import httpStatusCode from "./utils/httpStatusCode.js"
->>>>>>> development
 
 // import csurf from "csurf";
 
