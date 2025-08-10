@@ -204,7 +204,6 @@ export const deleteCouponService = async (couponId) => {
 };
 
 export const getAllActiveCouponsService = async (userId) => {
-  // console.log(userId)
   const now = new Date();
   now.setHours(0, 0, 0, 0);
   const id = new mongoose.Types.ObjectId(userId);
@@ -213,10 +212,14 @@ export const getAllActiveCouponsService = async (userId) => {
     isActive: true,
     isDeleted: false,
     expiryTime: { $gt: now },
-    $or: [{ userId: null }, { userId: id }],
-    "applicableFor.usedBy": { $ne: id },
-    $expr: { $lt: ["$applicableFor.usageCount", "$applicableFor.limit"] },
+
+    $or: [
+      { userId: null },
+      { userId: id }
+    ],
+
+    "applicableFor.usedBy": { $ne: id }
   });
-  // console.log("data:" , data)
+
   return data;
 };

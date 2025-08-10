@@ -763,12 +763,13 @@
 
       // Submit offer
       async function submitOffer() {
+        const submitBtn = document.getElementById("submitBtn");
+        const originalText = submitBtn.innerHTML;
+
         try {
           if (!validateForm()) return;
 
-          const submitBtn = document.getElementById("submitBtn");
-          const originalText = submitBtn.innerHTML;
-
+          // Set loading state
           submitBtn.innerHTML =
             '<i class="fas fa-spinner fa-spin"></i> Processing...';
           submitBtn.disabled = true;
@@ -789,30 +790,22 @@
 
           const response = editingOfferId
             ? await axios.patch(url, formData, {
-                headers: {
-                  "Content-Type": "application/json",
-                },
+                headers: { "Content-Type": "application/json" },
               })
             : await axios.post(url, formData, {
-                headers: {
-                  "Content-Type": "application/json",
-                },
+                headers: { "Content-Type": "application/json" },
               });
 
           const data = response.data;
           console.log("Server response:", data);
 
-          if (data.success === true) {
+          if (data.success) {
             showToast(data.message || "Offer saved successfully!", "success");
             await closeOfferModal();
             await loadOffers();
           } else {
-            console.log("Entered else block:", data);
-            const errMsg =
-              error.response?.data?.message ||
-              error.message ||
-              "Operation failed";
-            showToast(errMsg, "error");
+            console.warn("Backend returned success=false:", data);
+            showToast(data.message || "Operation failed", "error");
           }
         } catch (error) {
           console.error("Error submitting offer:", error);
@@ -828,7 +821,7 @@
 
           showToast(message, "error");
         } finally {
-          const submitBtn = document.getElementById("submitBtn");
+          // Reset button state
           submitBtn.innerHTML = editingOfferId
             ? '<i class="fas fa-save"></i> Update Offer'
             : '<i class="fas fa-save"></i> Save Offer';
@@ -854,7 +847,7 @@
           discountPercentage < 1 ||
           discountPercentage > 100
         ) {
-          showToast("Discount percentage must be between 1 and 100", "error");
+          showToast("Discount percentage must be between 1 and 99", "error");
           return false;
         }
 

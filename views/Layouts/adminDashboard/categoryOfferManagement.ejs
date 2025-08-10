@@ -774,12 +774,13 @@
 
       // Submit offer
       async function submitOffer() {
+        const submitBtn = document.getElementById("submitBtn");
+        const originalText = submitBtn.innerHTML;
+
         try {
           if (!validateForm()) return;
 
-          const submitBtn = document.getElementById("submitBtn");
-          const originalText = submitBtn.innerHTML;
-
+          // Set loading state
           submitBtn.innerHTML =
             '<i class="fas fa-spinner fa-spin"></i> Processing...';
           submitBtn.disabled = true;
@@ -814,17 +815,24 @@
             closeOfferModal();
             loadOffers();
           } else {
+            console.warn("Backend returned success=false:", data);
             showToast(data.message || "Operation failed", "error");
           }
         } catch (error) {
           console.error("Error submitting offer:", error);
-          const errMsg =
-            error.response?.data?.message ||
-            error.message ||
-            "Operation failed";
-          showToast(errMsg, "error");
+
+          let message = "An unexpected error occurred.";
+          if (error.response) {
+            if (typeof error.response.data === "string") {
+              message = error.response.data;
+            } else if (typeof error.response.data?.message === "string") {
+              message = error.response.data.message;
+            }
+          }
+
+          showToast(message, "error");
         } finally {
-          const submitBtn = document.getElementById("submitBtn");
+          // Reset button state
           submitBtn.innerHTML = editingOfferId
             ? '<i class="fas fa-save"></i> Update Offer'
             : '<i class="fas fa-save"></i> Save Offer';

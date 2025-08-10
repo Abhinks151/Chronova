@@ -265,7 +265,7 @@ export const placeOrderService = async (userId, orderData, req, isVerifiedOnline
         throw new Error("Coupon discount is greater than 50% of total amount. Select another coupon.");
       }
 
-      if (coupon.minimumCartAmount > totalAmount) {
+      if (coupon.minimumCartAmount > subtotal) {
         throw new Error(`Minimum cart value of ₹${coupon.minimumCartAmount} is required to apply this coupon.`);
       }
 
