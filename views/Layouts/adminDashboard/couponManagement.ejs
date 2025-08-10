@@ -257,21 +257,20 @@
       let isEditMode = false;
       let editCouponId = null;
       let confirmCallback = null;
-
       // Initialize page
       document.addEventListener("DOMContentLoaded", function () {
         loadCoupons();
-        setMinDateTime();
+        setMinDate();
       });
 
       // Set minimum datetime for expiry input
-      function setMinDateTime() {
+      function setMinDate() {
         const now = new Date();
         const offset = now.getTimezoneOffset() * 60000;
-        const localISOTime = new Date(now.getTime() - offset)
+        const localDate = new Date(now.getTime() - offset)
           .toISOString()
-          .slice(0, 16);
-        document.getElementById("expiryTime").min = localISOTime;
+          .split("T")[0];
+        document.getElementById("expiryTime").min = localDate;
       }
 
       // Toast notification function
@@ -410,17 +409,30 @@
 
       // Get status class for styling
       function getStatusClass(coupon) {
-        if (new Date(coupon.expiryTime) < new Date()) {
+        const today = new Date();
+        today.setHours(0, 0, 0, 0);
+
+        const expiryDate = new Date(coupon.expiryTime);
+        expiryDate.setHours(0, 0, 0, 0);
+
+        if (expiryDate < today) {
           return "status-expired";
         }
+
         return coupon.isActive ? "status-active" : "status-inactive";
       }
 
-      // Get status text
       function getStatusText(coupon) {
-        if (new Date(coupon.expiryTime) < new Date()) {
+        const today = new Date();
+        today.setHours(0, 0, 0, 0);
+
+        const expiryDate = new Date(coupon.expiryTime);
+        expiryDate.setHours(0, 0, 0, 0);
+
+        if (expiryDate < today) {
           return "Expired";
         }
+
         return coupon.isActive ? "Active" : "Inactive";
       }
 
@@ -431,7 +443,6 @@
           year: "numeric",
           month: "short",
           day: "numeric",
-         
         });
       }
 
@@ -567,7 +578,7 @@
         editCouponId = null;
         document.getElementById("modalTitle").textContent = "Add New Coupon";
         document.getElementById("couponForm").reset();
-        setMinDateTime();
+        setMinDate();
         document.getElementById("couponModal").classList.add("show");
       }
 
@@ -627,8 +638,16 @@
           }
 
           const expiryDate = new Date(formData.expiryTime);
-          if (expiryDate <= new Date()) {
-            showToast("Expiry date must be in the future", "error");
+
+          // Strip time from both dates
+          const today = new Date();
+          today.setHours(0, 0, 0, 0);
+
+          const selectedDate = new Date(expiryDate);
+          selectedDate.setHours(0, 0, 0, 0);
+
+          if (selectedDate < today) {
+            showToast("Expiry date cannot be in the past", "error");
             return;
           }
 

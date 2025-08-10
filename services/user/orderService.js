@@ -4,6 +4,7 @@ import { Cart } from "../../models/cart.js";
 import { Order } from "../../models/order.js";
 import { Category } from "../../models/category.js";
 import { Coupon } from "../../models/coupon.js";
+import Wallet from '../../models/wallet.js';
 
 import mongoose from "mongoose";
 import puppeteer from "puppeteer";
@@ -14,6 +15,7 @@ import * as crypto from "crypto";
 
 import { logger } from "../../config/logger.js";
 import { logStockChange } from "../../utils/logStockRegistry.js";
+// import { ProductOffer } from "../../models/productOffer.js";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -83,19 +85,21 @@ export const verifyRazorpayPaymentService = async (body) => {
 
 export const placeOrderService = async (userId, orderData, req, isVerifiedOnline) => {
   const session = await mongoose.startSession();
-
   try {
     await session.startTransaction();
 
+
     const fullAddress = await Address.findById(orderData.shippingAddress).session(session).lean();
     if (!fullAddress) throw new Error("Shipping address not found");
+
 
     if (orderData.paymentMethod === 'cod' && orderData.total > 1000) {
       throw new Error('Maximum order amount for COD is 1000');
     }
 
+
     const productIds = orderData.items.map((item) => {
-      return item.productId?._id?.toString() || item.productId?.toString();
+      return item.productId?._id?.toString() || item.productId?.toString();;
     });
 
     const products = await Products.find({
@@ -108,19 +112,10 @@ export const placeOrderService = async (userId, orderData, req, isVerifiedOnline
       throw new Error("No valid products found");
     }
 
-    const items = [];
 
-    const grossTotal = orderData.items.reduce((acc, item) => {
-      const price = Number(item.offerPrice || item.price || 0);
-      const quantity = Number(item.quantity || 0);
-      return acc + price * quantity;
-    }, 0);
+    let grossTotal = 0;
+    const itemCalculations = [];
 
-    const couponDiscount = Number(orderData.discount || 0);
-    let discountRatio = 0;
-    if (grossTotal > 0) {
-      discountRatio = couponDiscount / grossTotal;
-    }
 
     for (const item of orderData.items) {
       const productId = item.productId?._id?.toString() || item.productId?.toString();
@@ -129,11 +124,13 @@ export const placeOrderService = async (userId, orderData, req, isVerifiedOnline
       });
 
       if (!product) throw new Error("Product not found or blocked/deleted");
+
       const itemQty = Number(item.quantity || 0);
       if (product.stockQuantity < itemQty) {
         throw new Error(`${product.productName} has only ${product.stockQuantity} items left`);
       }
 
+      // Validate categories
       const validCategoryCount = await Category.countDocuments({
         _id: { $in: product.category },
         isBlocked: false,
@@ -149,13 +146,6 @@ export const placeOrderService = async (userId, orderData, req, isVerifiedOnline
       const perUnitDiscount = +(offerPrice * discountRatio).toFixed(2);
       const netPrice = Number(offerPrice - perUnitDiscount).toFixed(2);
 
-      let status;
-      if (orderData.paymentMethod === 'cod') {
-        status = 'Pending';
-      } else {
-        status = 'Paid';
-      }
-
       for (let i = 0; i < itemQty; i++) {
         items.push({
           productId: product._id,
@@ -163,28 +153,35 @@ export const placeOrderService = async (userId, orderData, req, isVerifiedOnline
           brand: product.brand,
           quantity: 1,
           price: basePrice,
+          finalPrice: offerPrice,
+          discount: itemCalc.offer?.discount || 0,
+          couponDiscountPerItem: couponDiscountPerItem,
+          totalCouponDiscount: couponDiscountPerItem,
+          netItemTotal: Math.round((finalPricePerUnit) * 100) / 100,
           category: product.category,
           image: {
             url: product.images?.[0]?.url || "",
             public_id: product.images?.[0]?.public_id || "",
           },
-          status : "Placed",
-          paymentStatus:status,
+          status: "Placed",
           discount: item.offer?.discount || 0,
           finalPrice: offerPrice,
           couponDiscountPerItem: isNaN(perUnitDiscount) ? 0 : perUnitDiscount,
           netItemTotal: isNaN(netPrice) ? 0 : netPrice,
         });
       }
-    }
+    };
 
+    // Calculate order totals
     const subtotal = items.reduce((acc, curr) => acc + (Number(curr.finalPrice) || 0), 0);
     const totalAmount = items.reduce((acc, curr) => acc + (Number(curr.netItemTotal) || 0), 0);
+    const actualCouponDiscount = subtotal - totalAmount;
 
     if (isNaN(subtotal) || isNaN(totalAmount)) {
       throw new Error("Subtotal or totalAmount contains invalid values");
     }
 
+    // Update stock quantities
     const bulkOps = orderData.items.map((item) => ({
       updateOne: {
         filter: {
@@ -200,15 +197,21 @@ export const placeOrderService = async (userId, orderData, req, isVerifiedOnline
       throw new Error("Stock update failed for one or more items");
     }
 
-    if (orderData.coupon) {
+
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+
+    if (orderData.coupon && couponDiscount > 0) {
       const coupon = await Coupon.findOne({
         coupon: orderData.coupon.code,
         isActive: true,
         isDeleted: false,
-        expiryTime: { $gte: new Date() },
+        expiryTime: { $gte: today },
       }).session(session);
 
-      if (!coupon) throw new Error("Invalid coupon code");
+      if (!coupon) {
+        throw new Error("Invalid coupon code")
+      };
 
       const userIdStr = req.user.id || req.user._id;
       if (coupon.applicableFor.usedBy.includes(userIdStr)) {
@@ -219,34 +222,54 @@ export const placeOrderService = async (userId, orderData, req, isVerifiedOnline
         throw new Error("Coupon usage limit exceeded");
       }
 
+      if (coupon.discountAmount >= totalAmount / 2) {
+        throw new Error("Coupon discount is greater than 50% of total amount. Select another coupon.");
+      }
+
+      if (coupon.minimumCartAmount > totalAmount) {
+        throw new Error(`Minimum cart value of ₹${coupon.minimumCartAmount} is required to apply this coupon.`);
+      }
+
+
+
+
       coupon.applicableFor.usedBy.push(userIdStr);
       coupon.applicableFor.usageCount += 1;
       await coupon.save({ session });
     }
 
+    // Create the order
     const newOrder = new Order({
       userId,
       shippingAddress: fullAddress,
       items,
       subtotal,
-      discount: couponDiscount,
+      discount: actualCouponDiscount,
       totalAmount,
       paymentMethod: orderData.paymentMethod.toUpperCase(),
-      coupon: orderData.coupon,
+      coupon: orderData.coupon ? {
+        ...orderData.coupon,
+        discountAmount: actualCouponDiscount,
+      } : undefined,
       isPaid: isVerifiedOnline,
       paymentStatus: isVerifiedOnline ? "Paid" : "Pending",
       paymentDetails: isVerifiedOnline
         ? {
-            paymentProvider: "Razorpay",
-            razorpay_payment_id: orderData.paymentDetails?.razorpay_payment_id,
-            razorpay_order_id: orderData.paymentDetails?.razorpay_order_id,
-            razorpay_signature: orderData.paymentDetails?.razorpay_signature,
-          }
+          paymentProvider: "Razorpay",
+          razorpay_payment_id: orderData.paymentDetails?.razorpay_payment_id,
+          razorpay_order_id: orderData.paymentDetails?.razorpay_order_id,
+          razorpay_signature: orderData.paymentDetails?.razorpay_signature,
+        }
         : {},
     });
 
+
+
+    // console.log(newOrder);
+
     await newOrder.save({ session });
 
+    // Log stock changes
     const groupedItems = {};
     for (const item of orderData.items) {
       const pid = item.productId?._id?.toString() || item.productId?.toString();
@@ -269,6 +292,7 @@ export const placeOrderService = async (userId, orderData, req, isVerifiedOnline
       }
     }
 
+    // Remove items from cart
     await Cart.updateOne(
       { userId },
       { $pull: { items: { productId: { $in: productIds } } } },
@@ -284,10 +308,21 @@ export const placeOrderService = async (userId, orderData, req, isVerifiedOnline
         shippingAddress: fullAddress,
         items: newOrder.items,
         subtotal,
+        discount: actualCouponDiscount,
         totalAmount,
         paymentMethod: newOrder.paymentMethod,
+        couponBreakdown: {
+          totalCouponDiscount: actualCouponDiscount,
+          itemWiseDistribution: items.map(item => ({
+            productId: item.productId,
+            productName: item.productName,
+            couponDiscountPerItem: item.couponDiscountPerItem,
+            finalPrice: item.netItemTotal
+          }))
+        }
       },
     };
+
   } catch (error) {
     await session.abortTransaction();
     throw error;
@@ -298,31 +333,93 @@ export const placeOrderService = async (userId, orderData, req, isVerifiedOnline
 
 
 
+// // Helper function to calculate refund amount for individual items
+// export const calculateItemRefundAmount = (item) => {
+//   // For refunds, return the net amount paid for this item
+//   // This includes the proportional coupon discount that was applied
+//   return {
+//     refundAmount: item.netItemTotal,
+//     originalPrice: item.price,
+//     finalPrice: item.finalPrice,
+//     couponDiscountLost: item.couponDiscountPerItem,
+//     breakdown: {
+//       baseRefund: item.netItemTotal,
+//       // Note: Coupon discount is already factored into netItemTotal
+//       // so no additional calculations needed
+//     }
+//   };
+// };
+
+// // Helper function for partial returns - calculate remaining order total
+// export const calculateRemainingOrderTotal = (order, returnedItemIds) => {
+//   const remainingItems = order.items.filter(item => 
+//     !returnedItemIds.includes(item._id.toString())
+//   );
+
+//   const remainingSubtotal = remainingItems.reduce((sum, item) => sum + item.finalPrice, 0);
+//   const remainingTotal = remainingItems.reduce((sum, item) => sum + item.netItemTotal, 0);
+//   const remainingCouponDiscount = remainingSubtotal - remainingTotal;
+
+//   return {
+//     remainingSubtotal,
+//     remainingTotal,
+//     remainingCouponDiscount,
+//     remainingItems: remainingItems.length
+//   };
+// };
 
 
 
 
-export const orderListByUserId = async (userId) => {
+
+
+
+
+export const orderListByUserId = async (userId, page = 1, limit = 10, statusFilter = 'all', searchTerm = '') => {
   try {
-    const orders = await Order.find({ userId })
-      .populate(
-        "items.productId",
-        "productName brand images finalPrice salePrice price"
-      )
-      .populate("shippingAddress")
+    const skip = (page - 1) * limit;
+    
+    let query = { userId };
+    
+    if (statusFilter !== 'all') {
+      query.$or = [
+        { orderStatus: statusFilter },
+        { 'items.status': statusFilter }
+      ];
+    }
+    
+    if (searchTerm) {
+      query.$or = [
+        ...(query.$or || []),
+        { orderId: { $regex: searchTerm, $options: 'i' } },
+        { 'items.productName': { $regex: searchTerm, $options: 'i' } },
+        { 'items.brand': { $regex: searchTerm, $options: 'i' } }
+      ];
+    }
+
+    const totalOrders = await Order.countDocuments(query);
+    
+    const orders = await Order.find(query)
       .sort({ createdAt: -1 })
+      .skip(skip)
+      .limit(limit)
+      .populate("userId", "name email")
+      .populate("items.productId", "productName images brand category")
       .lean();
 
-    return orders.map((order) => ({
-      ...order,
-      items: order.items.map((item) => ({
-        ...item,
-        productId: item.productId?._id || item.productId,
-      })),
-    }));
+    return {
+      orders,
+      pagination: {
+        currentPage: page,
+        totalPages: Math.ceil(totalOrders / limit),
+        totalOrders,
+        limit,
+        hasNext: page < Math.ceil(totalOrders / limit),
+        hasPrev: page > 1
+      }
+    };
   } catch (error) {
-    console.error("Error fetching orders:", error);
-    throw new Error("Failed to fetch orders");
+    throw new Error(`Error fetching orders: ${error.message}`);
   }
 };
 
@@ -363,6 +460,42 @@ export const cancelEntireOrderService = async (userId, orderId) => {
     error.statusCode = httpStatusCode.BAD_REQUEST.code;
     throw error;
   }
+
+
+  //refund for entire order cancel
+  const itemStaus = order.items.every((item) => {
+    return item.paymentStatus === "Paid";
+  })
+
+  if (order.paymentStatus === "Paid" && itemStaus) {
+    const refundAmount = order.totalAmount;
+    let wallet = await Wallet.findOne({ userId });
+
+    const transaction = {
+      amount: refundAmount,
+      type: "credit",
+      description: `Refund for cancelled order: ${order.orderId}`,
+      timestamp: new Date(),
+    };
+
+    if (!wallet) {
+      wallet = new Wallet({
+        userId,
+        balance: refundAmount,
+        transactions: [transaction],
+      });
+    } else {
+      wallet.balance += refundAmount;
+      wallet.transactions.push(transaction);
+    }
+
+    await wallet.save();
+  }
+
+
+
+
+
 
   for (const item of order.items) {
     await Products.findByIdAndUpdate(item.productId, {
@@ -427,8 +560,68 @@ export const cancelSingleItemService = async (userId, orderId, itemId) => {
     $inc: { stockQuantity: item.quantity },
   });
 
+
+
+  // //
+  // // practicing anpins questions
+
+  // const now = new Date();
+  // const product = await Products.findOne({ _id: itemId, stockQuantity: { $lt: 5 } });
+  // const offer = await ProductOffer.findOne({
+  //   products: { $in: [itemId] },
+  //   startDate: { $lte: now },
+  //   endDate: { $gte: now },
+  //   isActive: true,
+  //   isDeleted: false
+  // });
+
+  // const refundAmount = product && offer ?
+  //   item.netTotalAmount * item.quantity * (25 / 100)
+  //   : item.netTotalAmount * item.quantity
+
+  // //
+
+
+
+
+
+
+
+
+
+
+
+
+
+
   item.status = "Cancelled";
   item.cancelReason = "Cancelled by user";
+
+  //Refund for user if the item is paid;
+  if (item.paymentStatus === "Paid") {
+    const refundAmount = item.netItemTotal * item.quantity;
+    let wallet = await Wallet.findOne({ userId });
+
+    const transaction = {
+      amount: refundAmount,
+      type: "credit",
+      description: `Refund for cancelled item: ${item.productName} (Order: ${order.orderId})`,
+      timestamp: new Date(),
+    };
+
+    if (!wallet) {
+      wallet = new Wallet({
+        userId,
+        balance: refundAmount,
+        transactions: [transaction],
+      });
+    } else {
+      wallet.balance += refundAmount;
+      wallet.transactions.push(transaction);
+    }
+
+    await wallet.save();
+  }
 
   await logStockChange({
     productId: item.productId,

@@ -704,11 +704,16 @@ body {
     transform: translateX(400px);
     transition: all 0.3s ease;
     box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+    opacity: 0;
+    pointer-events: none;
 }
 
 .toaster.show {
     transform: translateX(0);
+    opacity: 1;
+    pointer-events: auto;
 }
+
 
 .toaster.success {
     background-color: #27ae60;

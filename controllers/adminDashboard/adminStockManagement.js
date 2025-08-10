@@ -1,4 +1,5 @@
 import { getActiveCategories, getStockData, getStockRegistryByProductId } from '../../services/adminStockMangementServies.js'
+import httpStatusCode from "../../utils/httpStatusCode.js"
 
 
 export const getStockRegistryByProduct = async (req, res) => {
@@ -6,7 +7,7 @@ export const getStockRegistryByProduct = async (req, res) => {
         const { productId } = req.params;
         
         if (!productId) {
-            return res.status(400).json({
+            return res.status(httpStatusCode.BAD_REQUEST.code).json({
                 success: false,
                 message: "Product ID is required",
             });
@@ -14,13 +15,13 @@ export const getStockRegistryByProduct = async (req, res) => {
 
         const registryEntries = await getStockRegistryByProductId(productId);
         
-        return res.status(200).json({
+        return res.status(httpStatusCode.OK.code).json({
             success: true,
             stockRegistry: registryEntries,
         });
     } catch (error) {
         console.error("Error fetching stock registry:", error);
-        return res.status(500).json({
+        return res.status(httpStatusCode.INTERNAL_SERVER_ERROR.code).json({
             success: false,
             message: "Failed to fetch stock registry",
         });
@@ -37,7 +38,7 @@ export const getStockManagementPage = async (req, res) => {
         });
     } catch (error) {
         console.error("Error rendering stock management page:", error);
-        return res.status(500).render("admin/error", {
+        return res.status(httpStatusCode.INTERNAL_SERVER_ERROR.code).render("admin/error", {
             message: "Failed to load stock management page.",
             title: "Error"
         });
@@ -60,14 +61,14 @@ export const getStockPageData = async (req, res) => {
 
         // Validate price filters
         if (filters.minPrice && isNaN(filters.minPrice)) {
-            return res.status(400).json({
+            return res.status(httpStatusCode.BAD_REQUEST.code).json({
                 success: false,
                 message: "Invalid minimum price value",
             });
         }
         
         if (filters.maxPrice && isNaN(filters.maxPrice)) {
-            return res.status(400).json({
+            return res.status(httpStatusCode.BAD_REQUEST.code).json({
                 success: false,
                 message: "Invalid maximum price value",
             });
@@ -83,7 +84,7 @@ export const getStockPageData = async (req, res) => {
         });
     } catch (error) {
         console.error("Error fetching stock data:", error);
-        return res.status(500).json({
+        return res.status(httpStatusCode.INTERNAL_SERVER_ERROR.code).json({
             success: false,
             message: "Failed to fetch stock data",
         });
@@ -100,7 +101,7 @@ export const getFilterData = async (req, res) => {
         });
     } catch (error) {
         console.error("Error fetching filter data:", error);
-        return res.status(500).json({
+        return res.status(httpStatusCode.INTERNAL_SERVER_ERROR.code).json({
             success: false,
             message: "Failed to fetch filter data",
         });

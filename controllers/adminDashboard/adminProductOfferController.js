@@ -42,7 +42,7 @@ export const getProductOfferManagementPageData = async (req, res) => {
     // console.log(products);
     // console.log(data);
 
-    return res.status(200).json({
+    return res.status(httpStatusCode.OK.code).json({
       success: true,
       ...data,
       products
@@ -50,7 +50,7 @@ export const getProductOfferManagementPageData = async (req, res) => {
 
   } catch (error) {
     console.error("Error in getProductOfferManagementPageData:", error.message);
-    return res.status(500).json({
+    return res.status(httpStatusCode.INTERNAL_SERVER_ERROR.code).json({
       success: false,
       message: error.message || "Something went wrong"
     });

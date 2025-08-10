@@ -1,21 +1,49 @@
 import Wallet from '../../models/wallet.js'
 
-export const getFilteredWalletHistoryService = async (userId, { page, limit, type, sort }) => {
+export const getFilteredWalletHistoryService = async (userId, { page, limit, search, type, sort }) => {
   try {
     const wallet = await Wallet.findOne({ userId });
     if (!wallet) {
-      throw new Error("Wallet not found for the given user ID");
+      // Create wallet if it doesn't exist
+      const newWallet = await Wallet.create({
+        userId,
+        balance: 0,
+        transactions: []
+      });
+      return {
+        transactions: [],
+        total: 0,
+        currentPage: page,
+        totalPages: 0,
+        balance: 0,
+      };
     }
 
     const sortOrder = sort === "asc" ? 1 : -1;
 
-    let filtered = type
-      ? wallet.transactions.filter(txn => txn.type === type)
-      : wallet.transactions;
+    // Filter by type if specified
+    let filtered = wallet.transactions;
+    if (type) {
+      filtered = wallet.transactions.filter(txn => txn.type === type);
+    }
 
-    filtered.sort((a, b) => sortOrder * (new Date(a.timestamp) - new Date(b.timestamp)));
+    // Filter by search if specified (search in description)
+    if (search && search.trim()) {
+      const searchTerm = search.trim().toLowerCase();
+      filtered = filtered.filter(txn => 
+        txn.description.toLowerCase().includes(searchTerm)
+      );
+    }
+
+    // Sort transactions
+    filtered.sort((a, b) => {
+      const dateA = new Date(a.timestamp);
+      const dateB = new Date(b.timestamp);
+      return sortOrder * (dateA - dateB);
+    });
 
     const total = filtered.length;
+    const totalPages = Math.ceil(total / limit);
     const startIndex = (page - 1) * limit;
     const paginated = filtered.slice(startIndex, startIndex + limit);
 
@@ -23,7 +51,7 @@ export const getFilteredWalletHistoryService = async (userId, { page, limit, typ
       transactions: paginated,
       total,
       currentPage: page,
-      totalPages: Math.ceil(total / limit),
+      totalPages,
       balance: wallet.balance,
     };
   } catch (error) {
@@ -32,31 +60,22 @@ export const getFilteredWalletHistoryService = async (userId, { page, limit, typ
   }
 };
 
-
 export const getWalletHistoryService = async (userId) => {
   try {
-    let data = await Wallet.findOne({ userId })
-      .populate('transactions')
+    let data = await Wallet.findOne({ userId });
 
     if (!data) {
-      if (!data) {
-        data = await Wallet.create({
-          userId,
-          balance: 0,
-          transactions: []
-        });
-      }
-
+      // Create new wallet if it doesn't exist
+      data = await Wallet.create({
+        userId,
+        balance: 0,
+        transactions: []
+      });
     }
-
-
 
     return data;
   } catch (error) {
     console.error("Error in getWalletHistory:", error);
     throw new Error("Failed to retrieve wallet history");
-
   }
 }
-
-

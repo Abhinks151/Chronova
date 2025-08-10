@@ -9,4 +9,4 @@ adminUserManagementRouter.get('/users/page', authenticateAdmin, getAdminUsersPag
 adminUserManagementRouter.patch('/users/toggle-block/:id', authenticateAdmin, togleBlock)
 
 
-export default adminUserManagementRouter  
+export default adminUserManagementRouter;

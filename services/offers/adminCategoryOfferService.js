@@ -1,7 +1,7 @@
 import mongoose from 'mongoose';
 import { CategoryOffer } from '../../models/categoryOffer.js';
 import { Category } from '../../models/category.js';
-import {logger} from '../../config/logger.js';
+import { logger } from '../../config/logger.js';
 
 export const getActiveCategoryOffers = async ({ page = 1, limit = 10, sort = "createdAt_desc", search = "", status = "", discount = "" }) => {
   const skip = (page - 1) * limit;
@@ -57,13 +57,17 @@ export const addCategoryOfferService = async (offerData) => {
     throw new Error("All fields are required and at least one category must be selected");
   }
 
+  if (/[^a-zA-Z0-9\s-_]/.test(name)) {
+    throw new Error("Category offer name can only include letters, numbers, spaces, hyphens, and underscores");
+  }
+
   const isExist = await CategoryOffer.findOne({ name });
   if (isExist) {
     throw new Error("Category offer already exists");
   }
 
-  if (discountPercentage <= 0 || discountPercentage > 100) {
-    throw new Error("Discount percent must be between 1 and 100");
+  if (discountPercentage <= 0 || discountPercentage > 99) {
+    throw new Error("Discount percent must be between 1 and 99");
   }
 
   const start = new Date(startDate);
@@ -101,6 +105,10 @@ export const editCategoryOfferService = async (offerId, data) => {
   if (!name || !discountPercentage || !startDate || !endDate || !Array.isArray(categories) || categories.length === 0) {
     logger.warn("Invalid category offer payload during edit");
     throw new Error("All fields are required and at least one category must be selected");
+  }
+
+  if (/[^a-zA-Z0-9\s-_]/.test(name)) {
+    throw new Error("Category offer name can only include letters, numbers, spaces, hyphens, and underscores");
   }
 
   // Check if another offer with the same name exists (excluding current offer)

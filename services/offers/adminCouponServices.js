@@ -48,11 +48,28 @@ export const createCouponService = async (data) => {
     throw new Error("Expiry time must be a valid date.");
   }
 
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+
+  const expiryDateOnly = new Date(parsedExpiryTime);
+  expiryDateOnly.setHours(0, 0, 0, 0);
+
+  if (expiryDateOnly < today) {
+    throw new Error("Expiry date cannot be in the past.");
+  }
+
+  
+
+  // Coupon code validation
   if (coupon && typeof coupon === "string" && coupon.trim() !== "") {
     coupon = coupon.trim();
 
     if (coupon.length != 8) {
       throw new Error("Coupon code must be 8 characters long.");
+    }
+
+    if (!/^[a-zA-Z0-9,-_]+$/.test(coupon)) {
+      throw new Error("Coupon code can only contain letters, numbers, hyphens, commas and underscores.");
     }
 
     const modifiedCoupon = "COUPON-" + coupon.toUpperCase();
@@ -65,6 +82,7 @@ export const createCouponService = async (data) => {
   } else {
     coupon = undefined;
   }
+
 
   const newCoupon = await Coupon.create({
     coupon,
@@ -97,6 +115,18 @@ export const editCouponService = async (couponId, updateData) => {
     throw new Error("Expiry time must be a valid date.");
   }
 
+  
+
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+
+  const expiryDateOnly = new Date(parsedExpiryTime);
+  expiryDateOnly.setHours(0, 0, 0, 0);
+
+  if (expiryDateOnly < today) {
+    throw new Error("Expiry date cannot be in the past.");
+  }
+
   const updatePayload = {
     discountAmount: parsedDiscountAmount,
     minimumCartAmount: parsedMinimumCartAmount,
@@ -109,6 +139,10 @@ export const editCouponService = async (couponId, updateData) => {
     if (coupon.length !== 8) {
       throw new Error("Coupon code must be 8 characters long.");
     }
+    if (!/^[a-zA-Z0-9,-_]+$/.test(coupon)) {
+      throw new Error("Coupon code can only contain letters, numbers, hyphens, commas and underscores.");
+    }
+    // console.log(coupon);
 
     const formattedCoupon = `COUPON-${coupon}`;
 
@@ -172,8 +206,9 @@ export const deleteCouponService = async (couponId) => {
 export const getAllActiveCouponsService = async (userId) => {
   // console.log(userId)
   const now = new Date();
+  now.setHours(0, 0, 0, 0);
   const id = new mongoose.Types.ObjectId(userId);
-  
+
   const data = await Coupon.find({
     isActive: true,
     isDeleted: false,

@@ -138,7 +138,7 @@ export const getAddressMangemnt = async (req, res) => {
     res.render('Layouts/users/userAddressmanagement');
   } catch (error) {
     console.error("Error loading user address management page:", error);
-    res.status(500).json({
+    res.status(httpStatusCode.INTERNAL_SERVER_ERROR.code).json({
       success: false,
       message: "Internal Server Error"
     })
@@ -155,7 +155,7 @@ export const getAddress = async (req, res) => {
     })
   } catch (error) {
     console.error("Error loading user address management page:", error);
-    res.status(500).json({
+    res.status(httpStatusCode.INTERNAL_SERVER_ERROR.code).json({
       success: false,
       message: "Internal Server Error"
     })
@@ -223,7 +223,7 @@ export const addAddress = async (req, res) => {
       });
     }
 
-    if (phone.length < 10) {
+    if (phone.length != 10) {
       return res.status(httpStatusCode.BAD_REQUEST.code).json({
         success: false,
         message: 'Phone number can not be less than 10 numbers',
@@ -367,7 +367,7 @@ export const addAddress = async (req, res) => {
     })
   } catch (error) {
     console.log(error);
-    res.status(500).json({
+    res.status(httpStatusCode.INTERNAL_SERVER_ERROR.code).json({
       success: false,
       message: "Internal Server Error"
     })
@@ -440,7 +440,7 @@ export const editAddress = async (req, res) => {
       });
     }
 
-    if (phone.length < 10) {
+    if (phone.length != 10) {
       return res.status(httpStatusCode.BAD_REQUEST.code).json({
         success: false,
         message: 'Phone number can not be less than 10 numbers',
@@ -580,7 +580,7 @@ export const editAddress = async (req, res) => {
     });
   } catch (error) {
     console.error("Error updating address:", error);
-    res.status(500).json({
+    res.status(httpStatusCode.INTERNAL_SERVER_ERROR.code).json({
       success: false,
       message: "Internal Server Error"
     });
@@ -631,7 +631,7 @@ export const deleteAddress = async (req, res) => {
     });
   } catch (error) {
     console.error("Error deleting address:", error);
-    res.status(500).json({
+    res.status(httpStatusCode.INTERNAL_SERVER_ERROR.code).json({
       success: false,
       message: "Internal Server Error"
     });

@@ -19,7 +19,7 @@ export const getAdminUserManagement = async (req, res) => {
     });
   } catch (err) {
     console.error('Admin User Management Error:', err);
-    res.status(500).render('error', { message: 'Something went wrong', error: err });
+    res.status(httpStatusCode.INTERNAL_SERVER_ERROR.code).render('error', { message: 'Something went wrong', error: err });
   }
 };
 

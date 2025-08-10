@@ -1,4 +1,3 @@
-<!-- Wallet Page EJS (Search Removed) -->
 <!DOCTYPE html>
 <html lang="en">
 	<head>
@@ -29,28 +28,38 @@
 					<h1>Wallet Management</h1>
 					<div class="wallet-balance">
 						<span class="balance-label">Current Balance:</span>
-						<span class="balance-amount" id="current-balance"
-							>₹0.00</span
-						>
+						<span class="balance-amount" id="current-balance">₹0.00</span>
 					</div>
 				</div>
 
 				<div class="wallet-content">
-					<!-- Filter Section -->
-					<div class="filter-section">
-						<select id="type-filter" class="filter-select">
-							<option value="">All Types</option>
-							<option value="credit">Credit</option>
-							<option value="debit">Debit</option>
-						</select>
-						<select id="sort-filter" class="filter-select">
-							<option value="desc">Latest First</option>
-							<option value="asc">Oldest First</option>
-						</select>
+					<!-- Search and Filter Section -->
+					
+						<div class="filter-section">
+							<select id="type-filter" class="filter-select">
+								<option value="">All Types</option>
+								<option value="credit">Credit</option>
+								<option value="debit">Debit</option>
+							</select>
+							<select id="sort-filter" class="filter-select">
+								<option value="desc">Latest First</option>
+								<option value="asc">Oldest First</option>
+							</select>
+							<select id="limit-filter" class="filter-select">
+								<option value="10">10 per page</option>
+								<option value="25">25 per page</option>
+								<option value="50">50 per page</option>
+								<option value="100">100 per page</option>
+							</select>
+						</div>
 					</div>
 
 					<!-- Transactions -->
 					<div class="transactions-section">
+						<div class="results-info">
+							<span id="results-count">Showing 0 transactions</span>
+						</div>
+
 						<div class="table-header">
 							<div class="header-cell">Date</div>
 							<div class="header-cell">Description</div>
@@ -58,42 +67,45 @@
 							<div class="header-cell">Amount</div>
 						</div>
 
-						<div
-							id="transactions-container"
-							class="transactions-container"
-						></div>
+						<div id="transactions-container" class="transactions-container"></div>
 
-						<div
-							id="loading"
-							class="loading"
-							style="display: none;"
-						>
+						<div id="loading" class="loading" style="display: none;">
 							<div class="loading-spinner"></div>
 							<span>Loading transactions...</span>
 						</div>
 
-						<div
-							id="no-data"
-							class="no-data"
-							style="display: none;"
-						>
+						<div id="no-data" class="no-data" style="display: none;">
+							<div class="no-data-icon">
+								<i class="fas fa-receipt"></i>
+							</div>
 							<span>No transactions found</span>
+							<small>Try adjusting your search or filter criteria</small>
 						</div>
 					</div>
 
-					<!-- Pagination -->
-					<div
-						class="pagination-section"
-						id="pagination-section"
-						style="display: none;"
-					>
-						<button id="prev-btn" class="pagination-btn" disabled>
-							Previous
-						</button>
-						<span id="page-info" class="page-info">Page 1</span>
-						<button id="next-btn" class="pagination-btn" disabled>
-							Next
-						</button>
+					<!-- Enhanced Pagination -->
+					<div class="pagination-section" id="pagination-section" style="display: none;">
+						<div class="pagination-info">
+							<span id="pagination-info-text">Page 1 of 1</span>
+						</div>
+						<div class="pagination-controls">
+							<button id="first-btn" class="pagination-btn pagination-btn-nav" title="First Page">
+								<i class="fas fa-angle-double-left"></i>
+							</button>
+							<button id="prev-btn" class="pagination-btn pagination-btn-nav" title="Previous Page">
+								<i class="fas fa-angle-left"></i> Previous
+							</button>
+							<div id="page-numbers" class="page-numbers"></div>
+							<button id="next-btn" class="pagination-btn pagination-btn-nav" title="Next Page">
+								Next <i class="fas fa-angle-right"></i>
+							</button>
+							<button id="last-btn" class="pagination-btn pagination-btn-nav" title="Last Page">
+								<i class="fas fa-angle-double-right"></i>
+							</button>
+						</div>
+						<div class="pagination-summary">
+							<span id="pagination-summary-text">Showing 1-10 of 0 transactions</span>
+						</div>
 					</div>
 				</div>
 			</div>
@@ -101,150 +113,301 @@
 
 		<script>
 			function showToast(message, type = 'success') {
-			  const toast = document.createElement('div');
-			  toast.className = `toast toast-${type}`;
-			  toast.innerHTML = `
-			    <span>${message}</span>
-			    <button class="toast-close" onclick="this.parentElement.remove()">×</button>
-			  `;
-			  document.getElementById('toast-container').appendChild(toast);
-			  setTimeout(() => {
-			    if (toast.parentElement) toast.remove();
-			  }, 5000);
+				const toast = document.createElement('div');
+				toast.className = `toast toast-${type}`;
+				toast.innerHTML = `
+					<span>${message}</span>
+					<button class="toast-close" onclick="this.parentElement.remove()">×</button>
+				`;
+				document.getElementById('toast-container').appendChild(toast);
+				setTimeout(() => {
+					if (toast.parentElement) toast.remove();
+				}, 5000);
 			}
 
 			let currentPage = 1;
 			let currentFilters = {
-			  type: '',
-			  sort: 'desc'
+				search: '',
+				type: '',
+				sort: 'desc',
+				limit: 10
 			};
 			let walletData = null;
+			let totalPages = 1;
+			let totalTransactions = 0;
+			let searchTimeout = null;
 
 			document.addEventListener('DOMContentLoaded', function () {
-			  loadWalletData();
-			  setupEventListeners();
+				loadWalletData();
+				setupEventListeners();
 			});
 
 			function setupEventListeners() {
-			  document.getElementById('type-filter').addEventListener('change', handleFilterChange);
-			  document.getElementById('sort-filter').addEventListener('change', handleFilterChange);
-			  document.getElementById('prev-btn').addEventListener('click', () => changePage(-1));
-			  document.getElementById('next-btn').addEventListener('click', () => changePage(1));
+				// Search functionality with debouncing
+				const searchInput = document.getElementById('search-input');
+				searchInput.addEventListener('input', function() {
+					clearTimeout(searchTimeout);
+					searchTimeout = setTimeout(() => {
+						handleSearchChange();
+					}, 500);
+				});
+
+				// Filter and limit changes
+				document.getElementById('type-filter').addEventListener('change', handleFilterChange);
+				document.getElementById('sort-filter').addEventListener('change', handleFilterChange);
+				document.getElementById('limit-filter').addEventListener('change', handleLimitChange);
+
+				// Search and clear buttons
+				document.getElementById('search-btn').addEventListener('click', handleSearchChange);
+				document.getElementById('clear-search-btn').addEventListener('click', clearSearch);
+
+				// Pagination controls
+				document.getElementById('first-btn').addEventListener('click', () => goToPage(1));
+				document.getElementById('prev-btn').addEventListener('click', () => goToPage(currentPage - 1));
+				document.getElementById('next-btn').addEventListener('click', () => goToPage(currentPage + 1));
+				document.getElementById('last-btn').addEventListener('click', () => goToPage(totalPages));
+
+				// Enter key for search
+				searchInput.addEventListener('keypress', function(e) {
+					if (e.key === 'Enter') {
+						handleSearchChange();
+					}
+				});
 			}
 
 			async function loadWalletData() {
-			  try {
-			    showLoading(true);
-			    const response = await axios.get('/user/wallet/data');
-			    if (response.data.success) {
-			      walletData = response.data.data;
-			      updateBalance(walletData.balance);
-			      await loadTransactions();
-			      showToast('Wallet data loaded successfully', 'info');
-			    } else {
-			      showToast(response.data.message || 'Failed to load wallet data', 'error');
-			    }
-			  } catch (error) {
-			    console.error('Error loading wallet data:', error);
-			    showToast('Error loading wallet data', 'error');
-			  } finally {
-			    showLoading(false);
-			  }
+				try {
+					showLoading(true);
+					const response = await axios.get('/user/wallet/data');
+					if (response.data.success) {
+						walletData = response.data.data;
+						updateBalance(walletData.balance);
+						await loadTransactions();
+					} else {
+						showToast(response.data.message || 'Failed to load wallet data', 'error');
+					}
+				} catch (error) {
+					console.error('Error loading wallet data:', error);
+					showToast('Error loading wallet data', 'error');
+				} finally {
+					showLoading(false);
+				}
 			}
 
 			async function loadTransactions() {
-			  try {
-			    showLoading(true);
-			    const params = {
-			      page: currentPage,
-			      limit: 10,
-			      ...currentFilters
-			    };
+				try {
+					showLoading(true);
+					const params = {
+						page: currentPage,
+						limit: currentFilters.limit,
+						search: currentFilters.search,
+						type: currentFilters.type,
+						sort: currentFilters.sort
+					};
 
-			    const response = await axios.get('/user/wallet/filter', { params });
-			    if (response.data.success) {
-			      const transactions = response.data.data.transactions || [];
-			      const totalPages = response.data.data.totalPages || 1;
-			      renderTransactions(transactions);
-			      updatePagination(totalPages);
-			      showNoData(transactions.length === 0);
-			    } else {
-			      showToast(response.data.message || 'Failed to load transactions', 'error');
-			    }
-			  } catch (error) {
-			    console.error('Error loading transactions:', error);
-			    showToast('Error loading transactions', 'error');
-			  } finally {
-			    showLoading(false);
-			  }
+					const response = await axios.get('/user/wallet/filter', { params });
+					if (response.data.success) {
+						const data = response.data.data;
+						const transactions = data.transactions || [];
+						totalPages = data.totalPages || 1;
+						totalTransactions = data.total || 0;
+						
+						renderTransactions(transactions);
+						updatePagination();
+						updateResultsInfo();
+						showNoData(transactions.length === 0);
+					} else {
+						showToast(response.data.message || 'Failed to load transactions', 'error');
+					}
+				} catch (error) {
+					console.error('Error loading transactions:', error);
+					showToast('Error loading transactions', 'error');
+				} finally {
+					showLoading(false);
+				}
 			}
 
 			function renderTransactions(transactions) {
-			  const container = document.getElementById('transactions-container');
-			  container.innerHTML = '';
-			  transactions.forEach(transaction => {
-			    const transactionEl = document.createElement('div');
-			    transactionEl.className = 'transaction-row';
+				const container = document.getElementById('transactions-container');
+				container.innerHTML = '';
+				
+				transactions.forEach(transaction => {
+					const transactionEl = document.createElement('div');
+					transactionEl.className = 'transaction-row';
 
-			    const date = new Date(transaction.timestamp).toLocaleDateString('en-IN', {
-			      year: 'numeric', month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit'
-			    });
+					const date = new Date(transaction.timestamp).toLocaleDateString('en-IN', {
+						year: 'numeric',
+						month: 'short',
+						day: 'numeric',
+						hour: '2-digit',
+						minute: '2-digit'
+					});
 
-			    transactionEl.innerHTML = `
-			      <div class="transaction-cell date-cell">${date}</div>
-			      <div class="transaction-cell description-cell">${transaction.description}</div>
-			      <div class="transaction-cell type-cell">
-			        <span class="transaction-type ${transaction.type}">${transaction.type.toUpperCase()}</span>
-			      </div>
-			      <div class="transaction-cell amount-cell">
-			        <span class="amount ${transaction.type}">
-			          ${transaction.type === 'credit' ? '+' : '-'}₹${transaction.amount.toFixed(2)}
-			        </span>
-			      </div>
-			    `;
+					transactionEl.innerHTML = `
+						<div class="transaction-cell date-cell" data-label="Date:">${date}</div>
+						<div class="transaction-cell description-cell" data-label="Description:">${transaction.description}</div>
+						<div class="transaction-cell type-cell" data-label="Type:">
+							<span class="transaction-type ${transaction.type}">${transaction.type.toUpperCase()}</span>
+						</div>
+						<div class="transaction-cell amount-cell" data-label="Amount:">
+							<span class="amount ${transaction.type}">
+								${transaction.type === 'credit' ? '+' : '-'}₹${transaction.amount.toFixed(2)}
+							</span>
+						</div>
+					`;
 
-			    container.appendChild(transactionEl);
-			  });
+					container.appendChild(transactionEl);
+				});
 			}
 
 			function updateBalance(balance) {
-			  document.getElementById('current-balance').textContent = `₹${balance.toFixed(2)}`;
+				document.getElementById('current-balance').textContent = `₹${balance.toFixed(2)}`;
+			}
+
+			function handleSearchChange() {
+				currentFilters.search = document.getElementById('search-input').value.trim();
+				currentPage = 1;
+				loadTransactions();
 			}
 
 			function handleFilterChange() {
-			  currentFilters.type = document.getElementById('type-filter').value;
-			  currentFilters.sort = document.getElementById('sort-filter').value;
-			  currentPage = 1;
-			  loadTransactions();
+				currentFilters.type = document.getElementById('type-filter').value;
+				currentFilters.sort = document.getElementById('sort-filter').value;
+				currentPage = 1;
+				loadTransactions();
 			}
 
-			function changePage(direction) {
-			  currentPage += direction;
-			  loadTransactions();
+			function handleLimitChange() {
+				currentFilters.limit = parseInt(document.getElementById('limit-filter').value);
+				currentPage = 1;
+				loadTransactions();
 			}
 
-			function updatePagination(totalPages) {
-			  const paginationSection = document.getElementById('pagination-section');
-			  const prevBtn = document.getElementById('prev-btn');
-			  const nextBtn = document.getElementById('next-btn');
-			  const pageInfo = document.getElementById('page-info');
+			function clearSearch() {
+				document.getElementById('search-input').value = '';
+				currentFilters.search = '';
+				currentPage = 1;
+				loadTransactions();
+			}
 
-			  if (totalPages > 1) {
-			    paginationSection.style.display = 'flex';
-			    prevBtn.disabled = currentPage === 1;
-			    nextBtn.disabled = currentPage === totalPages;
-			    pageInfo.textContent = `Page ${currentPage} of ${totalPages}`;
-			  } else {
-			    paginationSection.style.display = 'none';
-			  }
+			function goToPage(page) {
+				if (page >= 1 && page <= totalPages && page !== currentPage) {
+					currentPage = page;
+					loadTransactions();
+				}
+			}
+
+			function updatePagination() {
+				const paginationSection = document.getElementById('pagination-section');
+				const firstBtn = document.getElementById('first-btn');
+				const prevBtn = document.getElementById('prev-btn');
+				const nextBtn = document.getElementById('next-btn');
+				const lastBtn = document.getElementById('last-btn');
+				const pageNumbers = document.getElementById('page-numbers');
+				const paginationInfo = document.getElementById('pagination-info-text');
+				const paginationSummary = document.getElementById('pagination-summary-text');
+
+				if (totalPages > 1) {
+					paginationSection.style.display = 'flex';
+
+					// Update navigation buttons
+					firstBtn.disabled = currentPage === 1;
+					prevBtn.disabled = currentPage === 1;
+					nextBtn.disabled = currentPage === totalPages;
+					lastBtn.disabled = currentPage === totalPages;
+
+					// Update page numbers
+					renderPageNumbers();
+
+					// Update info text
+					paginationInfo.textContent = `Page ${currentPage} of ${totalPages}`;
+					
+					// Update summary
+					const startItem = (currentPage - 1) * currentFilters.limit + 1;
+					const endItem = Math.min(currentPage * currentFilters.limit, totalTransactions);
+					paginationSummary.textContent = `Showing ${startItem}-${endItem} of ${totalTransactions} transactions`;
+				} else {
+					paginationSection.style.display = 'none';
+				}
+			}
+
+			function renderPageNumbers() {
+				const pageNumbers = document.getElementById('page-numbers');
+				pageNumbers.innerHTML = '';
+
+				const maxVisiblePages = 5;
+				let startPage, endPage;
+
+				if (totalPages <= maxVisiblePages) {
+					startPage = 1;
+					endPage = totalPages;
+				} else {
+					if (currentPage <= 3) {
+						startPage = 1;
+						endPage = maxVisiblePages;
+					} else if (currentPage + 2 >= totalPages) {
+						startPage = totalPages - maxVisiblePages + 1;
+						endPage = totalPages;
+					} else {
+						startPage = currentPage - 2;
+						endPage = currentPage + 2;
+					}
+				}
+
+				// Add ellipsis before if needed
+				if (startPage > 1) {
+					addPageButton(1);
+					if (startPage > 2) {
+						pageNumbers.appendChild(createEllipsis());
+					}
+				}
+
+				// Add page numbers
+				for (let i = startPage; i <= endPage; i++) {
+					addPageButton(i);
+				}
+
+				// Add ellipsis after if needed
+				if (endPage < totalPages) {
+					if (endPage < totalPages - 1) {
+						pageNumbers.appendChild(createEllipsis());
+					}
+					addPageButton(totalPages);
+				}
+			}
+
+			function addPageButton(pageNum) {
+				const button = document.createElement('button');
+				button.className = `pagination-btn page-number ${pageNum === currentPage ? 'active' : ''}`;
+				button.textContent = pageNum;
+				button.addEventListener('click', () => goToPage(pageNum));
+				document.getElementById('page-numbers').appendChild(button);
+			}
+
+			function createEllipsis() {
+				const span = document.createElement('span');
+				span.className = 'pagination-ellipsis';
+				span.textContent = '...';
+				return span;
+			}
+
+			function updateResultsInfo() {
+				const resultsCount = document.getElementById('results-count');
+				if (totalTransactions === 0) {
+					resultsCount.textContent = 'No transactions found';
+				} else if (totalTransactions === 1) {
+					resultsCount.textContent = 'Showing 1 transaction';
+				} else {
+					resultsCount.textContent = `Showing ${totalTransactions} transactions`;
+				}
 			}
 
 			function showLoading(show) {
-			  document.getElementById('loading').style.display = show ? 'flex' : 'none';
+				document.getElementById('loading').style.display = show ? 'flex' : 'none';
 			}
 
 			function showNoData(show) {
-			  document.getElementById('no-data').style.display = show ? 'flex' : 'none';
+				document.getElementById('no-data').style.display = show ? 'flex' : 'none';
 			}
 		</script>
 	</body>
