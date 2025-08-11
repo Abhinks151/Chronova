@@ -144,13 +144,13 @@ function renderProducts() {
                 
                 <div class="product-actions">
                     ${product.stockQuantity === 0
-                        ? `
+            ? `
                         <button class="btn btn-disabled" disabled>
                             <i class="fas fa-shopping-cart"></i>
                             Add to Cart
                         </button>
                         `
-                        : `
+            : `
                         <button class="btn btn-primary" onclick="event.stopPropagation(); addToCart('${product._id}')">
                             <i class="fas fa-shopping-cart"></i>
                             Add to Cart
@@ -353,10 +353,10 @@ async function addToCart(productId) {
         const response = await fetch('/user/cart/add', {
             method: 'POST',
             headers: {
-                'Content-Type': 'application/json',
+                'Content-Type': 'application/json'
             },
             body: JSON.stringify({
-                productId: productId,
+                productId,
                 quantity: 1
             })
         });
@@ -366,6 +366,16 @@ async function addToCart(productId) {
         if (response.ok) {
             showToaster('Product added to cart successfully!', 'success');
             updateCartCount();
+            updateWishlistCount();
+
+            const heartIcon = document.querySelector(`.wishlist-btn-card i[data-id="${productId}"]`)
+                || document.querySelector(`.wishlist-btn-card[onclick*="${productId}"] i`);
+
+            if (heartIcon) {
+                heartIcon.classList.remove('fas', 'filled');
+                heartIcon.classList.add('far');
+            }
+
         } else {
             showToaster(data.message || 'Failed to add product to cart', 'error');
         }
@@ -374,6 +384,7 @@ async function addToCart(productId) {
         showToaster('Failed to add product to cart. Please try again.', 'error');
     }
 }
+
 
 async function toggleWishlist(productId) {
     try {

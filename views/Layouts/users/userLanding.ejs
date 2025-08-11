@@ -632,7 +632,8 @@
 			            }
 			        } catch (error) {
 			            console.error('Error updating wishlist:', error);
-			            this.showNotification('Failed to update wishlist', 'error');
+									const err = error.response.data
+			            this.showNotification(err.message || 'Failed to update wishlist', 'error');
 			        }
 			    }
 
@@ -672,22 +673,33 @@
 			    }
 
 			    async addToCart(productId) {
-							try {
-									const response = await axios.post('/user/cart/add', {
-											productId: productId,
-											quantity: 1
-									});
-									if (response.data && response.data.success) {
-											this.showNotification('Product added to cart!', 'success');
-											await this.updateCartCount();
-									} else {
-											this.showNotification(response.data.message || 'Failed to add to cart', 'error');
-									}
-							} catch (error) {
-									const errorMsg = error.response?.data?.message || 'An error occurred while adding to cart';
-									this.showNotification(errorMsg, 'error');
-							}
-					}
+			        try {
+			            const response = await axios.post('/user/cart/add', {
+			                productId,
+			                quantity: 1
+			            });
+			            if (response.data && response.data.success) {
+			                this.showNotification('Product added to cart!', 'success');
+			                await this.updateCartCount();
+			                await this.updateWishlistCount();
+
+			                const productCard = document.querySelector(`.product-card[data-product-id="${productId}"]`);
+			                if (productCard) {
+			                    const heartIcon = productCard.querySelector('.wishlist-btn i');
+			                    if (heartIcon) {
+			                        heartIcon.classList.remove('fas', 'filled');
+			                        heartIcon.classList.add('far');
+			                    }
+			                }
+			            } else {
+			                this.showNotification(response.data.message || 'Failed to add to cart', 'error');
+			            }
+			        } catch (error) {
+			            const errorMsg = error.response?.data?.message || 'An error occurred while adding to cart';
+			            this.showNotification(errorMsg, 'error');
+			        }
+			    }
+
 
 			    quickView(productId) {
 			        window.location.href = `/user/product/${productId}`;

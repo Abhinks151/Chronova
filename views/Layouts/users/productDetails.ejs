@@ -8,6 +8,18 @@
     <!-- Drift CSS - MUST be in head -->
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/drift-zoom@1.4.0/dist/drift-basic.min.css">
     <link rel="stylesheet" href="/styles/user/user-product-details.css">
+    <style>
+        /* Default outline heart color */
+        #wishlist-icon {
+          color: gray;
+          transition: color 0.2s ease-in-out;
+        }
+      
+        /* Color when item is in wishlist */
+        #wishlist-icon.filled {
+          color: red;
+        }
+      </style>
     <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
 </head>
 <body>
@@ -122,8 +134,9 @@
 
 	<!-- Wishlist -->
 	<button class="wishlist-btn" onclick="toggleWishlist()">
-		<i id="wishlist-icon" class="far fa-heart <%= isInWishlist ? 'fas filled' : '' %>"></i>
-	</button>
+        <i id="wishlist-icon" 
+           class="fa-heart <%= isInWishlist ? 'fas filled' : 'far' %>"></i>
+      </button>
 </div>
 
             </div>
@@ -485,63 +498,44 @@
         }
     }
 
-    // Action Functions
+
     async function addToCart() {
-        try {
-            const pathParts = window.location.pathname.split('/');
-            const productId = pathParts[pathParts.length - 1];
-            if (typeof axios === 'undefined') {
-                showNotification('Axios library not loaded!', 'error');
-                return;
+    try {
+        const pathParts = window.location.pathname.split('/');
+        const productId = pathParts[pathParts.length - 1];
+
+        const response = await axios.post('/user/cart/add', {
+            productId: productId,
+            quantity: currentQuantity
+        });
+
+        if (response.status) {
+            const result = response.data;
+
+            showNotification('Product added to cart successfully!', 'success');
+
+            updateCartCount(result.cartCount || cartCount + currentQuantity);
+
+            updateWishlistCount();
+
+            const heartIcon = document.querySelector('#wishlist-icon');
+            if (heartIcon) {
+                heartIcon.classList.remove('fas', 'filled');
+                heartIcon.classList.add('far');
             }
 
-            const response = await axios.post('/user/cart/add', {
-                productId: productId,
-                quantity: currentQuantity
-            });
-
-            if (response.status) {
-                const result = response.data;
-                showNotification('Product added to cart successfully!', 'success');
-                updateCartCount(result.cartCount || cartCount + currentQuantity);
-            } else {
-                const error = response.data;
-                showNotification(error.message || 'Failed to add product to cart', 'error');
-            }
-        } catch (error) {
-            const errorMsg = error.response?.data?.message || 'An error occurred while adding to cart';
-            console.error('Error adding to cart:', error);
-            showNotification(errorMsg, 'error');
+        } else {
+            const error = response.data;
+            showNotification(error.message || 'Failed to add product to cart', 'error');
         }
+    } catch (error) {
+        const errorMsg = error.response?.data?.message || 'An error occurred while adding to cart';
+        console.error('Error adding to cart:', error);
+        showNotification(errorMsg, 'error');
     }
+}
 
-    async function buyNow() {
-        try {
-            const pathParts = window.location.pathname.split('/');
-            const productId = pathParts[pathParts.length - 1];
-            
-            const addToCartResponse = await fetch('/user/cart/add', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                },
-                body: JSON.stringify({
-                    productId: productId,
-                    quantity: currentQuantity
-                })
-            });
-            
-            if (addToCartResponse.ok) {
-                window.location.href = '/checkout';
-            } else {
-                const error = await addToCartResponse.json();
-                showNotification(error.message || 'Failed to proceed to checkout', 'error');
-            }
-        } catch (error) {
-            console.error('Error in buy now:', error);
-            showNotification('An error occurred while processing your request', 'error');
-        }
-    }
+
 
     async function toggleWishlist() {
     try {
@@ -550,31 +544,36 @@
 
         const response = await fetch('/user/profile/wishlist/toggle', {
             method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-            },
+            headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ productId })
         });
 
         const data = await response.json();
 
-        if (response.ok) {
-            const action = data.action || 'updated'; // expected: 'added' or 'removed'
-            const message = action === 'added' ? 'Product added to wishlist!' : 'Product removed from wishlist!';
-            showNotification(message, 'success');
-
-            // Toggle heart icon on product page
-            const heartIcon = document.querySelector('#wishlist-icon');
-            if (heartIcon) {
-                heartIcon.classList.toggle('fas', action === 'added');
-                heartIcon.classList.toggle('far', action !== 'added');
-                heartIcon.classList.toggle('filled', action === 'added'); // optional for styling
-            }
-
-            updateWishlistCount(); 
-        } else {
+        if (!response.ok) {
             showNotification(data.message || 'Failed to update wishlist', 'error');
+            return;
         }
+
+        const action = data.action || 'updated';
+        showNotification(
+            action === 'added' ? 'Product added to wishlist!' : 'Product removed from wishlist!',
+            'success'
+        );
+
+        // Update heart icon
+        const heartIcon = document.querySelector('#wishlist-icon');
+        if (heartIcon) {
+            heartIcon.classList.toggle('fas', action === 'added');
+            heartIcon.classList.toggle('far', action !== 'added');
+            heartIcon.classList.toggle('filled', action === 'added'); // controls color
+        }
+
+        // Optionally update wishlist count
+        if (typeof updateWishlistCount === 'function') {
+            updateWishlistCount();
+        }
+
     } catch (error) {
         console.error('Error toggling wishlist:', error);
         showNotification('An error occurred while updating wishlist', 'error');
@@ -656,27 +655,40 @@
     function goToProduct(productId) {
         window.location.href = `/user/product/${productId}`;
     }
+    
     async function addFeaturedToCart(productId) {
-        try {
-            const response = await axios.post('/user/cart/add', {
-                productId: productId,
-                quantity: 1
-            });
+    try {
+        const response = await axios.post('/user/cart/add', {
+            productId: productId,
+            quantity: 1
+        });
 
-            if (response.status === 200) {
-                const result = response.data;
-                showNotification('Product added to cart!', 'success');
-                updateCartCount(result.cartCount || cartCount + 1);
-            } else {
-                const error = response.data;
-                showNotification(error.message || 'Failed to add to cart', 'error');
+        if (response.status === 200) {
+            const result = response.data;
+            showNotification('Product added to cart!', 'success');
+            updateCartCount(result.cartCount || cartCount + 1);
+            updateWishlistCount();
+
+            const heartIcon = document.querySelector(`#featured-heart-${productId}`);
+            if (heartIcon) {
+                heartIcon.classList.remove('fas', 'filled');
+                heartIcon.classList.add('far');
+                heartIcon.style.color = '';
             }
-        } catch (error) {
-            const errorMsg = error.response?.data?.message || 'An error occurred while adding to cart';
-            console.error('Error adding featured product to cart:', error);
-            showNotification(errorMsg, 'error');
+
+            updateWishlistButton?.();
+
+        } else {
+            const error = response.data;
+            showNotification(error.message || 'Failed to add to cart', 'error');
         }
+    } catch (error) {
+        const errorMsg = error.response?.data?.message || 'An error occurred while adding to cart';
+        console.error('Error adding featured product to cart:', error);
+        showNotification(errorMsg, 'error');
     }
+}
+
 
 async function toggleFeaturedWishlist(productId) {
     try {
