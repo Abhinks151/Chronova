@@ -91,14 +91,7 @@
                 <h1 class="product-title"><%= product.productName %></h1>
                 <div class="brand-name">by <%= product.brand %></div>
 
-                <div class="rating-section">
-                    <div class="stars">
-                        <% for(let i = 1; i <= 5; i++) { %>
-                            <i class="fa<%= i <= Math.floor(product.averageRating) ? 's' : 'r' %> fa-star"></i>
-                        <% } %>
-                    </div>
-                    <span class="rating-text"><%= product.averageRating %> (<%= product.reviewCount %> reviews)</span>
-                </div>
+                
 
                 <div class="price-section">
                     <span class="current-price">₹<%= price.offerPrice %></span>
@@ -606,7 +599,7 @@
   
   
     const heartClass = product.isInWishlist ? 'fas filled' : 'far';
-    const heartStyle = product.isInWishlist ? 'color: #e11d48;' : ''; // optional: use a red color when active
+    const heartStyle = product.isInWishlist ? 'color: #e11d48;' : ''; 
 
     return `
         <div class="featured-card" onclick="goToProduct('${product._id}')">

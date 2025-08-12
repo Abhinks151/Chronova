@@ -186,7 +186,8 @@ export const placeOrderService = async (userId, orderData, req, isVerifiedOnline
       const finalPricePerUnit = itemQty > 0 ? Math.round((finalItemTotal / itemQty) * 100) / 100 : 0;
 
       const status = orderData.paymentMethod === 'cod' ? 'Pending' : 'Paid';
-
+      const itemStatus = isVerifiedOnline ? "Placed" : orderData.paymentMethod === 'cod' ? "Placed" : "Pending";
+      
 
       for (let i = 0; i < itemQty; i++) {
         items.push({
@@ -205,13 +206,13 @@ export const placeOrderService = async (userId, orderData, req, isVerifiedOnline
             url: product.images?.[0]?.url || "",
             public_id: product.images?.[0]?.public_id || "",
           },
-          status: "Placed",
-          paymentStatus: status,
+          status: itemStatus,
+          paymentStatus: isVerifiedOnline ? status : "Failed",
         });
       }
     });
 
-    // Calculate order totals
+    // order totals
     const subtotal = items.reduce((acc, curr) => acc + (Number(curr.finalPrice) || 0), 0);
     const totalAmount = items.reduce((acc, curr) => acc + (Number(curr.netItemTotal) || 0), 0);
     const actualCouponDiscount = subtotal - totalAmount;
@@ -258,6 +259,8 @@ export const placeOrderService = async (userId, orderData, req, isVerifiedOnline
       }
 
       if (coupon.applicableFor.usageCount >= coupon.applicableFor.limit) {
+        console.log(coupon.applicableFor.usageCount);
+        console.log(coupon.applicableFor.limit);
         throw new Error("Coupon usage limit exceeded");
       }
 
@@ -277,6 +280,9 @@ export const placeOrderService = async (userId, orderData, req, isVerifiedOnline
       await coupon.save({ session });
     }
 
+
+    const orderStatus = orderData.paymentMethod === 'cod' ? 'Placed' : isVerifiedOnline ? 'Placed' : 'Pending';
+
     // Create the order
     const newOrder = new Order({
       userId,
@@ -285,6 +291,7 @@ export const placeOrderService = async (userId, orderData, req, isVerifiedOnline
       subtotal,
       discount: actualCouponDiscount,
       totalAmount,
+      orderStatus,
       paymentMethod: orderData.paymentMethod.toUpperCase(),
       coupon: orderData.coupon ? {
         ...orderData.coupon,
@@ -418,16 +425,16 @@ export const placeOrderService = async (userId, orderData, req, isVerifiedOnline
 export const orderListByUserId = async (userId, page = 1, limit = 10, statusFilter = 'all', searchTerm = '') => {
   try {
     const skip = (page - 1) * limit;
-    
+
     let query = { userId };
-    
+
     if (statusFilter !== 'all') {
       query.$or = [
         { orderStatus: statusFilter },
         { 'items.status': statusFilter }
       ];
     }
-    
+
     if (searchTerm) {
       query.$or = [
         ...(query.$or || []),
@@ -438,7 +445,7 @@ export const orderListByUserId = async (userId, page = 1, limit = 10, statusFilt
     }
 
     const totalOrders = await Order.countDocuments(query);
-    
+
     const orders = await Order.find(query)
       .sort({ createdAt: -1 })
       .skip(skip)

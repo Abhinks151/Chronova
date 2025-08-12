@@ -579,16 +579,7 @@
 			                    <div class="product-brand">${product.brand || 'Premium Brand'}</div>
 			                    <h3 class="product-name">${product.productName}</h3>
 			                    <div class="product-description">${product.description ? product.description.substring(0, 60) + '...' : 'Premium timepiece with exceptional craftsmanship'}</div>
-			                    <div class="product-rating">
-			                        <div class="stars">
-			                            <i class="fas fa-star"></i>
-			                            <i class="fas fa-star"></i>
-			                            <i class="fas fa-star"></i>
-			                            <i class="fas fa-star"></i>
-			                            <i class="fas fa-star"></i>
-			                        </div>
-			                        <span class="review-count">(0 reviews)</span>
-			                    </div>
+			                    
 			                    <div class="product-price">
 			                        <span class="current-price">₹${product.offer.offerPrice}</span>
 			                        ${product.offer.offerPrice < product.price ? `

@@ -35,10 +35,10 @@ router.get("/orders", authenticateUser, getOrderMangementPage)
 router.get("/orders/data", authenticateUser, getOrderMangementPageData)
 router.get("/orders/:orderId", authenticateUser, getSingleOrderController)
 
-router.post("/orders/:orderId/cancel", authenticateUser, cancelEntireOrderController);
-router.post("/orders/:orderId/cancel/:itemId", authenticateUser, cancelSingleItemController);
-router.post("/orders/:orderId/return/:itemId", authenticateUser, returnOrderItemController)
-router.post("/orders/:orderId/return", authenticateUser, returnEntireOrderController)
+router.patch("/orders/:orderId/cancel", authenticateUser, cancelEntireOrderController);
+router.patch("/orders/:orderId/cancel/:itemId", authenticateUser, cancelSingleItemController);
+router.patch("/orders/:orderId/return/:itemId", authenticateUser, returnOrderItemController)
+router.patch("/orders/:orderId/return", authenticateUser, returnEntireOrderController)
 
 router.get("/orders/invoice/:orderId", authenticateUser, viewInvoiceController)
 router.get("/orders/invoice/download/:orderId", authenticateUser, downloadInvoiceController)

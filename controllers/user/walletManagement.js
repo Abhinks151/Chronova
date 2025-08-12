@@ -58,7 +58,7 @@ export const getFilteredWalletHistory = async (req, res) => {
     const userId = req.user._id || req.user.id;
     const { 
       page = 1, 
-      limit = 10, 
+      limit = 1, 
       search = '', 
       type = '', 
       sort = 'desc' 

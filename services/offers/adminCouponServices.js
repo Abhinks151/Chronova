@@ -218,7 +218,7 @@ export const getAllActiveCouponsService = async (userId) => {
       { userId: id }
     ],
 
-    "applicableFor.usedBy": { $ne: id }
+    "applicableFor.usedBy": { $nin: [id] }
   });
 
   return data;

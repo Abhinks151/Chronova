@@ -91,6 +91,8 @@ export const placeOrder = async (req, res) => {
       isPaid: isVerifiedOnline,
     };
 
+    
+
     const order = await placeOrderService(userId, orderData, req, isVerifiedOnline);
 
     return res.status(httpStatusCode.OK.code).json({
@@ -132,7 +134,7 @@ export const getConformPage = (req, res) => {
 
 export const getOrderMangementPage = (req, res) => {
   try {
-    res.render("Layouts/users/orders",{ orders: [] });
+    res.render("Layouts/users/orders", { orders: [] });
   } catch (error) {
     logger.error('Error rendering order management page:', error);
     console.error("Error rendering order management page:", error);
@@ -147,7 +149,7 @@ export const getOrderMangementPage = (req, res) => {
 export const getOrderMangementPageData = async (req, res) => {
   try {
     const userId = req.user._id || req.user.id;
-    
+
     if (!userId) {
       return res.status(httpStatusCode.UNAUTHORIZED.code).json({
         success: false,
@@ -375,6 +377,16 @@ export const retryPaymentController = async (req, res) => {
       orderId: razorpayOrder.id,
       receipt: razorpayOrder.receipt,
     };
+
+
+    order.isPaid = true;
+    for (let i = 0; i < order.items.length; i++) {
+      order.items[i].paymentStatus = "Paid";
+      order.items[i].status = "Placed";
+    }
+    order.isPaid = true;
+    order.orderStatus = "Placed";
+
     await order.save();
 
     res.status(httpStatusCode.OK.code).json({

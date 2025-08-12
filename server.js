@@ -7,17 +7,14 @@ import './config/passport.js';
 import passport from "passport";
 import nocache from "nocache";
 import session from "express-session";
-// import MongoStore from 'connect-mongo';
-import httpStatusCode from "./utils/httpStatusCode.js"
 
-// import csurf from "csurf";
 
 import connection from "./config/dbConnection.js";
-// import { errorMiddleware } from "./middlewares/errorMiddleware.js";
 
 import indexRoutes from "./routes/index.js";
 import { authenticateUser } from "./middlewares/userAuthMiddleware.js";
-// import { requestLogger } from "./middlewares/requestLogger.js";
+import errorHandler from "./middlewares/errorMiddleware.js";
+import notFoundHandler from "./middlewares/404Page.js";
 
 dotenv.config();
 const PORT = process.env.PORT || 3000;
@@ -50,28 +47,8 @@ app.use(
 );
 
 
-// const isProduction = process.env.NODE_ENV === "production";
-// app.set("trust proxy", 1);
-// app.use(
-//   session({
-//     secret: "Abhin is the batman",
-//     resave: false,
-//     saveUninitialized: false, // Don't save empty sessions
-//     cookie: {
-//       secure: isProduction,         // True in production
-//       httpOnly: true,
-//       sameSite: isProduction ? "none" : "lax", // Allows cross-origin in prod
-//     },
-//   })
-// );
 
 
-
-
-// Error handler
-// app.use(errorMiddleware);
-
-// app.use(requestLogger);
 app.use("/", indexRoutes);
 
 app.get('/',authenticateUser,(req,res)=>{
@@ -83,20 +60,12 @@ app.get("/error", (req, res, next) => {
 });
 
 
-app.use((req, res) => {
-  res.status(httpStatusCode.NOT_FOUND.code).render('Layouts/404');
-});
+//404 page
+app.use(notFoundHandler);
 
 
 //Error
-app.use((err, req, res, next) => {
-  console.log(err);
-  res.status(httpStatusCode.INTERNAL_SERVER_ERROR.code).render("Layouts/error", {
-    statusCode: httpStatusCode.INTERNAL_SERVER_ERROR.code,
-    message: "Internal Server Error",
-    description: "Something went wrong. Please try again later.",
-  });
-})
+app.use(errorHandler);
 
 
 

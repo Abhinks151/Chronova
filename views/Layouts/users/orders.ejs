@@ -313,6 +313,36 @@
       </div>
     </div>
 
+    <!-- Confirmation Modal -->
+    <div id="confirmation-modal" class="modal">
+      <div class="modal-content confirmation-modal-content">
+        <div class="modal-header confirmation-header">
+          <div class="confirmation-icon">
+            <i class="fas fa-exclamation-triangle"></i>
+          </div>
+          <h2 id="confirmation-title">Confirm Action</h2>
+        </div>
+        <div class="modal-body">
+          <p id="confirmation-message">Are you sure you want to proceed?</p>
+          <div
+            class="confirmation-details"
+            id="confirmation-details"
+            style="display: none"
+          >
+            <!-- Additional details will be populated here -->
+          </div>
+        </div>
+        <div class="modal-footer confirmation-footer">
+          <button id="confirmation-cancel" class="btn-cancel">
+            <i class="fas fa-times"></i> Cancel
+          </button>
+          <button id="confirmation-confirm" class="btn-confirm">
+            <i class="fas fa-check"></i> Confirm
+          </button>
+        </div>
+      </div>
+    </div>
+
     <!-- Toast Container -->
     <div id="toast-container" class="toast-container"></div>
 
@@ -398,6 +428,29 @@
         document
           .getElementById("return-form")
           .addEventListener("submit", handleReturnSubmission);
+
+        // Add to setupEventListeners function
+        document
+          .getElementById("confirmation-cancel")
+          .addEventListener("click", hideConfirmationModal);
+        document
+          .getElementById("confirmation-confirm")
+          .addEventListener("click", () => {
+            if (confirmationCallback) {
+              confirmationCallback();
+            }
+          });
+
+        // Update existing modal click outside listener
+        window.addEventListener("click", function (event) {
+          const orderModal = document.getElementById("order-details-modal");
+          const returnModal = document.getElementById("return-modal");
+          const confirmModal = document.getElementById("confirmation-modal");
+
+          if (event.target === orderModal) closeOrderModal();
+          if (event.target === returnModal) closeReturnModal();
+          if (event.target === confirmModal) hideConfirmationModal();
+        });
 
         // Return reason select change
         document
@@ -643,7 +696,7 @@
                             ${
                               order.paymentMethod === "ONLINE" &&
                               !order.isPaid &&
-                              order.orderStatus === "Placed"
+                              order.orderStatus === "Pending"
                                 ? `
                                 <button onclick="retryPayment('${order.orderId}')" class="action-btn download-btn">
                                     Retry Payment
@@ -910,40 +963,119 @@
       }
 
       // Cancel individual item
+      // Confirmation Modal Functions
+      let confirmationCallback = null;
+
+      function showConfirmationModal(
+        title,
+        message,
+        details = null,
+        confirmText = "Confirm",
+        confirmAction = null
+      ) {
+        document.getElementById("confirmation-title").textContent = title;
+        document.getElementById("confirmation-message").textContent = message;
+
+        const detailsDiv = document.getElementById("confirmation-details");
+        if (details) {
+          detailsDiv.innerHTML = details;
+          detailsDiv.style.display = "block";
+        } else {
+          detailsDiv.style.display = "none";
+        }
+
+        const confirmBtn = document.getElementById("confirmation-confirm");
+        confirmBtn.innerHTML = `<i class="fas fa-check"></i> ${confirmText}`;
+
+        confirmationCallback = confirmAction;
+
+        document.getElementById("confirmation-modal").style.display = "flex";
+        document.body.style.overflow = "hidden";
+      }
+
+      function hideConfirmationModal() {
+        document.getElementById("confirmation-modal").style.display = "none";
+        document.body.style.overflow = "auto";
+        confirmationCallback = null;
+      }
+
+      // Updated Cancel Functions
       async function cancelItem(orderId, itemId) {
-        if (!confirm("Are you sure you want to cancel this item?")) return;
+        const order = orders.find((o) => o.orderId === orderId);
+        const item = order?.items.find((i) => i._id === itemId);
 
-        try {
-          await axios.post(`/user/orders/${orderId}/cancel/${itemId}`);
-          showToast("Item cancelled successfully!", "success");
-          await loadOrders();
-        } catch (error) {
-          console.error("Error cancelling item:", error);
-          showToast(
-            error.response?.data?.message || "Failed to cancel item",
-            "error"
-          );
-        }
+        const details = item
+          ? `
+    <h4>Item Details:</h4>
+    <p><strong>Product:</strong> ${item.productName}</p>
+    <p><strong>Brand:</strong> ${item.brand}</p>
+    <p><strong>Quantity:</strong> ${item.quantity}</p>
+    <p><strong>Amount:</strong> ₹${(
+      item.netItemTotal * item.quantity
+    ).toLocaleString()}</p>
+  `
+          : null;
+
+        showConfirmationModal(
+          "Cancel Item",
+          "Are you sure you want to cancel this item? This action cannot be undone.",
+          details,
+          "Cancel Item",
+          async () => {
+            try {
+              await axios.patch(`/user/orders/${orderId}/cancel/${itemId}`);
+              showToast("Item cancelled successfully!", "success");
+              await loadOrders();
+              hideConfirmationModal();
+            } catch (error) {
+              console.error("Error cancelling item:", error);
+              showToast(
+                error.response?.data?.message || "Failed to cancel item",
+                "error"
+              );
+              hideConfirmationModal();
+            }
+          }
+        );
       }
 
-      // Cancel entire order
       async function cancelEntireOrder(orderId) {
-        if (!confirm("Are you sure you want to cancel this entire order?"))
-          return;
+        const order = orders.find((o) => o.orderId === orderId);
 
-        try {
-          await axios.post(`/user/orders/${orderId}/cancel`);
-          showToast("Order cancelled successfully!", "success");
-          await loadOrders();
-        } catch (error) {
-          console.error("Error cancelling order:", error);
-          showToast(
-            error.response?.data?.message || "Failed to cancel order",
-            "error"
-          );
-        }
+        const details = order
+          ? `
+    <h4>Order Details:</h4>
+    <p><strong>Order ID:</strong> ${order.orderId}</p>
+    <p><strong>Items:</strong> ${order.items.length} item${
+              order.items.length > 1 ? "s" : ""
+            }</p>
+    <p><strong>Total Amount:</strong> ₹${order.totalAmount.toLocaleString()}</p>
+    <p style="color: #ef4444; margin-top: 12px;"><strong>Note:</strong> All items in this order will be cancelled.</p>
+  `
+          : null;
+
+        showConfirmationModal(
+          "Cancel Order",
+          "Are you sure you want to cancel this entire order? This action cannot be undone.",
+          details,
+          "Cancel Order",
+          async () => {
+            try {
+              await axios.patch(`/user/orders/${orderId}/cancel`);
+              showToast("Order cancelled successfully!", "success");
+              await loadOrders();
+              hideConfirmationModal();
+            } catch (error) {
+              console.error("Error cancelling order:", error);
+              showToast(
+                error.response?.data?.message || "Failed to cancel order",
+                "error"
+              );
+              hideConfirmationModal();
+            }
+          }
+        );
       }
-
       // Return individual item
       function returnItem(orderId, itemId, productName) {
         currentReturnOrder = orderId;
@@ -1013,7 +1145,7 @@
             ? `/user/orders/${currentReturnOrder}/return`
             : `/user/orders/${currentReturnOrder}/return/${currentReturnItem}`;
 
-          await axios.post(url, { returnReason });
+          await axios.patch(url, { returnReason });
 
           showToast(
             "Return request submitted successfully! Admin will review your request.",

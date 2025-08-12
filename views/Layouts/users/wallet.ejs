@@ -83,28 +83,20 @@
 						</div>
 					</div>
 
-					<!-- Enhanced Pagination -->
-					<div class="pagination-section" id="pagination-section" style="display: none;">
+					<!-- Simplified Pagination - Always Visible -->
+					<div class="pagination-section" id="pagination-section">
 						<div class="pagination-info">
-							<span id="pagination-info-text">Page 1 of 1</span>
 						</div>
 						<div class="pagination-controls">
-							<button id="first-btn" class="pagination-btn pagination-btn-nav" title="First Page">
-								<i class="fas fa-angle-double-left"></i>
-							</button>
-							<button id="prev-btn" class="pagination-btn pagination-btn-nav" title="Previous Page">
+							<button id="prev-btn" class="pagination-btn pagination-btn-nav">
 								<i class="fas fa-angle-left"></i> Previous
 							</button>
-							<div id="page-numbers" class="page-numbers"></div>
-							<button id="next-btn" class="pagination-btn pagination-btn-nav" title="Next Page">
+							<button id="next-btn" class="pagination-btn pagination-btn-nav">
 								Next <i class="fas fa-angle-right"></i>
-							</button>
-							<button id="last-btn" class="pagination-btn pagination-btn-nav" title="Last Page">
-								<i class="fas fa-angle-double-right"></i>
 							</button>
 						</div>
 						<div class="pagination-summary">
-							<span id="pagination-summary-text">Showing 1-10 of 0 transactions</span>
+							<span id="pagination-summary-text">Showing 0 of 0 transactions</span>
 						</div>
 					</div>
 				</div>
@@ -130,7 +122,7 @@
 				search: '',
 				type: '',
 				sort: 'desc',
-				limit: 10
+				limit: 1
 			};
 			let walletData = null;
 			let totalPages = 1;
@@ -145,12 +137,21 @@
 			function setupEventListeners() {
 				// Search functionality with debouncing
 				const searchInput = document.getElementById('search-input');
-				searchInput.addEventListener('input', function() {
-					clearTimeout(searchTimeout);
-					searchTimeout = setTimeout(() => {
-						handleSearchChange();
-					}, 500);
-				});
+				if (searchInput) {
+					searchInput.addEventListener('input', function() {
+						clearTimeout(searchTimeout);
+						searchTimeout = setTimeout(() => {
+							handleSearchChange();
+						}, 500);
+					});
+
+					// Enter key for search
+					searchInput.addEventListener('keypress', function(e) {
+						if (e.key === 'Enter') {
+							handleSearchChange();
+						}
+					});
+				}
 
 				// Filter and limit changes
 				document.getElementById('type-filter').addEventListener('change', handleFilterChange);
@@ -158,21 +159,14 @@
 				document.getElementById('limit-filter').addEventListener('change', handleLimitChange);
 
 				// Search and clear buttons
-				document.getElementById('search-btn').addEventListener('click', handleSearchChange);
-				document.getElementById('clear-search-btn').addEventListener('click', clearSearch);
+				const searchBtn = document.getElementById('search-btn');
+				const clearSearchBtn = document.getElementById('clear-search-btn');
+				if (searchBtn) searchBtn.addEventListener('click', handleSearchChange);
+				if (clearSearchBtn) clearSearchBtn.addEventListener('click', clearSearch);
 
-				// Pagination controls
-				document.getElementById('first-btn').addEventListener('click', () => goToPage(1));
+				// Pagination controls - simplified
 				document.getElementById('prev-btn').addEventListener('click', () => goToPage(currentPage - 1));
 				document.getElementById('next-btn').addEventListener('click', () => goToPage(currentPage + 1));
-				document.getElementById('last-btn').addEventListener('click', () => goToPage(totalPages));
-
-				// Enter key for search
-				searchInput.addEventListener('keypress', function(e) {
-					if (e.key === 'Enter') {
-						handleSearchChange();
-					}
-				});
 			}
 
 			async function loadWalletData() {
@@ -265,7 +259,8 @@
 			}
 
 			function handleSearchChange() {
-				currentFilters.search = document.getElementById('search-input').value.trim();
+				const searchInput = document.getElementById('search-input');
+				currentFilters.search = searchInput ? searchInput.value.trim() : '';
 				currentPage = 1;
 				loadTransactions();
 			}
@@ -284,7 +279,8 @@
 			}
 
 			function clearSearch() {
-				document.getElementById('search-input').value = '';
+				const searchInput = document.getElementById('search-input');
+				if (searchInput) searchInput.value = '';
 				currentFilters.search = '';
 				currentPage = 1;
 				loadTransactions();
@@ -298,97 +294,27 @@
 			}
 
 			function updatePagination() {
-				const paginationSection = document.getElementById('pagination-section');
-				const firstBtn = document.getElementById('first-btn');
 				const prevBtn = document.getElementById('prev-btn');
 				const nextBtn = document.getElementById('next-btn');
-				const lastBtn = document.getElementById('last-btn');
-				const pageNumbers = document.getElementById('page-numbers');
-				const paginationInfo = document.getElementById('pagination-info-text');
 				const paginationSummary = document.getElementById('pagination-summary-text');
 
-				if (totalPages > 1) {
-					paginationSection.style.display = 'flex';
+				// Always show pagination section
+				document.getElementById('pagination-section').style.display = 'flex';
 
-					// Update navigation buttons
-					firstBtn.disabled = currentPage === 1;
-					prevBtn.disabled = currentPage === 1;
-					nextBtn.disabled = currentPage === totalPages;
-					lastBtn.disabled = currentPage === totalPages;
+				// Update navigation buttons
+				prevBtn.disabled = currentPage === 1;
+				nextBtn.disabled = currentPage >= totalPages;
 
-					// Update page numbers
-					renderPageNumbers();
-
-					// Update info text
-					paginationInfo.textContent = `Page ${currentPage} of ${totalPages}`;
-					
-					// Update summary
+				// Update info text
+				
+				// Update summary
+				if (totalTransactions === 0) {
+					paginationSummary.textContent = 'No transactions to display';
+				} else {
 					const startItem = (currentPage - 1) * currentFilters.limit + 1;
 					const endItem = Math.min(currentPage * currentFilters.limit, totalTransactions);
 					paginationSummary.textContent = `Showing ${startItem}-${endItem} of ${totalTransactions} transactions`;
-				} else {
-					paginationSection.style.display = 'none';
 				}
-			}
-
-			function renderPageNumbers() {
-				const pageNumbers = document.getElementById('page-numbers');
-				pageNumbers.innerHTML = '';
-
-				const maxVisiblePages = 5;
-				let startPage, endPage;
-
-				if (totalPages <= maxVisiblePages) {
-					startPage = 1;
-					endPage = totalPages;
-				} else {
-					if (currentPage <= 3) {
-						startPage = 1;
-						endPage = maxVisiblePages;
-					} else if (currentPage + 2 >= totalPages) {
-						startPage = totalPages - maxVisiblePages + 1;
-						endPage = totalPages;
-					} else {
-						startPage = currentPage - 2;
-						endPage = currentPage + 2;
-					}
-				}
-
-				// Add ellipsis before if needed
-				if (startPage > 1) {
-					addPageButton(1);
-					if (startPage > 2) {
-						pageNumbers.appendChild(createEllipsis());
-					}
-				}
-
-				// Add page numbers
-				for (let i = startPage; i <= endPage; i++) {
-					addPageButton(i);
-				}
-
-				// Add ellipsis after if needed
-				if (endPage < totalPages) {
-					if (endPage < totalPages - 1) {
-						pageNumbers.appendChild(createEllipsis());
-					}
-					addPageButton(totalPages);
-				}
-			}
-
-			function addPageButton(pageNum) {
-				const button = document.createElement('button');
-				button.className = `pagination-btn page-number ${pageNum === currentPage ? 'active' : ''}`;
-				button.textContent = pageNum;
-				button.addEventListener('click', () => goToPage(pageNum));
-				document.getElementById('page-numbers').appendChild(button);
-			}
-
-			function createEllipsis() {
-				const span = document.createElement('span');
-				span.className = 'pagination-ellipsis';
-				span.textContent = '...';
-				return span;
 			}
 
 			function updateResultsInfo() {

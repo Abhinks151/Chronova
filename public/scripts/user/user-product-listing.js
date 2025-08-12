@@ -126,12 +126,7 @@ function renderProducts() {
                 <h3 class="product-name">${product.productName}</h3>
                 <p class="product-description">${truncateText(product.description || '', 60)}</p>
                 
-                <div class="product-rating">
-                    <div class="stars">
-                        ${generateStars(product.averageRating || 0)}
-                    </div>
-                    <span class="rating-text">(${product.reviewCount || 0} reviews)</span>
-                </div>
+                
                 
                 <div class="product-price">
                     <span class="current-price">₹${formatPrice(product.offer.offerPrice)}</span>

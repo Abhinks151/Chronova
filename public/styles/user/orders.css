@@ -1278,3 +1278,132 @@ body {
     font-size: 0.75rem;
   }
 }
+
+/* Confirmation Modal Styles */
+.confirmation-modal-content {
+  max-width: 500px;
+  width: 90%;
+}
+
+.confirmation-header {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 20px 24px 16px;
+  border-bottom: 1px solid #e5e7eb;
+}
+
+.confirmation-icon {
+  width: 48px;
+  height: 48px;
+  border-radius: 50%;
+  background: #fef3c7;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #d97706;
+  font-size: 20px;
+}
+
+.confirmation-header h2 {
+  margin: 0;
+  font-size: 1.25rem;
+  color: #374151;
+}
+
+.confirmation-modal-content .modal-body {
+  padding: 20px 24px;
+}
+
+.confirmation-modal-content .modal-body p {
+  margin: 0 0 16px 0;
+  color: #6b7280;
+  line-height: 1.6;
+}
+
+.confirmation-details {
+  background: #f9fafb;
+  border: 1px solid #e5e7eb;
+  border-radius: 6px;
+  padding: 16px;
+  margin-top: 16px;
+}
+
+.confirmation-details h4 {
+  margin: 0 0 8px 0;
+  color: #374151;
+  font-size: 0.875rem;
+  font-weight: 600;
+}
+
+.confirmation-details p {
+  margin: 0;
+  font-size: 0.875rem;
+  color: #6b7280;
+}
+
+.confirmation-footer {
+  display: flex;
+  justify-content: flex-end;
+  gap: 12px;
+  padding: 16px 24px 20px;
+  border-top: 1px solid #e5e7eb;
+}
+
+.btn-cancel {
+  background: #f3f4f6;
+  color: #374151;
+  border: 1px solid #d1d5db;
+  padding: 10px 20px;
+  border-radius: 6px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 0.875rem;
+  transition: all 0.2s ease;
+}
+
+.btn-cancel:hover {
+  background: #e5e7eb;
+}
+
+.btn-confirm {
+  background: #ef4444;
+  color: white;
+  border: 1px solid #ef4444;
+  padding: 10px 20px;
+  border-radius: 6px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 0.875rem;
+  transition: all 0.2s ease;
+}
+
+.btn-confirm:hover {
+  background: #dc2626;
+  border-color: #dc2626;
+}
+
+.btn-confirm:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+/* Confirmation modal specific animations */
+.confirmation-modal-content {
+  animation: confirmationSlideIn 0.3s ease-out;
+}
+
+@keyframes confirmationSlideIn {
+  from {
+    transform: translateY(-20px);
+    opacity: 0;
+  }
+  to {
+    transform: translateY(0);
+    opacity: 1;
+  }
+}
