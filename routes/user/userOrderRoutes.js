@@ -15,6 +15,7 @@ import {
   verifyRazorpayPayment,
   retryPaymentController,
   viewInvoiceController,
+  getFailedPage,
 } from "../../controllers/user/orderManagement.js"
 import { authenticateUser } from "../../middlewares/userAuthMiddleware.js"
 import { getAllActiveCoupons } from "../../controllers/adminDashboard/adminCoupionManagementController.js"
@@ -29,6 +30,7 @@ router.get("/checkout/data", authenticateUser, getCheckoutPageData)
 router.get("/checkout/coupon/data", authenticateUser, getAllActiveCoupons)
 router.post("/order/place", authenticateUser, placeOrder)
 router.get("/order/conform", authenticateUser, getConformPage)
+router.get("/order/failed", authenticateUser, getFailedPage)
 
 // Order management 
 router.get("/orders", authenticateUser, getOrderMangementPage)

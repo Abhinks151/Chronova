@@ -1173,7 +1173,7 @@
             };
           }
 
-          // Always place the order first
+          
           const orderPlaceRes = await axios.post(
             "/user/order/place",
             orderData
@@ -1193,7 +1193,7 @@
               window.location.href = `/user/order/conform?orderId=${placedOrderId}`;
             }, 2000);
           } else {
-            // Online Payment Flow
+            //online payment
             const razorRes = await axios.post("/user/create-razorpay-order", {
               amount: total,
               receipt: `receipt_${Date.now()}`,
@@ -1239,11 +1239,15 @@
               modal: {
                 ondismiss: function () {
                   showNotification(
-                    "Payment was cancelled by the user.",
+                    "Payment is required to place the order. Retry payment in orders page.",
                     "error"
                   );
+                  // setTimeout(() => {
+                  //   window.location.href = `/user/order/conform?orderId=${placedOrderId}`;
+                  // }, 1500);
+                  
                   setTimeout(() => {
-                    window.location.href = `/user/order/conform?orderId=${placedOrderId}`;
+                    window.location.href = `/user/order/failed?orderId=${placedOrderId}`;
                   }, 1500);
                 },
               },

@@ -91,7 +91,12 @@ export const placeOrder = async (req, res) => {
       isPaid: isVerifiedOnline,
     };
 
-    
+    // if(isVerifiedOnline){
+    //   return res.status(httpStatusCode.PAYMENT_REQUIRED.code).json({
+    //     success: false,
+    //     message: "Payment is required to place the order. Retry payment in orders page."
+    //   })
+    // }
 
     const order = await placeOrderService(userId, orderData, req, isVerifiedOnline);
 
@@ -119,6 +124,22 @@ export const getConformPage = (req, res) => {
   try {
     const { orderId } = req.query;
     res.status(httpStatusCode.OK.code).render("Layouts/users/orderConform", {
+      orderId,
+    });
+  } catch (error) {
+    logger.error('Error rendering order confirmation page:', error);
+    console.error("Error rendering order confirmation page:", error);
+    res.status(httpStatusCode.INTERNAL_SERVER_ERROR.code).json({
+      success: false,
+      message:
+        "Something went wrong while rendering the order confirmation page.",
+    });
+  }
+};
+export const getFailedPage = (req, res) => {
+  try {
+    const { orderId } = req.query;
+    res.status(httpStatusCode.OK.code).render("Layouts/users/orderFailed", {
       orderId,
     });
   } catch (error) {
