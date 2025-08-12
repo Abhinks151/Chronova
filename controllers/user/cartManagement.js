@@ -113,8 +113,8 @@ export const updateCartCount = async (req, res) => {
       });
     }
 
-    const cart = await updateCartService(userId, productId, quantity);
-    if (!cart) {
+    const result = await updateCartService(userId, productId, quantity);
+    if (!result) {
       return res.status(httpStatusCode.NOT_FOUND.code).json({
         success: false,
         message: "Product not found in cart or cart deleted.",
@@ -123,8 +123,8 @@ export const updateCartCount = async (req, res) => {
 
     res.status(httpStatusCode.OK.code).json({
       success: true,
-      message: "Cart updated successfully.",
-      cart,
+      message: result.message,
+      cart: result.cart,
     });
   } catch (error) {
     res.status(httpStatusCode.BAD_REQUEST.code).json({

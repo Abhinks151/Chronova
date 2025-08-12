@@ -146,8 +146,17 @@ export const updateCartService = async (userId, productId, quantity) => {
     throw new Error("Maximum 5 items allowed per product.");
   }
 
-  if (quantity > product.stockQuantity) {
-    throw new Error(`Only ${product.stockQuantity} item(s) in stock.`);
+  if (quantity > product.stockQuantity && cartItem.quantity <= product.stockQuantity) {
+    throw new Error(`Only ${product.stockQuantity} items in stock.`);
+  }
+
+  if (cartItem.quantity > product.stockQuantity) {
+    cartItem.quantity = product.stockQuantity;
+    await cart.save();
+    return {
+      cart,
+      message: `Not enough stock reduced. Quantity adjusted to ${product.stockQuantity}.`,
+    };
   }
 
   if (quantity <= 0) {
@@ -163,8 +172,9 @@ export const updateCartService = async (userId, productId, quantity) => {
   }
 
   await cart.save();
-  return cart;
+  return { cart, message: "Cart quantity updated successfully." };;
 };
+
 
 export const removeCartService = async (userId, productId) => {
   const cart = await Cart.findOne({ userId });
