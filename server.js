@@ -8,13 +8,13 @@ import passport from "passport";
 import nocache from "nocache";
 import session from "express-session";
 
-
 import connection from "./config/dbConnection.js";
 
 import indexRoutes from "./routes/index.js";
 import { authenticateUser } from "./middlewares/userAuthMiddleware.js";
 import errorHandler from "./middlewares/errorMiddleware.js";
 import notFoundHandler from "./middlewares/404Page.js";
+import { limit } from "./middlewares/rateLimiter.js";
 
 dotenv.config();
 const PORT = process.env.PORT || 3000;
@@ -26,7 +26,8 @@ const __dirname = path.dirname(__filename);
 connection();
 
 
-
+//rate limiting
+app.use(limit);
 
 app.use(express.static("public"));
 app.set("view engine", "ejs");
@@ -74,3 +75,6 @@ app.listen(PORT, () => {
   console.log(`Server running on http://localhost:${PORT}/user/home`);
   console.log(`Server running on http://localhost:${PORT}/admin/dashboard`);
 });
+
+
+git commit -m"feat(rate limiter) Imlpemented a application level rate limiting Middleware "
