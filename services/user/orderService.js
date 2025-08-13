@@ -63,6 +63,7 @@ export const verifyRazorpayPaymentService = async (body) => {
 
   order.paymentStatus = "Paid";
   order.isPaid = true;
+  order.orderStatus = "Placed";
   order.paymentDetails = {
     transactionId: razorpay_payment_id,
     razorpay_order_id,
@@ -70,6 +71,11 @@ export const verifyRazorpayPaymentService = async (body) => {
     paymentDate: new Date(),
     paymentProvider: "Razorpay",
   };
+
+  for (let i = 0; i < order.items.length; i++) {
+    order.items[i].status = "Placed";
+    order.items[i].paymentStatus = "Paid";
+  }
 
   await order.save();
 
@@ -187,7 +193,7 @@ export const placeOrderService = async (userId, orderData, req, isVerifiedOnline
 
       const status = orderData.paymentMethod === 'cod' ? 'Pending' : 'Paid';
       const itemStatus = isVerifiedOnline ? "Placed" : orderData.paymentMethod === 'cod' ? "Placed" : "Pending";
-      
+
 
       for (let i = 0; i < itemQty; i++) {
         items.push({

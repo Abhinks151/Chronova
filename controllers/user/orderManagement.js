@@ -373,6 +373,66 @@ const razorpay = new Razorpay({
 });
 
 
+// export const retryPaymentController = async (req, res) => {
+//   try {
+//     const { orderId } = req.body;
+//     const userId = req.user._id;
+
+//     const order = await Order.findOne({ orderId, userId }).populate("userId");
+
+//     if (!order) {
+//       return res.status(404).json({ success: false, message: "Order not found" });
+//     }
+
+//     if (order.isPaid) {
+//       return res.status(httpStatusCode.BAD_REQUEST.code).json({ success: false, message: "Order already paid" });
+//     }
+
+//     const razorpayOrder = await razorpay.orders.create({
+//       amount: order.totalAmount * 100,
+//       currency: "INR",
+//       receipt: `retry_${Date.now()}`,
+//     });
+
+//     order.razorpay = {
+//       orderId: razorpayOrder.id,
+//       receipt: razorpayOrder.receipt,
+//     };
+
+
+//     order.isPaid = true;
+//     for (let i = 0; i < order.items.length; i++) {
+//       order.items[i].paymentStatus = "Paid";
+//       order.items[i].status = "Placed";
+//     }
+//     order.isPaid = true;
+//     order.orderStatus = "Placed";
+
+//     await order.save();
+
+//     res.status(httpStatusCode.OK.code).json({
+//       success: true,
+//       order: {
+//         orderId: order.orderId,
+//         razorpayOrderId: razorpayOrder.id,
+//         amount: razorpayOrder.amount,
+//         currency: razorpayOrder.currency,
+//       },
+//       user: {
+//         name: order.userId.name,
+//         email: order.userId.email,
+//         phone: order.userId.phone,
+//       },
+//       razorpayKey: process.env.RAZORPAY_KEY_ID,
+//     });
+//   } catch (err) {
+//     console.error("Retry Payment Error:", err);
+//     res.status(httpStatusCode.INTERNAL_SERVER_ERROR.code).json({ success: false, message: "Something went wrong" });
+//   }
+// };
+
+
+
 export const retryPaymentController = async (req, res) => {
   try {
     const { orderId } = req.body;
@@ -385,7 +445,10 @@ export const retryPaymentController = async (req, res) => {
     }
 
     if (order.isPaid) {
-      return res.status(httpStatusCode.BAD_REQUEST.code).json({ success: false, message: "Order already paid" });
+      return res.status(httpStatusCode.BAD_REQUEST.code).json({
+        success: false,
+        message: "Order already paid"
+      });
     }
 
     const razorpayOrder = await razorpay.orders.create({
@@ -398,16 +461,6 @@ export const retryPaymentController = async (req, res) => {
       orderId: razorpayOrder.id,
       receipt: razorpayOrder.receipt,
     };
-
-
-    order.isPaid = true;
-    for (let i = 0; i < order.items.length; i++) {
-      order.items[i].paymentStatus = "Paid";
-      order.items[i].status = "Placed";
-    }
-    order.isPaid = true;
-    order.orderStatus = "Placed";
-
     await order.save();
 
     res.status(httpStatusCode.OK.code).json({
@@ -425,8 +478,12 @@ export const retryPaymentController = async (req, res) => {
       },
       razorpayKey: process.env.RAZORPAY_KEY_ID,
     });
+
   } catch (err) {
     console.error("Retry Payment Error:", err);
-    res.status(httpStatusCode.INTERNAL_SERVER_ERROR.code).json({ success: false, message: "Something went wrong" });
+    res.status(httpStatusCode.INTERNAL_SERVER_ERROR.code).json({
+      success: false,
+      message: "Something went wrong"
+    });
   }
 };
