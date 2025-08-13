@@ -46,9 +46,12 @@ passport.use(
               firstname: fullName,
               avatar,
               isGoogleUser: true,
+              isRegistrationCompleted:false,
               isVerified: true,
               lastLogin: Date.now(),
             });
+
+
           }
         }
 

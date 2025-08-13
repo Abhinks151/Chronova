@@ -206,7 +206,7 @@ export const deleteCouponService = async (couponId) => {
 export const getAllActiveCouponsService = async (userId) => {
   const now = new Date();
   now.setHours(0, 0, 0, 0);
-  const id = new mongoose.Types.ObjectId(userId);
+  const id = new mongoose.Types.ObjectId(userId);// covert to object id(string to mongo ID)
 
   const data = await Coupon.find({
     isActive: true,

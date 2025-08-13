@@ -1,0 +1,250 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Complete Google Registration</title>
+  <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
+  <style>
+    /* ---- ALL YOUR CSS HERE ---- */
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+      background-color: #ffffff;
+      color: #1a1a1a;
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 16px;
+      line-height: 1.5;
+    }
+    .container {
+      width: 100%;
+      max-width: 800px;
+      margin: 0 auto;
+    }
+    .register-card {
+      background-color: #ffffff;
+      border-radius: 16px;
+      padding: 32px;
+      box-shadow: 0 4px 24px rgba(0, 0, 0, 0.08), 0 2px 8px rgba(0, 0, 0, 0.04);
+      border: 1px solid #e5e7eb;
+      width: 100%;
+    }
+    h1 {
+      font-size: 24px;
+      font-weight: 700;
+      text-align: center;
+      margin-bottom: 24px;
+      color: #1a1a1a;
+    }
+    .form-group {
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+      margin-bottom: 16px;
+    }
+    label {
+      font-size: 13px;
+      font-weight: 600;
+      color: #374151;
+    }
+    .form-input {
+      width: 100%;
+      padding: 12px 14px;
+      border: 1.5px solid #d1d5db;
+      border-radius: 8px;
+      background-color: #ffffff;
+      color: #1a1a1a;
+      font-size: 15px;
+      transition: all 0.2s ease;
+      outline: none;
+    }
+    .form-input:focus {
+      border-color: #1a1a1a;
+      box-shadow: 0 0 0 3px rgba(26, 26, 26, 0.1);
+    }
+    .signup-btn {
+      width: 100%;
+      padding: 12px 20px;
+      background-color: #1a1a1a;
+      color: #ffffff;
+      border: none;
+      border-radius: 8px;
+      font-size: 15px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.2s ease;
+      position: relative;
+      height: 44px;
+    }
+    .signup-btn:hover:not(:disabled) {
+      background-color: #000;
+      transform: translateY(-1px);
+      box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+    }
+    .signup-btn:disabled {
+      cursor: not-allowed;
+      opacity: 0.7;
+    }
+    .btn-text { transition: opacity 0.2s ease; }
+    .loading-spinner {
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      width: 18px;
+      height: 18px;
+      border: 2px solid #ffffff;
+      border-top: 2px solid transparent;
+      border-radius: 50%;
+      animation: spin 1s linear infinite;
+      display: none;
+    }
+    @keyframes spin {
+      to { transform: translate(-50%, -50%) rotate(360deg); }
+    }
+    .success-message {
+      color: green;
+      font-weight: 600;
+      margin-top: 1rem;
+    }
+    .toast-container {
+      position: fixed;
+      top: 1rem;
+      right: 1rem;
+      display: flex;
+      flex-direction: column;
+      gap: 0.5rem;
+      z-index: 9999;
+    }
+    .toast {
+      min-width: 250px;
+      max-width: 300px;
+      padding: 0.75rem 1rem;
+      border-radius: 6px;
+      color: white;
+      font-size: 0.9rem;
+      box-shadow: 0 4px 8px rgba(0,0,0,0.15);
+      animation: slideIn 0.3s forwards, fadeOut 0.3s ease 3s forwards;
+    }
+    .toast.success { background-color: #28a745; }
+    .toast.error { background-color: #dc3545; }
+    .toast.info { background-color: #17a2b8; }
+    @keyframes slideIn { from {opacity:0;transform:translateX(100%);} to {opacity:1;transform:translateX(0);} }
+    @keyframes fadeOut { to {opacity:0;transform:translateY(-10px);} }
+  </style>
+</head>
+<body>
+<div class="container">
+  <div class="register-card">
+    <h1>Complete Your Registration</h1>
+    <form id="googleCompleteForm">
+      <div class="form-group">
+        <label for="firstname">First name</label>
+        <input type="text" id="firstname" name="firstname" class="form-input" required />
+      </div>
+      <div class="form-group">
+        <label for="lastname">Last name (optional)</label>
+        <input type="text" id="lastname" name="lastname" class="form-input" />
+      </div>
+      <div class="form-group">
+        <label for="email">Email address</label>
+        <input type="email" id="email" name="email" class="form-input" disabled />
+      </div>
+      <div class="form-group">
+        <label for="referral">Referral Code (optional)</label>
+        <input type="text" id="referral" name="referral" class="form-input" />
+      </div>
+      <button type="submit" id="completeBtn" class="signup-btn">
+        <span class="btn-text">Complete Registration</span>
+        <div class="loading-spinner" id="loadingSpinner"></div>
+      </button>
+      <div id="successMessage" class="success-message" style="display:none"></div>
+    </form>
+  </div>
+</div>
+<div class="toast-container" id="toastContainer"></div>
+<script>
+document.addEventListener('DOMContentLoaded', async () => {
+  const form = document.getElementById('googleCompleteForm');
+  const btn = document.getElementById('completeBtn');
+  const btnText = btn.querySelector('.btn-text');
+  const spinner = document.getElementById('loadingSpinner');
+  const successMessage = document.getElementById('successMessage');
+  const toastContainer = document.getElementById('toastContainer');
+
+  const firstname = document.getElementById('firstname');
+  const lastname = document.getElementById('lastname');
+  const email = document.getElementById('email');
+  const referral = document.getElementById('referral');
+
+  try {
+    const res = await axios.get('/user/google/register/complete/data', { withCredentials: true });
+    if (res.data.success && res.data.data) {
+      firstname.value = res.data.data.firstname || '';
+      lastname.value = res.data.data.lastname || '';
+      email.value = res.data.data.email || '';
+      showToast('Data loaded successfully', 'info');
+    }
+  } catch (err) {
+    showToast(err?.response?.data?.message || 'Could not load your info.', 'error');
+  }
+
+  form.addEventListener('submit', async (e) => {
+    e.preventDefault();
+    setLoading(true);
+    try {
+      const payload = {
+        firstname: firstname.value.trim(),
+        lastname: lastname.value.trim(),
+        referralCode: referral.value.trim()
+      };
+      const res = await axios.patch('/user/google/register/complete', payload, {
+        headers: { 'Content-Type': 'application/json' },
+        withCredentials: true
+      });
+      if (res.data.success) {
+        showSuccess(res.data.message || 'Registration complete!');
+        showToast(res.data.message || 'Registration complete!', 'success');
+        setTimeout(() => window.location.href = '/user/products', 1500);
+      } else {
+        showToast('Something went wrong.', 'error');
+      }
+    } catch (err) {
+      const errors = err?.response?.data?.errors;
+      if (errors) {
+        Object.values(errors).forEach(msg => showToast(msg, 'error'));
+      } else {
+        showToast('Server error.', 'error');
+      }
+    } finally {
+      setLoading(false);
+    }
+  });
+
+  function setLoading(state) {
+    btn.disabled = state;
+    btnText.style.opacity = state ? '0' : '1';
+    spinner.style.display = state ? 'block' : 'none';
+  }
+  function showSuccess(msg) {
+    successMessage.textContent = msg;
+    successMessage.style.display = 'block';
+  }
+  function showToast(message, type = 'info') {
+    const toast = document.createElement('div');
+    toast.className = `toast ${type}`;
+    toast.textContent = message;
+    toastContainer.appendChild(toast);
+    setTimeout(() => toast.remove(), 3500);
+  }
+});
+</script>
+</body>
+</html>

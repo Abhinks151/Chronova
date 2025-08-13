@@ -16,6 +16,7 @@ import {
 
 import validate from '../../utils/validationRules.js';
 import { preventLoggedInAccess } from '../../middlewares/userAuthMiddleware.js';
+import { completeGoogleAuth, completeGoogleAuthPage, completeGoogleAuthPageData } from "../../controllers/auth/googleAuth.js";
 
 
 
@@ -38,6 +39,12 @@ userAuthRouter.post('/forgot-password', postForgotPassword);
 
 userAuthRouter.get('/reset-password/:token', getResetPassword);
 userAuthRouter.post('/reset-password', postResetPassword);
+
+//google completion
+userAuthRouter.get('/google/register/complete',completeGoogleAuthPage)
+userAuthRouter.patch('/google/register/complete',completeGoogleAuth)
+userAuthRouter.get('/google/register/complete/data',completeGoogleAuthPageData)
+
 
 userAuthRouter.get('/logout', userLogout);
 

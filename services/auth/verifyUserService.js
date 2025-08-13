@@ -70,6 +70,7 @@ export const verifyUserOTPService = async (session, body) => {
     user.newEmail = undefined;
   } else {
     user.isVerified = true;
+    user.isRegistrationCompleted = true;
     sendWelcome(user);
   }
 
