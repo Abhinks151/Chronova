@@ -1,7 +1,10 @@
+import { customAlphabet } from "nanoid";
 import { Coupon } from "../../models/coupon.js";
 import { User } from "../../models/userModels.js";
 import { generateToken } from "../../utils/generateToken.js";
 import httpStatusCode from "../../utils/httpStatusCode.js";
+
+const nanoid = customAlphabet("ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789", 8);
 
 export const getUserByIdServiceForGoolge = async (userId) => {
   const user = await User.findById(userId);
@@ -11,7 +14,7 @@ export const getUserByIdServiceForGoolge = async (userId) => {
   }
 
   return user;
-}
+};
 
 export const completeGoogleAuthService = async (userId, req) => {
   if (!userId) {
@@ -19,8 +22,8 @@ export const completeGoogleAuthService = async (userId, req) => {
       status: httpStatusCode.BAD_REQUEST.code,
       body: {
         success: false,
-        errors: { userId: 'User ID not found in session' }
-      }
+        errors: { userId: "User ID not found in session" },
+      },
     };
   }
 
@@ -32,8 +35,8 @@ export const completeGoogleAuthService = async (userId, req) => {
       status: httpStatusCode.BAD_REQUEST.code,
       body: {
         success: false,
-        errors: { user: 'User not found' }
-      }
+        errors: { user: "User not found" },
+      },
     };
   }
 
@@ -45,14 +48,14 @@ export const completeGoogleAuthService = async (userId, req) => {
         status: httpStatusCode.BAD_REQUEST.code,
         body: {
           success: false,
-          errors: { referralCode: 'Invalid referral code' }
-        }
+          errors: { referralCode: "Invalid referral code" },
+        },
       };
     }
   }
 
   const updatedFields = {
-    isRegistrationComplete: true
+    isRegistrationComplete: true,
   };
 
   if (firstName && firstName !== user.firstName) {
@@ -70,6 +73,7 @@ export const completeGoogleAuthService = async (userId, req) => {
 
   if (referredUser) {
     await Coupon.create({
+      coupon: `REF-${nanoid()}`,
       discountAmount: 200,
       minimumCartAmount: 500,
       expiryTime: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000),
@@ -84,15 +88,14 @@ export const completeGoogleAuthService = async (userId, req) => {
   user.isRegistrationCompleted = true;
   await user.save();
 
-
   const token = generateToken(user._id);
 
   return {
     status: httpStatusCode.OK.code,
     body: {
       success: true,
-      data: updatedUser
+      data: updatedUser,
     },
-    token
+    token,
   };
 };

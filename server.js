@@ -38,6 +38,8 @@ app.use(nocache());
 app.use(cookieParser());
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
+app.set('trust proxy', 1);
+
 app.use(
   session({
     secret: "Abhin is the batman",
@@ -75,6 +77,3 @@ app.listen(PORT, () => {
   console.log(`Server running on http://localhost:${PORT}/user/home`);
   console.log(`Server running on http://localhost:${PORT}/admin/dashboard`);
 });
-
-
-git commit -m"feat(rate limiter) Imlpemented a application level rate limiting Middleware "
