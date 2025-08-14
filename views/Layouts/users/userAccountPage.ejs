@@ -108,7 +108,7 @@
 
           <div class="profile-avatar-section">
             <div class="avatar-container">
-              <% if (user && user.avatar) { %>
+              <% if (user && user.avatar && user.avatar.url) { %>
               <img
                 src="<%= user.avatar.url %>"
                 alt="Profile Avatar"

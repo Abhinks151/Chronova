@@ -1,0 +1,310 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title><%= title %> 429 - Too Many Requests</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            background: linear-gradient(135deg, #fef7f0 0%, #fed7aa 100%);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #334155;
+        }
+
+        .container {
+            text-align: center;
+            padding: 3rem 2rem;
+            max-width: 600px;
+            width: 100%;
+        }
+
+        .error-code {
+            font-size: 8rem;
+            font-weight: 800;
+            color: #ea580c;
+            margin-bottom: 1rem;
+            text-shadow: 0 4px 8px rgba(234, 88, 12, 0.3);
+            animation: shake 3s ease-in-out infinite;
+        }
+
+        @keyframes shake {
+            0%, 100% {
+                transform: translateX(0);
+            }
+            25% {
+                transform: translateX(-2px);
+            }
+            75% {
+                transform: translateX(2px);
+            }
+        }
+
+        .error-title {
+            font-size: 2.5rem;
+            font-weight: 700;
+            color: #1e293b;
+            margin-bottom: 1rem;
+            letter-spacing: -0.025em;
+        }
+
+        .error-message {
+            font-size: 1.25rem;
+            color: #64748b;
+            margin-bottom: 2rem;
+            max-width: 500px;
+            margin-left: auto;
+            margin-right: auto;
+        }
+
+        .countdown-container {
+            background: rgba(255, 255, 255, 0.8);
+            backdrop-filter: blur(10px);
+            border-radius: 16px;
+            padding: 1.5rem;
+            margin-bottom: 2.5rem;
+            box-shadow: 0 8px 32px rgba(234, 88, 12, 0.1);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+        }
+
+        .countdown-text {
+            font-size: 1.1rem;
+            color: #475569;
+            margin-bottom: 0.5rem;
+        }
+
+        .countdown-timer {
+            font-size: 2rem;
+            font-weight: 700;
+            color: #ea580c;
+            font-variant-numeric: tabular-nums;
+        }
+
+        .retry-button {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.75rem;
+            background: #ea580c;
+            color: white;
+            text-decoration: none;
+            padding: 1rem 2rem;
+            border-radius: 12px;
+            font-weight: 600;
+            font-size: 1.1rem;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 14px rgba(234, 88, 12, 0.4);
+            border: none;
+            cursor: pointer;
+        }
+
+        .retry-button:hover:not(:disabled) {
+            background: #c2410c;
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(234, 88, 12, 0.5);
+        }
+
+        .retry-button:active:not(:disabled) {
+            transform: translateY(0);
+        }
+
+        .retry-button:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        .retry-icon {
+            width: 20px;
+            height: 20px;
+            fill: currentColor;
+        }
+
+        .decorative-elements {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            overflow: hidden;
+            z-index: -1;
+        }
+
+        .wave {
+            position: absolute;
+            border-radius: 50%;
+            background: rgba(234, 88, 12, 0.1);
+            animation: wave 4s ease-in-out infinite;
+        }
+
+        .wave:nth-child(1) {
+            width: 300px;
+            height: 300px;
+            top: -50px;
+            left: -50px;
+            animation-delay: 0s;
+        }
+
+        .wave:nth-child(2) {
+            width: 200px;
+            height: 200px;
+            top: 50%;
+            right: -100px;
+            animation-delay: 1s;
+        }
+
+        .wave:nth-child(3) {
+            width: 150px;
+            height: 150px;
+            bottom: -75px;
+            left: 30%;
+            animation-delay: 2s;
+        }
+
+        @keyframes wave {
+            0%, 100% {
+                transform: scale(1) rotate(0deg);
+                opacity: 0.3;
+            }
+            50% {
+                transform: scale(1.2) rotate(180deg);
+                opacity: 0.6;
+            }
+        }
+
+        .progress-bar {
+            width: 100%;
+            height: 4px;
+            background: rgba(234, 88, 12, 0.2);
+            border-radius: 2px;
+            overflow: hidden;
+            margin-top: 1rem;
+        }
+
+        .progress-fill {
+            height: 100%;
+            background: #ea580c;
+            border-radius: 2px;
+            transition: width 0.1s ease;
+        }
+
+        @media (max-width: 640px) {
+            .error-code {
+                font-size: 6rem;
+            }
+
+            .error-title {
+                font-size: 2rem;
+            }
+
+            .error-message {
+                font-size: 1.1rem;
+            }
+
+            .container {
+                padding: 2rem 1rem;
+            }
+
+            .retry-button {
+                padding: 0.875rem 1.5rem;
+                font-size: 1rem;
+            }
+
+            .countdown-timer {
+                font-size: 1.5rem;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .error-code {
+                font-size: 4.5rem;
+            }
+
+            .error-title {
+                font-size: 1.75rem;
+            }
+
+            .wave {
+                display: none;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="decorative-elements">
+        <div class="wave"></div>
+        <div class="wave"></div>
+        <div class="wave"></div>
+    </div>
+
+    <div class="container">
+        <div class="error-code">429</div>
+        <h1 class="error-title">Too Many Requests</h1>
+        <p class="error-message">
+            Whoa there! You're making requests a bit too quickly. Please take a breather and try again in a moment.
+        </p>
+        
+        <div class="countdown-container">
+            <div class="countdown-text">Please wait</div>
+            <div class="countdown-timer" id="countdown">60</div>
+            <div class="countdown-text">seconds</div>
+            <div class="progress-bar">
+                <div class="progress-fill" id="progress"></div>
+            </div>
+        </div>
+
+        <button class="retry-button" id="retryBtn" disabled onclick="location.reload()">
+            <svg class="retry-icon" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <path d="M4 12a8 8 0 018-8V2.5L14.5 5 12 7.5V6a6 6 0 100 12 6 6 0 006-6h2a8 8 0 01-16 0z" fill="currentColor"/>
+            </svg>
+            Try Again
+        </button>
+    </div>
+
+    <script>
+        let retryAfter = parseInt('<%= typeof retryAfter !== "undefined" ? retryAfter : "60" %>') || 60;
+        
+        const countdownElement = document.getElementById('countdown');
+        const progressElement = document.getElementById('progress');
+        const retryButton = document.getElementById('retryBtn');
+        
+        const totalTime = retryAfter;
+        let timeLeft = retryAfter;
+        
+        function updateCountdown() {
+            countdownElement.textContent = timeLeft;
+            
+            // Update progress bar
+            const progressPercent = ((totalTime - timeLeft) / totalTime) * 100;
+            progressElement.style.width = progressPercent + '%';
+            
+            if (timeLeft <= 0) {
+                retryButton.disabled = false;
+                retryButton.textContent = 'Try Again';
+                countdownElement.textContent = '0';
+                progressElement.style.width = '100%';
+                return;
+            }
+            
+            timeLeft--;
+            setTimeout(updateCountdown, 1000);
+        }
+        
+        updateCountdown();
+        
+        setTimeout(() => {
+            if (timeLeft <= 0) {
+                location.reload();
+            }
+        }, (retryAfter + 1) * 1000);
+    </script>
+</body>
+</html>
