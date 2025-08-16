@@ -522,6 +522,8 @@ export const cancelEntireOrderService = async (userId, orderId) => {
 
   if (order.paymentStatus === "Paid" && itemStaus) {
     const refundAmount = order.totalAmount;
+    order.refundedAmount = refundAmount;
+
     let wallet = await Wallet.findOne({ userId });
 
     const transaction = {
@@ -574,6 +576,8 @@ export const cancelEntireOrderService = async (userId, orderId) => {
     cancelledBy: "User",
     reason: "Cancelled by user",
   };
+
+
 
   await order.save();
 
@@ -653,6 +657,8 @@ export const cancelSingleItemService = async (userId, orderId, itemId) => {
   //Refund for user if the item is paid;
   if (item.paymentStatus === "Paid") {
     const refundAmount = item.netItemTotal * item.quantity;
+    order.refundedAmount = refundAmount;
+
     let wallet = await Wallet.findOne({ userId });
 
     const transaction = {
@@ -695,6 +701,7 @@ export const cancelSingleItemService = async (userId, orderId, itemId) => {
     };
     logger.info(`Entire order marked as cancelled since all items are cancelled: orderId=${orderId}`);
   }
+
 
   await order.save();
 

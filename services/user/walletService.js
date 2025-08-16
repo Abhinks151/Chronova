@@ -4,7 +4,6 @@ export const getFilteredWalletHistoryService = async (userId, { page, limit, sea
   try {
     const wallet = await Wallet.findOne({ userId });
     if (!wallet) {
-      // Create wallet if it doesn't exist
       const newWallet = await Wallet.create({
         userId,
         balance: 0,
@@ -21,13 +20,11 @@ export const getFilteredWalletHistoryService = async (userId, { page, limit, sea
 
     const sortOrder = sort === "asc" ? 1 : -1;
 
-    // Filter by type if specified
     let filtered = wallet.transactions;
     if (type) {
       filtered = wallet.transactions.filter(txn => txn.type === type);
     }
 
-    // Filter by search if specified (search in description)
     if (search && search.trim()) {
       const searchTerm = search.trim().toLowerCase();
       filtered = filtered.filter(txn => 
@@ -35,7 +32,6 @@ export const getFilteredWalletHistoryService = async (userId, { page, limit, sea
       );
     }
 
-    // Sort transactions
     filtered.sort((a, b) => {
       const dateA = new Date(a.timestamp);
       const dateB = new Date(b.timestamp);
@@ -65,7 +61,6 @@ export const getWalletHistoryService = async (userId) => {
     let data = await Wallet.findOne({ userId });
 
     if (!data) {
-      // Create new wallet if it doesn't exist
       data = await Wallet.create({
         userId,
         balance: 0,

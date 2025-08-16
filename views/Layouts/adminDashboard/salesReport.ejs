@@ -261,7 +261,7 @@
 
         function updateSalesTable(orders) {
             const tableBody = document.getElementById("salesTableBody");
-            tableBody.innerHTML = ""; // Clear existing rows
+            tableBody.innerHTML = "";
 
             if (orders.length === 0) {
                 tableBody.innerHTML = `<tr><td colspan="10" class="no-data">No sales data found for the selected filters.</td></tr>`;
@@ -302,13 +302,12 @@
             const endEntry = Math.min(pagination.currentPage * pagination.itemsPerPage, pagination.totalItems);
             paginationInfo.textContent = `Showing ${startEntry} to ${endEntry} of ${pagination.totalItems} entries`;
 
-            paginationControls.innerHTML = ""; // Clear existing buttons
+            paginationControls.innerHTML = ""; 
 
             if (pagination.currentPage > 1) {
                 paginationControls.insertAdjacentHTML("beforeend", `<button class="pagination-btn" onclick="goToPage(${pagination.currentPage - 1})">Previous</button>`);
             }
 
-            // Display a range of pages around the current page
             const maxPagesToShow = 5;
             let startPage = Math.max(1, pagination.currentPage - Math.floor(maxPagesToShow / 2));
             let endPage = Math.min(pagination.totalPages, startPage + maxPagesToShow - 1);
@@ -333,7 +332,7 @@
             currentFilters.endDate = document.getElementById("endDate").value;
             currentFilters.status = document.getElementById("statusFilter").value;
             currentFilters.limit = parseInt(document.getElementById("itemsPerPage").value);
-            currentFilters.page = 1; // Reset to first page on filter change
+            currentFilters.page = 1;
 
             updateURLAndFetch();
         }
@@ -352,7 +351,7 @@
             currentFilters.limit = 10;
             currentFilters.page = 1;
 
-            handlePeriodChange(); // Hide custom date inputs
+            handlePeriodChange();
             updateURLAndFetch();
         }
 
@@ -373,13 +372,14 @@
             params.append("limit", currentFilters.limit);
 
             const newUrl = `${window.location.pathname}?${params.toString()}`;
-            window.history.pushState({ path: newUrl }, "", newUrl); // Update URL without full reload
-            fetchSalesReportData(); // Fetch data for the new state
+            window.history.pushState({ path: newUrl }, "", newUrl);
+            fetchSalesReportData();
         }
 
         function downloadReport(type) {
             const params = new URLSearchParams();
             params.append("period", currentFilters.period);
+            console.log(params);
             if (currentFilters.period === "custom") {
                 if (currentFilters.startDate) params.append("startDate", currentFilters.startDate);
                 if (currentFilters.endDate) params.append("endDate", currentFilters.endDate);
@@ -387,13 +387,12 @@
             if (currentFilters.status) params.append("status", currentFilters.status);
 
             if (type === 'pdf') {
-                window.location.href = `/admin/sales/report/download/pdf?${params.toString()}`;
+                window.location.href = `/admin/sales/report/download/pdf?all=true&${params.toString()}`;
             } else if (type === 'excel') {
-                window.location.href = `/admin/sales/report/download/excel?${params.toString()}`;
+                window.location.href = `/admin/sales/report/download/excel?all=true&${params.toString()}`;
             }
         }
 
-        // Utility functions (re-using from previous context)
         function showLoading() {
             document.getElementById("loadingSpinner").style.display = "flex";
         }
@@ -427,7 +426,6 @@
             }, 5000);
         }
     </script>
-    <!-- Toast Container (ensure this element exists in your main layout or here) -->
     <div id="toastContainer" class="toast-container"></div>
 </body>
 </html>

@@ -193,7 +193,7 @@ export const updateOrderStatus = async (req, res) => {
       return res.status(404).json({ error: "Order not found" });
     }
 
-    if (status === "Delivered" ) {
+    if (status === "Delivered") {
       const allItemsPaid = order.items.every(item => item.paymentStatus === "Paid");
       if (!allItemsPaid) {
         return res.status(httpStatusCode.BAD_REQUEST.code).json({
@@ -308,7 +308,7 @@ export const updateItemStatus = async (req, res) => {
 export const approveReturn = async (req, res) => {
   try {
     const { orderId, itemId } = req.params;
-    
+
     // console.log("Incoming orderId:", orderId, "| itemId:", itemId);
 
     if (!orderId || !itemId) {
@@ -357,12 +357,17 @@ export const approveReturn = async (req, res) => {
 
     await updateOrderStatusBasedOnItems(order);
 
+
+    // refund amount
+    const refundAmount = item.netItemTotal * item.quantity;
+    order.refundedAmount = refundAmount;
+
+
     await order.save();
 
 
     // console.log(item.price, item.discount, item.quantity,item.finalPrice);
 
-    const refundAmount = item.netItemTotal * item.quantity;
     let wallet = await Wallet.findOne({ userId: order.userId._id });
 
     const transaction = {
@@ -385,7 +390,7 @@ export const approveReturn = async (req, res) => {
 
     await wallet.save();
 
-    order.refundedAmount = (order.refundedAmount || 0) + refundAmount;
+    order.refundedAmount = refundAmount;
 
     if (order.refundedAmount >= order.totalAmount) {
       order.paymentStatus = "Refunded";
@@ -619,7 +624,7 @@ async function updateOrderStatusBasedOnItems(order) {
       if (allItemsPaid) {
         order.orderStatus = "Delivered";
       } else {
-        order.orderStatus = "Shipped"; 
+        order.orderStatus = "Shipped";
       }
     } else {
       order.orderStatus = "Delivered";

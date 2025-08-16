@@ -3,7 +3,7 @@ import puppeteer from "puppeteer";
 import ExcelJS from "exceljs";
 
 export const getSalesReportService = async (req) => {
-  const { period, startDate, endDate, status, page = 1, limit = 10 } = req.query // Changed default limit to 10
+  const { period, startDate, endDate, status, page = 1, limit = 10, all } = req.query // Changed default limit to 10
   const filter = {}
   const now = new Date()
 
@@ -50,10 +50,16 @@ export const getSalesReportService = async (req) => {
     filter.orderStatus = status
   }
   const totalItems = await Order.countDocuments(filter)
-  const orders = await Order.find(filter)
-    .sort({ createdAt: -1 })
-    .skip((page - 1) * limit)
-    .limit(Number.parseInt(limit))
+
+  let orders;
+  if (all === 'true') {
+    orders = await Order.find(filter).sort({ createdAt: -1 });
+  } else {
+    orders = await Order.find(filter)
+      .sort({ createdAt: -1 })
+      .skip((page - 1) * limit)
+      .limit(Number.parseInt(limit));
+  }
   const allFilteredOrders = await Order.find(filter)
   const summary = {
     totalOrders: allFilteredOrders.length,

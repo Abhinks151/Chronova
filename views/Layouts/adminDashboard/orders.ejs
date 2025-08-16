@@ -511,7 +511,6 @@
                                     <p><strong>Qty:</strong> ${item.quantity}</p>
                                     <p><strong>Price:</strong> ₹${(item.price * item.quantity).toLocaleString()}</p>
                                     <p><strong>Return Reason:</strong> ${item.returnReason || "N/A"}</p>
-                                    <p><strong>Requested On:</strong> ${item.returnRequestedAt ? new Date(item.returnRequestedAt).toLocaleDateString() : "N/A"}</p>
                                     <div class="return-actions">
                                         <button class="btn-approve" onclick="showApproveReturnConfirmation('${orderId}', '${item._id}', '${item.productName}', ${item.price * item.quantity})">
                                             ✅ Approve & Refund
