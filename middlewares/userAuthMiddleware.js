@@ -5,69 +5,83 @@ import httpStatusCode from "../utils/httpStatusCode.js";
 
 dotenv.config();
 
-const createRenderData = (title, errors = {}, formData = {}, successMessage = null) => ({
-  title,
-  errors,
-  formData,
-  successMessage
-});
-
-const handleResponse = (req, res, status, viewName, data, jsonData = null) => {
-  if (req.xhr || req.get('Content-Type') === 'application/json') {
-    return res.status(status).json(jsonData || {
-      success: status < 400,
-      ...(data.errors && { errors: data.errors }),
-      ...(data.successMessage && { message: data.successMessage }),
-      ...(data.redirect && { redirect: data.redirect })
-    });
-  }
-  return res.status(status).render(viewName, data);
-};
-
 export const authenticateUser = async (req, res, next) => {
   try {
     const token = req.cookies?.token || req.header('Authorization')?.replace('Bearer ', '');
 
     if (!token) {
-      const renderData = createRenderData(
-        'Login',
-        { email: 'Login to your account to continue' },
-        {},
-        null
-      );
-      return handleResponse(req, res, httpStatusCode.UNAUTHORIZED.code, 'Layouts/userLogin', renderData);
+      const renderData = {
+        title: 'Login',
+        errors: { email: 'Login to your account to continue' },
+        formData: {},
+        successMessage: null
+      };
+
+      if (req.xhr || req.get('Content-Type') === 'application/json') {
+        return res.status(httpStatusCode.UNAUTHORIZED.code).json({
+          success: false,
+          errors: renderData.errors
+        });
+      }
+
+      return res.status(httpStatusCode.UNAUTHORIZED.code).render('Layouts/userLogin', renderData);
     }
 
     const decoded = jwt.verify(token, process.env.JWT_SECRET_KEY);
     const user = await User.findById(decoded.id);
+
     if (!user) {
-      const renderData = createRenderData(
-        'Login',
-        { email: 'Login to your account to continue' },
-        {},
-        null
-      );
-      return handleResponse(req, res, httpStatusCode.UNAUTHORIZED.code, 'Layouts/userLogin', renderData);
+      const renderData = {
+        title: 'Login',
+        errors: { email: 'Login to your account to continue' },
+        formData: {},
+        successMessage: null
+      };
+
+      if (req.xhr || req.get('Content-Type') === 'application/json') {
+        return res.status(httpStatusCode.UNAUTHORIZED.code).json({
+          success: false,
+          errors: renderData.errors
+        });
+      }
+
+      return res.status(httpStatusCode.UNAUTHORIZED.code).render('Layouts/userLogin', renderData);
     }
 
     if (!user.isVerified) {
-      const renderData = createRenderData(
-        'Login',
-        { email: 'Please verify your email before logging in' },
-        {},
-        null
-      );
-      return handleResponse(req, res, httpStatusCode.UNAUTHORIZED.code, 'Layouts/userLogin', renderData);
+      const renderData = {
+        title: 'Login',
+        errors: { email: 'Please verify your email before logging in' },
+        formData: {},
+        successMessage: null
+      };
+
+      if (req.xhr || req.get('Content-Type') === 'application/json') {
+        return res.status(httpStatusCode.UNAUTHORIZED.code).json({
+          success: false,
+          errors: renderData.errors
+        });
+      }
+
+      return res.status(httpStatusCode.UNAUTHORIZED.code).render('Layouts/userLogin', renderData);
     }
 
     if (user.isBlocked) {
-      const renderData = createRenderData(
-        'Login',
-        { email: 'Your account has been blocked. Please contact the admin.' },
-        {},
-        null
-      );
-      return handleResponse(req, res, httpStatusCode.UNAUTHORIZED.code, 'Layouts/userLogin', renderData);
+      const renderData = {
+        title: 'Login',
+        errors: { email: 'Your account has been blocked. Please contact the admin.' },
+        formData: {},
+        successMessage: null
+      };
+
+      if (req.xhr || req.get('Content-Type') === 'application/json') {
+        return res.status(httpStatusCode.UNAUTHORIZED.code).json({
+          success: false,
+          errors: renderData.errors
+        });
+      }
+
+      return res.status(httpStatusCode.UNAUTHORIZED.code).render('Layouts/userLogin', renderData);
     }
 
     req.user = user;
@@ -75,16 +89,23 @@ export const authenticateUser = async (req, res, next) => {
   } catch (error) {
     console.error("JWT Auth Error:", error.message);
 
-    const renderData = createRenderData(
-      'Login',
-      { email: 'Session expired or invalid. Please login again.' },
-      {},
-      null
-    );
-    return handleResponse(req, res, httpStatusCode.UNAUTHORIZED.code, 'Layouts/userLogin', renderData);
+    const renderData = {
+      title: 'Login',
+      errors: { email: 'Session expired or invalid. Please login again.' },
+      formData: {},
+      successMessage: null
+    };
+
+    if (req.xhr || req.get('Content-Type') === 'application/json') {
+      return res.status(httpStatusCode.UNAUTHORIZED.code).json({
+        success: false,
+        errors: renderData.errors
+      });
+    }
+
+    return res.status(httpStatusCode.UNAUTHORIZED.code).render('Layouts/userLogin', renderData);
   }
 };
-
 
 export const preventLoggedInAccess = (req, res, next) => {
   const token = req.cookies?.token;
@@ -97,7 +118,8 @@ export const preventLoggedInAccess = (req, res, next) => {
     if (decoded) {
       return res.redirect('/user/home');
     }
-  } catch (err) {
+  } catch (error) {
+    console.log(error);
   }
 
   next();
