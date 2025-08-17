@@ -304,7 +304,7 @@ export const placeOrderService = async (userId, orderData, req, isVerifiedOnline
         discountAmount: actualCouponDiscount,
       } : undefined,
       isPaid: isVerifiedOnline,
-      paymentStatus: isVerifiedOnline ? "Paid" : "Pending",
+      paymentStatus: isVerifiedOnline ? "Paid" : "Failed",
       paymentDetails: isVerifiedOnline
         ? {
           paymentProvider: "Razorpay",

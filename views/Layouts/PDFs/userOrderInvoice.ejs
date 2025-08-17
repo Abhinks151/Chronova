@@ -58,7 +58,7 @@
   <div class="summary">
     <p class="right">Subtotal: ₹<%= order.subtotal %></p>
     <% if (order.discount > 0) { %>
-      <p class="right">Discount: -₹<%= order.discount %></p>
+      <p class="right" id="discount">Discount: -₹<%= order.discount %></p>
     <% } %>
     <% if (order.coupon) { %>
       <p class="right">Coupon: -₹<%= order.coupon.discountAmount %></p>
@@ -68,5 +68,19 @@
     <% } %>
     <h3 class="right">Total: ₹<%= order.totalAmount %></h3>
   </div>
+
+  <script>
+    const products = <%= order.items%>;
+    const totalDiscount = products.reduce((acc,curr)=>{
+      acc += curr.discount;
+      return acc;
+    },0);
+
+    const discount = document.getElementById('discount');
+    if (totalDiscount > 0) {
+      discount.style.display = 'block';
+    }
+    discount.innerHTML = `Discount: - ${totalDiscount}%`;
+  </script>
 </body>
 </html>
