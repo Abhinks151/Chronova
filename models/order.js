@@ -47,7 +47,7 @@ const orderSchema = new mongoose.Schema(
         quantity: { type: Number, required: true, min: 1 },
         price: { type: Number, required: true },
         finalPrice: { type: Number, required: true },
-        discount: { type: Number, required: true, default: 0 },fixed 
+        discount: { type: Number, required: true, default: 0 },
         couponDiscountPerItem: { type: Number, default: 0 },
         totalCouponDiscount: { type: Number, default: 0 },
         netItemTotal: { type: Number, required: false },
