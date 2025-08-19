@@ -27,7 +27,34 @@ export const completeGoogleAuthService = async (userId, req) => {
     };
   }
 
-  const { firstName, lastName, referralCode } = req.body;
+  const { firstname, lastname, referralCode } = req.body;
+
+  // console.log(req.body);
+  
+
+  if (!/^[a-zA-Z]+$/.test(firstname)) {
+    return {
+      status: httpStatusCode.BAD_REQUEST.code,
+      body: {
+        success: false,
+        errors: { firstName: "First name must contain only letters" },
+      },
+    };
+  }
+
+  if(lastname){
+    if (!/^[a-zA-Z]+$/.test(lastname)) {
+      return {
+        status: httpStatusCode.BAD_REQUEST.code,
+        body: {
+          success: false,
+          errors: { lastName: "Last name must contain only letters" },
+        },
+      };
+    }
+  }
+
+
   const user = await User.findById(userId);
 
   if (!user) {
@@ -58,11 +85,11 @@ export const completeGoogleAuthService = async (userId, req) => {
     isRegistrationComplete: true,
   };
 
-  if (firstName && firstName !== user.firstName) {
-    updatedFields.firstName = firstName;
+  if (firstname && firstname !== user.firstname) {
+    updatedFields.firstname = firstname;
   }
-  if (lastName && lastName !== user.lastName) {
-    updatedFields.lastName = lastName;
+  if (lastname && lastname !== user.lastname) {
+    updatedFields.lastname = lastname;
   }
 
   const updatedUser = await User.findByIdAndUpdate(
