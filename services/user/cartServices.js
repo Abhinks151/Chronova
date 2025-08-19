@@ -94,6 +94,8 @@ export const postAddToCartService = async (userId, productId, quantity) => {
       userId,
       items: [{ productId, quantity }],
     });
+    await Wishlist.deleteOne({ userId, productId });
+
     return await cart.save();
   }
 

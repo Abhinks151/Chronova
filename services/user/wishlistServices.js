@@ -63,7 +63,7 @@ export const countWishlistProductByUserId = async (userId) => {
         .populate({
             path: 'category',
             select: '_id isBlocked'
-        });
+        }).lean();
 
     const visibleProductCount = products.filter(product => {
         if (product.isBlocked || product.isDeleted) return false;
