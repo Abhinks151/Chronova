@@ -116,12 +116,12 @@ Chronova is a full-featured e-commerce platform for selling watches, crafted wit
 
 ## 📦 Project Structure Highlights
 
-- Modular folder structure: `controllers`, `routes`, `services`, `models`, `middlewares`
-- Internal scripts in EJS pages
-- Reusable services across modules
-- Error handling middleware
-- Logger with daily rotation and cleanup
-- Clean, maintainable architecture for scalability
+- **Modular Folder Layout**: Clean separation into `controllers/`, `routes/`, `services/`, `models/`, `middlewares/`, and `utils/`.
+- **Standardized Naming Conventions**: All service files follow a consistent `[Action][Domain]Service.js` pattern (e.g. `deleteProductService.js`, `cartService.js`).
+- **Winston-Based Daily Rotating Logs**: Custom logger config that logs to daily rotating files (`logs/combined-%DATE%.log` and `logs/error-%DATE%.log`) and streams colorized levels to the terminal in development.
+- **Error Handling Middleware**: Global centralized catch-all middleware in `server.js` with structured error reporting.
+- **Centralized Validation Helpers**: Reusable utility functions (e.g. `utils/addressValidation.js`) extracting common domain validation to keep controllers clean.
+- **Environment Isolation**: A `.env.example` template matching all runtime configurations (`PORT`, `NODE_ENV`, `SESSION_SECRET`, and API tokens).
 
 ---
 
