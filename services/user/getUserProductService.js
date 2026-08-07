@@ -1,6 +1,6 @@
-import mongoose from "mongoose";
 import { Category } from "../../models/category.js";
 import { Products } from "../../models/products.js";
+import { logger } from '../../config/logger.js';
 
 export const getActiveProducts = async () => {
   const products = await Products.aggregate([
@@ -55,7 +55,7 @@ export const getProductByCategoryId = async (categoryId) => {
 
     return products;
   } catch (error) {
-    console.error(error);
+    logger.error(error);
     return [];
   }
 };

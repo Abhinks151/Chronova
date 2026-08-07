@@ -115,7 +115,7 @@ export const getCouponManagementPageData = async (req, res) => {
 
 export const addCoupon = async (req, res) => {
   try {
-    // console.log(req.body)
+    // logger.info(req.body)
     if (!req.body) {
       return res.status(httpStatusCOde.BAD_REQUEST.code).json({
         success: false,
@@ -210,7 +210,7 @@ export const getAllActiveCoupons = async (req, res) => {
     });
   } catch (error) {
     logger.error(error);
-    console.log(error);
+    logger.info(error);
     res.status(httpStatusCOde.INTERNAL_SERVER_ERROR.code).json({
       success: false,
       message: error.message || "Something went wrong",

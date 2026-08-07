@@ -12,7 +12,7 @@ export const getAdminDashboardPage = (req, res) => {
     res.status(httpStatusCode.OK.code).render("Layouts/adminDashboard/dashboard");
   } catch (error) {
     logger.error(error);
-    console.error(error);
+    logger.error(error);
     res.status(httpStatusCode.INTERNAL_SERVER_ERROR.code).json({ error: error.message });
   }
 };
@@ -20,14 +20,14 @@ export const getAdminDashboardPage = (req, res) => {
 export const getAdminDashboardPageData = async (req, res) => {
   try {
     const data = await getAdminDashboardPageDataService();
-    // console.log(data);
+    // logger.info(data);
     res.status(httpStatusCode.OK.code).json({
       success: true,
       data
     });
   } catch (error) {
     logger.error(error);
-    console.error(error);
+    logger.error(error);
     res.status(httpStatusCode.INTERNAL_SERVER_ERROR.code).json({ error: error.message });
   }
 }
@@ -36,14 +36,14 @@ export const getAdminDashboardPageData = async (req, res) => {
 export const getAdminDashboardChartData = async (req, res) => {
   try {
     const data = await getAdminDashboardChartService(req);
-    // console.log(data);
+    // logger.info(data);
     res.status(httpStatusCode.OK.code).json({
       success: true,
       data
     });
   } catch (error) {
     logger.error(error);
-    console.error(error);
+    logger.error(error);
     res.status(httpStatusCode.INTERNAL_SERVER_ERROR.code).json({ error: error.message });
   }
 }
@@ -62,7 +62,7 @@ export const getAdminDashboardPieData = async (req, res) => {
 
   } catch (err) {
     logger.error('Pie chart fetch error:', err.message);
-    console.error('Pie chart fetch error:', err.message);
+    logger.error('Pie chart fetch error:', err.message);
     const status = err.message.includes('Invalid chart type') ? 400 : 500;
 
     res.status(status).json({

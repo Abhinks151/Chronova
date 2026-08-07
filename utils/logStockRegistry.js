@@ -1,5 +1,6 @@
 import { Products } from "../models/products.js";
 import { stockRegistry } from "../models/stockRegistry.js";
+import { logger } from '../config/logger.js';
 
 
 export const logStockChange = async ({
@@ -13,7 +14,7 @@ export const logStockChange = async ({
 }) => {
   const product = await Products.findById(productId);
   if (!product) {
-    console.error("Product not found in logStockChange:", productId);
+    logger.error("Product not found in logStockChange:", productId);
     return;
   }
 
@@ -27,7 +28,7 @@ export const logStockChange = async ({
       : finalNewStock + quantity;
 
   if (isNaN(previousStock) || isNaN(finalNewStock)) {
-    console.error(`Invalid stock numbers: prev=${previousStock}, new=${finalNewStock}`);
+    logger.error(`Invalid stock numbers: prev=${previousStock}, new=${finalNewStock}`);
     return;
   }
 

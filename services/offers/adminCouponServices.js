@@ -142,7 +142,7 @@ export const editCouponService = async (couponId, updateData) => {
     if (!/^[a-zA-Z0-9,-_]+$/.test(coupon)) {
       throw new Error("Coupon code can only contain letters, numbers, hyphens, commas and underscores.");
     }
-    // console.log(coupon);
+    // logger.info(coupon);
 
     const formattedCoupon = `COUPON-${coupon}`;
 
@@ -204,7 +204,7 @@ export const deleteCouponService = async (couponId) => {
 };
 
 export const getAllActiveCouponsService = async (userId) => {
-  // console.log(userId)
+  // logger.info(userId)
   const now = new Date();
   now.setHours(0, 0, 0, 0);
   const id = new mongoose.Types.ObjectId(userId);
@@ -217,6 +217,6 @@ export const getAllActiveCouponsService = async (userId) => {
     "applicableFor.usedBy": { $ne: id },
     $expr: { $lt: ["$applicableFor.usageCount", "$applicableFor.limit"] },
   });
-  // console.log("data:" , data)
+  // logger.info("data:" , data)
   return data;
 };

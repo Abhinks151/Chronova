@@ -1,19 +1,20 @@
 
-import { addCategoryService } from "../../services/adminCategoryManagemnt/addCategoryService.js";
-import { filterCategoriesService } from "../../services/adminCategoryManagemnt/filterCategoryService.js";
-import { getCategoryService } from "../../services/adminCategoryManagemnt/getCategoryService.js";
+import { addCategoryService } from "../../services/adminCategoryManagement/addCategoryService.js";
+import { filterCategoriesService } from "../../services/adminCategoryManagement/filterCategoryService.js";
+import { getCategoryService } from "../../services/adminCategoryManagement/getCategoryService.js";
 import httpStatusCode from "../../utils/httpStatusCode.js";
-import { editCategoryService } from "../../services/adminCategoryManagemnt/editCategoryService.js";
-import { toggleBlockCategoryService } from "../../services/adminCategoryManagemnt/blockCategory.js";
-import { deleteCategoryService } from "../../services/adminCategoryManagemnt/deleteCategory.js";
+import { editCategoryService } from "../../services/adminCategoryManagement/editCategoryService.js";
+import { toggleBlockCategoryService } from "../../services/adminCategoryManagement/blockCategory.js";
+import { deleteCategoryService } from "../../services/adminCategoryManagement/deleteCategory.js";
 import { types } from "../../utils/categoryTypes.js";
+import { logger } from '../../config/logger.js';
 
 
 export const getCategory = async (req, res) => {
   try {
     const { categoriesWithCount, products } = await getCategoryService();
-    // console.log('categoriesWithCount', categoriesWithCount);
-    // console.log('products', products);
+    // logger.info('categoriesWithCount', categoriesWithCount);
+    // logger.info('products', products);
     return res.status(httpStatusCode.OK.code).render('Layouts/adminDashboard/category', {
       categories: categoriesWithCount,
       types,
@@ -21,7 +22,7 @@ export const getCategory = async (req, res) => {
     });
 
   } catch (error) {
-    console.error('Error fetching categories:', error);
+    logger.error('Error fetching categories:', error);
     return res.status(httpStatusCode.BAD_REQUEST.code).render('Layouts/adminDashboard/category', {
       categories: [],
       types,
@@ -36,7 +37,7 @@ export const getCategory = async (req, res) => {
 //     const category = await addCategoryService(categoryData);
 //     res.status(httpStatusCode.CREATED.code).json(category);
 //   } catch (error) {
-//     console.error(error);
+//     logger.error(error);
 //     res.status(httpStatusCode.INTERNAL_SERVER_ERROR.code).json({ message: 'An error occurred' });
 //   }
 // };
@@ -59,7 +60,7 @@ export const getCategory = async (req, res) => {
 //       products
 //     });
 //   } catch (error) {
-//     console.error('Error fetching categories:', error);
+//     logger.error('Error fetching categories:', error);
 //     return res.render('Layouts/adminDashboard/category', {
 //       categories: [],
 //       types,
@@ -80,7 +81,7 @@ export const filterCategories = async (req, res) => {
       return res.status(httpStatusCode.BAD_REQUEST.code).json({ success: false, message: 'Invalid pagination parameters' });
     }
 
-    // console.log(req.query);
+    // logger.info(req.query);
 
     const result = await filterCategoriesService({
       ...req.query,
@@ -88,11 +89,11 @@ export const filterCategories = async (req, res) => {
       limit
     });
 
-    // console.log(result)
+    // logger.info(result)
 
     res.status(httpStatusCode.OK.code).json(result);
   } catch (error) {
-    console.error('Error filtering categories:', error);
+    logger.error('Error filtering categories:', error);
     res.status(httpStatusCode.BAD_REQUEST.code).json({
       success: false,
       message: error.message || 'Server error while filtering categories'
@@ -160,7 +161,7 @@ export const editCategory = async (req, res) => {
     });
 
   } catch (error) {
-    console.error('Error in editCategory controller:', error);
+    logger.error('Error in editCategory controller:', error);
     return res.status(httpStatusCode.INTERNAL_SERVER_ERROR.code).json({
       success: false,
       message: 'Internal server error'
@@ -198,7 +199,7 @@ export const toggleBlockCategory = async (req, res) => {
     });
 
   } catch (error) {
-    console.error('Error toggling category block state:', error);
+    logger.error('Error toggling category block state:', error);
     res.status(httpStatusCode.INTERNAL_SERVER_ERROR.code).json({
       success: false,
       message: 'Internal server error'
@@ -233,7 +234,7 @@ export const deleteCategory = async (req, res) => {
     });
 
   } catch (error) {
-    console.error('Error deleting category:', error);
+    logger.error('Error deleting category:', error);
     res.status(httpStatusCode.INTERNAL_SERVER_ERROR.code).json({
       success: false,
       message: 'Internal server error'

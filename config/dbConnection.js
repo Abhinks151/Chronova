@@ -1,20 +1,19 @@
 import mongoose from "mongoose";
 import dotenv from "dotenv";
+import { logger } from "./logger.js";
 
 dotenv.config();
-const URI = process.env.MONGO_URI;
 
 export const connection = async () => {
-  mongoose.connect(
-    URI,
-    {
+  try {
+    await mongoose.connect(process.env.MONGO_URI, {
       dbName: "chronova",
-    }
-  ).then(() => {
-    console.log('DB connected');
-  }).catch((value) => {
-    console.log(`DB connection error: ${value}`);
-  });
+    });
+    logger.info("MongoDB connected successfully");
+  } catch (error) {
+    logger.error(`MongoDB connection error: ${error.message}`);
+    process.exit(1);
+  }
 };
 
 export default connection;

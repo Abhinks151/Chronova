@@ -1,6 +1,7 @@
 import Razorpay from "razorpay";
 import httpStatusCode from "../../utils/httpStatusCode.js";
 import dotenv from 'dotenv';
+import { logger } from '../../config/logger.js';
 
 dotenv.config();
 
@@ -30,7 +31,7 @@ export const createRazorpayOrder = async (req, res) => {
       .status(httpStatusCode.OK.code)
       .json({ success: true, order: razorpayOrder });
   } catch (error) {
-    console.error("Razorpay create order error", error);
+    logger.error("Razorpay create order error", error);
     res
       .status(httpStatusCode.INTERNAL_SERVER_ERROR.code)
       .json({ success: false, message: "Failed to create Razorpay order" });

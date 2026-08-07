@@ -3,6 +3,7 @@ import httpStatusCode from "../../utils/httpStatusCode.js";
 import mongoose from "mongoose";
 import { v2 as cloudinary } from 'cloudinary';
 import { logStockChange } from "../../utils/logStockRegistry.js";
+import { logger } from '../../config/logger.js';
 
 export const getProduct = async (id) => {
   return await Products.findOne({ _id: id, isBlocked: false }).lean();
@@ -128,8 +129,8 @@ export const updateProductService = async (productId, body, files) => {
       if (index !== null && index >= 0 && index < 4) {
         if (images[index]?.public_id) {
           cloudinary.uploader.destroy(images[index].public_id)
-            .then(res => console.log(`Deleted ${images[index].public_id}:`, res))
-            .catch(err => console.error(`Error deleting ${images[index].public_id}:`, err));
+            .then(res => logger.info(`Deleted ${images[index].public_id}:`, res))
+            .catch(err => logger.error(`Error deleting ${images[index].public_id}:`, err));
         }
 
         updatedImages[index] = {
@@ -183,7 +184,7 @@ export const updateProductService = async (productId, body, files) => {
     };
 
   } catch (error) {
-    console.error("Service error in updateProductService:", error);
+    logger.error("Service error in updateProductService:", error);
     return {
       success: false,
       statusCode: httpStatusCode.INTERNAL_SERVER_ERROR.code,

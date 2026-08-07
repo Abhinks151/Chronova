@@ -1,5 +1,6 @@
-import { countWishlistProductByUserId, getWishlistProductsByUserId, wishlistToggleService } from '../../services/user/wishlistServices.js';
+import { countWishlistProductByUserId, getWishlistProductsByUserId, wishlistToggleService } from '../../services/user/wishlistService.js';
 import httpStatusCode from '../../utils/httpStatusCode.js';
+import { logger } from '../../config/logger.js';
 
 
 export const getWishlistController = async (req, res) => {
@@ -17,7 +18,7 @@ export const getWishlistController = async (req, res) => {
       wishlistProducts
     })
   } catch (error) {
-    console.error('Error fetching wishlist:', error);
+    logger.error('Error fetching wishlist:', error);
     return res.status(httpStatusCode.INTERNAL_SERVER_ERROR.code).render('Layouts/users/wishlist', {
       wishlistProducts: [],
     });
@@ -34,7 +35,7 @@ export const getWishlistData = async (req, res) => {
       products: wishlistProducts
     });
   } catch (error) {
-    console.error('Error fetching wishlist data API:', error);
+    logger.error('Error fetching wishlist data API:', error);
     res.status(httpStatusCode.INTERNAL_SERVER_ERROR.code).json({
       success: false,
       message: "Unable to fetch wishlist data."
@@ -70,7 +71,7 @@ export const toggleWishlistController = async (req, res) => {
       action
     });
   } catch (error) {
-    console.error('Error toggling wishlist:', error);
+    logger.error('Error toggling wishlist:', error);
     return res.status(httpStatusCode.INTERNAL_SERVER_ERROR.code).json({
       success: false,
       message: "Something went wrong. Please try again later."

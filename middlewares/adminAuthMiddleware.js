@@ -2,6 +2,7 @@ import dotenv from "dotenv";
 import jwt from "jsonwebtoken";
 import { Admin } from "../models/adminModels.js";
 import httpStatusCode from "../utils/httpStatusCode.js";
+import { logger } from '../config/logger.js';
 
 dotenv.config();
 
@@ -26,8 +27,11 @@ export const authenticateAdmin = async (req, res, next) => {
 
     next();
   } catch (error) {
-    console.error('Error authenticating admin:', error);
-    res.status(httpStatusCode.INTERNAL_SERVER_ERROR.code).json({ error: 'Internal Server Error' });
+    logger.error('Error authenticating admin:', error.message);
+    if (req.xhr || req.get('Content-Type') === 'application/json') {
+      return res.status(httpStatusCode.UNAUTHORIZED.code).json({ error: 'Session expired or invalid. Please login again.' });
+    }
+    return res.redirect('/admin/login?error=unauthorized');
   }
 }
 

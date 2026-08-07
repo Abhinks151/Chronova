@@ -1,13 +1,14 @@
 import { User } from '../../models/userModels.js';
 import { sendVerificationOTP } from '../../utils/sendVerificationOTP.js';
 import httpStatusCode from '../../utils/httpStatusCode.js';
+import { logger } from '../../config/logger.js';
 
 // import { sendWelcome } from '../../utils/sendVerificationOTP';
 
 
 export const handleResendVerification = async (req) => {
   const email = req.session.emailForVerification;
-  // console.log(email)
+  // logger.info(email)
   if (!email) {
     return {
       status: httpStatusCode.BAD_REQUEST.code,
@@ -38,7 +39,7 @@ export const handleResendVerification = async (req) => {
       message: 'Verification code sent successfully. Please check your inbox.',
     };
   } catch (err) {
-    console.error('Error sending OTP:', err);
+    logger.error('Error sending OTP:', err);
     return {
       status: httpStatusCode.INTERNAL_SERVER.code,
       message: 'Failed to send verification code. Please try again later.',

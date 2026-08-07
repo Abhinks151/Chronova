@@ -1,5 +1,6 @@
 import { Order } from "../../models/order.js"
 import Wallet from "../../models/wallet.js"
+import { logger } from '../../config/logger.js';
 
 export const updateOrderPaymentStatus = async (orderId, paymentStatus, adminId) => {
   try {
@@ -84,7 +85,7 @@ export const updateOrderPaymentStatus = async (orderId, paymentStatus, adminId) 
       oldPaymentStatus: oldPaymentStatus,
     }
   } catch (error) {
-    console.error("Error in updateOrderPaymentStatus:", error)
+    logger.error("Error in updateOrderPaymentStatus:", error)
     return {
       success: false,
       error: "Failed to update order payment status",
@@ -156,7 +157,7 @@ export const updateItemPaymentStatus = async (orderId, itemId, paymentStatus, ad
       oldPaymentStatus: oldPaymentStatus,
     }
   } catch (error) {
-    console.error("Error in updateItemPaymentStatus:", error)
+    logger.error("Error in updateItemPaymentStatus:", error)
     return {
       success: false,
       error: "Failed to update item payment status",
@@ -193,7 +194,7 @@ export const getOrderPaymentStatus = async (orderId) => {
       data: paymentData,
     }
   } catch (error) {
-    console.error("Error in getOrderPaymentStatus:", error)
+    logger.error("Error in getOrderPaymentStatus:", error)
     return {
       success: false,
       error: "Failed to fetch order payment status",
@@ -274,7 +275,7 @@ const processWalletRefund = async (userId, amount, orderId, description) => {
 
     await wallet.save()
   } catch (error) {
-    console.error("Error processing wallet refund:", error)
+    logger.error("Error processing wallet refund:", error)
     throw error
   }
 }

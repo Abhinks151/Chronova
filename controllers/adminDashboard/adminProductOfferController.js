@@ -8,6 +8,7 @@ import {
 } from "../../services/offers/adminProductOfferService.js";
 import { getActiveProducts } from "../../services/user/getUserProductService.js";
 import httpStatusCode from '../../utils/httpStatusCode.js';
+import { logger } from '../../config/logger.js';
 
 
 export const getProductOfferManagementPage = async (req, res) => {
@@ -15,7 +16,7 @@ export const getProductOfferManagementPage = async (req, res) => {
     return res.status(httpStatusCode.OK.code).render('Layouts/adminDashboard/productOfferManagement', {});
     
   } catch (error) {
-    console.error("Error in getProductOfferManagementPage:", error.message);
+    logger.error("Error in getProductOfferManagementPage:", error.message);
     return res.status(httpStatusCode.INTERNAL_SERVER_ERROR.code).json({
       success: false,
       message: error.message || "Something went wrong"
@@ -39,8 +40,8 @@ export const getProductOfferManagementPageData = async (req, res) => {
 
     const products = await getActiveProducts();
 
-    // console.log(products);
-    // console.log(data);
+    // logger.info(products);
+    // logger.info(data);
 
     return res.status(httpStatusCode.OK.code).json({
       success: true,
@@ -49,7 +50,7 @@ export const getProductOfferManagementPageData = async (req, res) => {
     });
 
   } catch (error) {
-    console.error("Error in getProductOfferManagementPageData:", error.message);
+    logger.error("Error in getProductOfferManagementPageData:", error.message);
     return res.status(httpStatusCode.INTERNAL_SERVER_ERROR.code).json({
       success: false,
       message: error.message || "Something went wrong"
@@ -59,7 +60,7 @@ export const getProductOfferManagementPageData = async (req, res) => {
 
 export const addProductOffer = async (req, res) => {
   try {
-    // console.log(req.body);
+    // logger.info(req.body);
     const data = await addProductOfferService(req.body);
     return res.status(httpStatusCode.CREATED.code).json({
       message: "Product offer added successfully",
@@ -67,7 +68,7 @@ export const addProductOffer = async (req, res) => {
       data
     });
   } catch (error) {
-    console.error("Error in addProductOffer:", error.message);
+    logger.error("Error in addProductOffer:", error.message);
     return res.status(httpStatusCode.BAD_REQUEST.code).json({
       success: false,
       message: error.message || "Something went wrong"
@@ -77,8 +78,8 @@ export const addProductOffer = async (req, res) => {
 
 export const editProductOffers = async (req,res)=>{
   try{
-    // console.log('req.params',req.params);
-    // console.log('req.body',req.body);
+    // logger.info('req.params',req.params);
+    // logger.info('req.body',req.body);
     const offerId = req.params.id;
     const newData = req.body;
     const data = await editProductOfferService(offerId,newData);
@@ -88,7 +89,7 @@ export const editProductOffers = async (req,res)=>{
       message:"Product offer updated "
     });
   }catch(error){
-    console.error("Error in editProductOffers:", error.message);
+    logger.error("Error in editProductOffers:", error.message);
     return res.status(httpStatusCode.BAD_REQUEST.code).json({
       success: false,
       message: error.message || "Something went wrong"
@@ -100,14 +101,14 @@ export const editProductOffers = async (req,res)=>{
 export const getProductOfferById = async (req, res) => {
   try {
     const offerId = req.params.id;
-    // console.log(offerId);
+    // logger.info(offerId);
     const data = await getProductOfferByIdService(offerId);
     return res.status(httpStatusCode.OK.code).json({
       success: true,
       data
     });
   } catch (error) {
-    console.error("Error in getProductOfferById:", error.message);
+    logger.error("Error in getProductOfferById:", error.message);
     return res.status(httpStatusCode.BAD_REQUEST.code).json({
       success: false,
       message: error.message || "Something went wrong"
@@ -128,7 +129,7 @@ export const toggleProductOfferStatus = async (req, res) => {
       data: updatedOffer,
     });
   } catch (error) {
-    console.error("Error toggling product offer status:", error.message);
+    logger.error("Error toggling product offer status:", error.message);
 
     let statusCode;
     if (error.message === "Product offer not found") {
@@ -155,7 +156,7 @@ export const deleteProductOffer = async (req, res) => {
       message: "Product offer deleted successfully",
     });
   } catch (error) {
-    console.error("Error deleting product offer:", error.message);
+    logger.error("Error deleting product offer:", error.message);
     return res.status(httpStatusCode.INTERNAL_SERVER_ERROR.code).json({
       success: false,
       message: error.message || "Something went wrong",

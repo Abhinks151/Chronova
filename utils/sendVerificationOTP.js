@@ -2,6 +2,7 @@
 import { generateNumericOTP, hashOTP } from './otp.js';
 import { sendOTPEmail, sendResetPasswordEmail, sendWelcomeEmail } from '../services/emailService.js';
 import { User } from '../models/userModels.js';
+import { logger } from '../config/logger.js';
 
 export const sendVerificationOTP = async (user,newEmail) => {
   const otp = generateNumericOTP();
@@ -11,7 +12,7 @@ export const sendVerificationOTP = async (user,newEmail) => {
   user.verificationToken = hashed;
   user.verificationTokenExpireAt = expiry;
   await user.save();
-  console.log(newEmail);
+  logger.info(newEmail);
   await sendOTPEmail(newEmail, otp, user.firstname);
 };
 
@@ -19,7 +20,7 @@ export const sendResetPasswordToken = async (user) => {
   const resetToken = generateNumericOTP(6);
   const hashedToken = hashOTP(resetToken);
   const expiry = Date.now() + 1000 * 60 * 60;
-  // console.log(hashedToken); 
+  // logger.info(hashedToken); 
   user.resetPasswordToken = hashedToken;
   user.resetPasswordExpire = expiry;
   await user.save();

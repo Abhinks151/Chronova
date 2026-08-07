@@ -3,6 +3,7 @@ import { Category } from "../../models/category.js";
 
 
 import mongoose from "mongoose";
+import { logger } from '../../config/logger.js';
 
 export const getProductDetails = async (productId) => {
   try {
@@ -47,7 +48,7 @@ export const getProductDetails = async (productId) => {
       data: product,
     };
   } catch (error) {
-    console.error("Error in getProductDetails:", error.message);
+    logger.error("Error in getProductDetails:", error.message);
     return {
       success: false,
       message: "Something went wrong while fetching product details",

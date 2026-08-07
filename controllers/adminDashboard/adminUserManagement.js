@@ -1,6 +1,7 @@
 import HttpStatusCode from "../../utils/httpStatusCode.js";
-import { getPaginatedUsers } from '../../services/adminUserManagement/paginationQuires.js';
+import { getPaginatedUsers } from '../../services/adminUserManagement/paginationQueries.js';
 import { User } from "../../models/userModels.js";
+import { logger } from '../../config/logger.js';
 
 
 
@@ -18,7 +19,7 @@ export const getAdminUserManagement = async (req, res) => {
       ...data,
     });
   } catch (err) {
-    console.error('Admin User Management Error:', err);
+    logger.error('Admin User Management Error:', err);
     res.status(httpStatusCode.INTERNAL_SERVER_ERROR.code).render('error', { message: 'Something went wrong', error: err });
   }
 };
@@ -41,7 +42,7 @@ export const getAdminUsersPage = async (req, res) => {
       limit: data.limit,
     });
   } catch (err) {
-    console.error('Admin Users API Error:', err);
+    logger.error('Admin Users API Error:', err);
     res.status(HttpStatusCode.INTERNAL_SERVER_ERROR.code).json({
       message: 'Failed to fetch users',
       error: err.message,
@@ -53,7 +54,7 @@ export const getAdminUsersPage = async (req, res) => {
 
 export const togleBlock = async (req, res) => {
   try {
-    console.log(req.params.id);;
+    logger.info(req.params.id);;
 
     const user = await User.findById(req.params.id);
 
@@ -71,7 +72,7 @@ export const togleBlock = async (req, res) => {
 
 
   } catch (error) {
-    console.error('Toggle block error:', error);
+    logger.error('Toggle block error:', error);
     res.status(HttpStatusCode.INTERNAL_SERVER_ERROR.code).json({ success: false, message: 'Internal server error' });
   }
 }

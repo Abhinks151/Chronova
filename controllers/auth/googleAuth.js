@@ -1,6 +1,7 @@
 import passport from "passport";
 import { generateToken } from "../../utils/generateToken.js";
 import httpStatusCode from "../../utils/httpStatusCode.js"
+import { logger } from '../../config/logger.js';
 
 
 
@@ -10,10 +11,10 @@ export const googleAuth = passport.authenticate('google', {
 });
 
 export const googleCallback = async (req, res, next) => {
-  passport.authenticate('google', { session: false }, async (err, user, info) => {
+  passport.authenticate('google', { session: false }, async (err, user, _info) => {
     try {
       if (err) {
-        console.error('Passport error:', err);
+        logger.error('Passport error:', err);
         return res.status(httpStatusCode.INTERNAL_SERVER_ERROR.code).render('Layouts/userLogin', {
           title: "Login",
           success: false,
@@ -25,7 +26,7 @@ export const googleCallback = async (req, res, next) => {
         return res.status(httpStatusCode.BAD_REQUEST.code).render('Layouts/userLogin', {
           title: "Login",
           success: false,
-          errors: {email : 'user is blocked by admin'}
+          errors: { email: 'user is blocked by admin' }
         });
       }
 
@@ -40,7 +41,7 @@ export const googleCallback = async (req, res, next) => {
 
       res.redirect('/user/products');
     } catch (err) {
-      console.error('OAuth error:', err);
+      logger.error('OAuth error:', err);
       res.status(httpStatusCode.INTERNAL_SERVER_ERROR.code).render('Layouts/userLogin', {
         title: "Login",
         success: false,

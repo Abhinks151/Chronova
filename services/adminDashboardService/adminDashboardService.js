@@ -23,13 +23,13 @@ export const getAdminDashboardPageDataService = async () => {
     { $project: { _id: 0, productName: 1, totalQuantity: 1, totalAmount: 1 } }
   ]);
 
-  // console.log(bestTenProducts);
+  // logger.info(bestTenProducts);
 
   // const sum =  bestTenProducts.reduce((acc,curr)=>{
   //   acc += curr.totalAmount;
   //   return acc;
   // },0);
-  // console.log("Sum",sum);
+  // logger.info("Sum",sum);
 
 
   const bestTenBrands = await Order.aggregate([
@@ -74,7 +74,7 @@ export const getAdminDashboardPageDataService = async () => {
 
 
 
-  // console.log(bestTenCategory);
+  // logger.info(bestTenCategory);
 
 
   return {
@@ -343,7 +343,7 @@ export const getAdminPieChartDataService = async (type, startDate, endDate) => {
   }
 
   const result = await Order.aggregate(pipeline);
-  // console.log(result);
+  // logger.info(result);
   const labels = result.map(item => item.name);
   const values = result.map(item => item.totalRevenue);
   const total = values.reduce((acc, curr) => acc + curr, 0);

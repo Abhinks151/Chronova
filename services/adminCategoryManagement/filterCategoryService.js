@@ -13,7 +13,7 @@ export const filterCategoriesService = async (queryParams) => {
   } = queryParams;
 
   const filter = {};
-  // console.log(search)
+  // logger.info(search)
   if (search) {
     filter.$or = [
       { categoryName: { $regex: search, $options: 'i' } }
@@ -42,8 +42,8 @@ export const filterCategoriesService = async (queryParams) => {
     sortQuery.createdAt = -1;
   }
 
-  // console.log(filter);
-  // console.log(sortQuery);
+  // logger.info(filter);
+  // logger.info(sortQuery);
 
   filter.isDeleted = false;
   const totalCount = await Category.countDocuments(filter);

@@ -64,6 +64,6 @@ export const findBestPriceForProduct = async (productId) => {
   }
 
 
-  // console.log("Best offer price:", offerPrice); 
+  // logger.info("Best offer price:", offerPrice); 
   return { offerPrice, discount };
 };

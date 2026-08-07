@@ -5,7 +5,7 @@ export const blockProductService = async (productId) => {
   try {
 
     const updatedProduct = await Products.findOne({ _id: productId });
-    // console.log(updatedProduct);
+    // logger.info(updatedProduct);
     updatedProduct.isBlocked = !updatedProduct.isBlocked;
     await updatedProduct.save();
     return updatedProduct;

@@ -7,79 +7,61 @@ import './config/passport.js';
 import passport from "passport";
 import nocache from "nocache";
 import session from "express-session";
-// import MongoStore from 'connect-mongo';
-import httpStatusCode from "./utils/httpStatusCode.js"
-
-// import csurf from "csurf";
-
+import httpStatusCode from "./utils/httpStatusCode.js";
 import connection from "./config/dbConnection.js";
-// import { errorMiddleware } from "./middlewares/errorMiddleware.js";
-
 import indexRoutes from "./routes/index.js";
 import { authenticateUser } from "./middlewares/userAuthMiddleware.js";
-// import { requestLogger } from "./middlewares/requestLogger.js";
+import { requestLogger } from "./middlewares/requestLogger.js";
+import { logger } from "./config/logger.js";
 
 dotenv.config();
+
 const PORT = process.env.PORT || 3000;
 const app = express();
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
+// Connect to MongoDB
 connection();
 
-
-
-
-app.use(express.static("public"));
+// Static Files & Template Engine Setup
+app.use(express.static(path.join(__dirname, "public")));
 app.set("view engine", "ejs");
 app.set("views", path.join(__dirname, "views"));
 
-app.use(passport.initialize());
+// Request Logging Middleware
+app.use(requestLogger);
+
+// Global Middleware Config
 app.use(nocache());
 app.use(cookieParser());
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
+
+// Express Session Configuration
+const isProduction = process.env.NODE_ENV === "production";
 app.use(
   session({
-    secret: "Abhin is the batman",
+    secret: process.env.SESSION_SECRET || "Abhin is the batman",
     resave: false,
     saveUninitialized: true,
-    cookie: { secure: false },
+    cookie: {
+      secure: isProduction,
+      httpOnly: true,
+      maxAge: 24 * 60 * 60 * 1000 // 1 day
+    },
   })
 );
 
+// Initialize Passport
+app.use(passport.initialize());
 
-// const isProduction = process.env.NODE_ENV === "production";
-// app.set("trust proxy", 1);
-// app.use(
-//   session({
-//     secret: "Abhin is the batman",
-//     resave: false,
-//     saveUninitialized: false, // Don't save empty sessions
-//     cookie: {
-//       secure: isProduction,         // True in production
-//       httpOnly: true,
-//       sameSite: isProduction ? "none" : "lax", // Allows cross-origin in prod
-//     },
-//   })
-// );
-
-
-
-
-// Error handler
-// app.use(errorMiddleware);
-
-// app.use(requestLogger);
+// Application Routing
 app.use("/", indexRoutes);
 
-app.get('/',authenticateUser,(req,res)=>{
-  res.redirect('/user/home')
-})
-
-app.get("/error", (req, res, next) => {
-  next(new Error("This is a test error"));
+app.get('/', authenticateUser, (req, res) => {
+  res.redirect('/user/home');
 });
 
 
@@ -87,21 +69,18 @@ app.use((req, res) => {
   res.status(httpStatusCode.NOT_FOUND.code).render('Layouts/404');
 });
 
+// Global Error Handler
+app.use((err, req, res, _next) => {
+  logger.error(`Error: ${err.message}\nStack: ${err.stack}`);
 
-//Error
-app.use((err, req, res, next) => {
-  console.log(err);
   res.status(httpStatusCode.INTERNAL_SERVER_ERROR.code).render("Layouts/error", {
     statusCode: httpStatusCode.INTERNAL_SERVER_ERROR.code,
     message: "Internal Server Error",
     description: "Something went wrong. Please try again later.",
   });
-})
-
-
-
+});
 
 app.listen(PORT, () => {
-  console.log(`Server running on http://localhost:${PORT}/user/home`);
-  console.log(`Server running on http://localhost:${PORT}/admin/dashboard`);
+  logger.info(`Server running in ${process.env.NODE_ENV || 'development'} mode on http://localhost:${PORT}/user/home`);
+  logger.info(`Admin panel accessible on http://localhost:${PORT}/admin/dashboard`);
 });

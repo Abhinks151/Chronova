@@ -112,11 +112,6 @@ export const placeOrderService = async (userId, orderData, req, isVerifiedOnline
       throw new Error("No valid products found");
     }
 
-
-    let grossTotal = 0;
-    const itemCalculations = [];
-
-
     for (const item of orderData.items) {
       const productId = item.productId?._id?.toString() || item.productId?.toString();
       const product = products.find((product) => {
@@ -265,7 +260,7 @@ export const placeOrderService = async (userId, orderData, req, isVerifiedOnline
 
 
 
-    // console.log(newOrder);
+    // logger.info(newOrder);
 
     await newOrder.save({ session });
 
@@ -378,16 +373,16 @@ export const placeOrderService = async (userId, orderData, req, isVerifiedOnline
 export const orderListByUserId = async (userId, page = 1, limit = 10, statusFilter = 'all', searchTerm = '') => {
   try {
     const skip = (page - 1) * limit;
-    
+
     let query = { userId };
-    
+
     if (statusFilter !== 'all') {
       query.$or = [
         { orderStatus: statusFilter },
         { 'items.status': statusFilter }
       ];
     }
-    
+
     if (searchTerm) {
       query.$or = [
         ...(query.$or || []),
@@ -398,7 +393,7 @@ export const orderListByUserId = async (userId, page = 1, limit = 10, statusFilt
     }
 
     const totalOrders = await Order.countDocuments(query);
-    
+
     const orders = await Order.find(query)
       .sort({ createdAt: -1 })
       .skip(skip)

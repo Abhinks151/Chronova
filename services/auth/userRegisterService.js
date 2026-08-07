@@ -68,7 +68,7 @@ export const registerUser = async (req, userData) => {
   await newUser.save();
 
   if (referredUser) {
-    // console.log(referredUser);
+    // logger.info(referredUser);
     await Coupon.create({
       discountAmount: 200,
       minimumCartAmount: 500,

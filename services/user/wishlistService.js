@@ -27,7 +27,7 @@ export const wishlistToggleService = async (userId, productId) => {
 
 // export const findWishlistByUserId = async (userId) => {
 //   const productIds = await Wishlist.find({ userId }).distinct('productId');
-//   console.log(productIds)
+//   logger.info(productIds)
 //   return productIds;
 // }
 
@@ -93,7 +93,7 @@ export const getWishlistProductsByUserId = async (userId) => {
     for(let elem of visibleProducts) {
         elem.offer = await findBestPriceForProduct(elem._id);
     }
-    // console.log(visibleProducts);
+    // logger.info(visibleProducts);
 
     return visibleProducts;
 };

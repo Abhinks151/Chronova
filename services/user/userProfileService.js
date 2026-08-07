@@ -116,7 +116,7 @@ export const getAllAddress = async (userId) => {
 export const addAddressService = async (userId, data) => {
   // const address = data
   // const {addressName,fullName,phone,pincode,addressLine,city,state,country,countryCode,landmark,isDefault} = data;
-  // console.log(data);
+  // logger.info(data);
   data.userId = userId;
 
   const address = new Address(data);

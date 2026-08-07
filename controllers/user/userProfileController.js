@@ -1,9 +1,11 @@
 
 import { User } from "../../models/userModels.js";
-import { addAddressService, changeEmail, deleteAddressService, editAddressService, editDefaultByIdService, finduserByEmail, finduserById, getAllAddress, validateAndUpdateUser } from "../../services/user/userProfileServices.js"
+import { addAddressService, changeEmail, deleteAddressService, editAddressService, editDefaultByIdService, finduserByEmail, finduserById, getAllAddress, validateAndUpdateUser } from "../../services/user/userProfileService.js"
 import cloudinary from "../../utils/cloudinary.js";
 import httpStatusCode from "../../utils/httpStatusCode.js"
 import { sendResetPasswordToken } from "../../utils/sendVerificationOTP.js";
+import { validateAddress } from "../../utils/addressValidation.js";
+import { logger } from '../../config/logger.js';
 
 
 export const getProfile = async (req, res) => {
@@ -17,12 +19,12 @@ export const getProfile = async (req, res) => {
     }
 
     user.address = await getAllAddress(userId);
-    // console.log(user);
+    // logger.info(user);
     res.render('Layouts/users/userAccountPage', {
       user
     });
   } catch (err) {
-    console.error('Error loading user profile:', err);
+    logger.error('Error loading user profile:', err);
     res.status(httpStatusCode.INTERNAL_SERVER_ERROR.code).render('Layouts/users/userAccountPage', {
       message: 'Internal Server Error',
       user: null
@@ -39,7 +41,7 @@ export const sentPasswordReset = async (req, res) => {
       success: true
     })
   } catch (error) {
-    console.log(error);
+    logger.info(error);
     res.status(httpStatusCode.INTERNAL_SERVER_ERROR.code).json({
       success: false
     })
@@ -95,7 +97,7 @@ export const postChangeEmail = async (req, res) => {
 
     res.status(httpStatusCode.OK.code).redirect('/user/verify-otp');
   } catch (error) {
-    console.error(error);
+    logger.error(error);
     res.status(httpStatusCode.INTERNAL_SERVER_ERROR.code).json({
       success: false,
       message: "Internal server error",
@@ -122,7 +124,7 @@ export const updateUserData = async (req, res) => {
       data: result.data
     })
   } catch (error) {
-    console.error(error)
+    logger.error(error)
     res.status(httpStatusCode.INTERNAL_SERVER_ERROR.code).json({
       success: false,
       message: "Internal server error"
@@ -137,7 +139,7 @@ export const getAddressMangemnt = async (req, res) => {
   try {
     res.render('Layouts/users/userAddressmanagement');
   } catch (error) {
-    console.error("Error loading user address management page:", error);
+    logger.error("Error loading user address management page:", error);
     res.status(httpStatusCode.INTERNAL_SERVER_ERROR.code).json({
       success: false,
       message: "Internal Server Error"
@@ -147,14 +149,14 @@ export const getAddressMangemnt = async (req, res) => {
 
 export const getAddress = async (req, res) => {
   try {
-    // console.log(addresses)
+    // logger.info(addresses)
     const addresses = await getAllAddress(req.user._id)
     res.json({
       success: true,
       addresses: addresses
     })
   } catch (error) {
-    console.error("Error loading user address management page:", error);
+    logger.error("Error loading user address management page:", error);
     res.status(httpStatusCode.INTERNAL_SERVER_ERROR.code).json({
       success: false,
       message: "Internal Server Error"
@@ -164,7 +166,7 @@ export const getAddress = async (req, res) => {
 
 export const addAddress = async (req, res) => {
   try {
-    // console.log(req.body)
+    // logger.info(req.body)
 
     if (!req.user._id) {
       return res.status(httpStatusCode.BAD_REQUEST.code).json({
@@ -172,187 +174,12 @@ export const addAddress = async (req, res) => {
         message: "Something went wrong"
       })
     }
-    const { addressName, fullName, phone, pincode, addressLine, city, state, country, landmark } = req.body;
 
-    if (!addressName) {
+    const validationError = validateAddress(req.body);
+    if (validationError) {
       return res.status(httpStatusCode.BAD_REQUEST.code).json({
         success: false,
-        message: 'Address name is required',
-      });
-    }
-
-    if (addressName.length < 2) {
-      return res.status(httpStatusCode.BAD_REQUEST.code).json({
-        success: false,
-        message: 'Address name can not be less than 2 characters',
-      });
-    }
-
-    if (!/^[A-Za-z0-9\s]+$/.test(addressName)) {
-      return res.status(httpStatusCode.BAD_REQUEST.code).json({
-        success: false,
-        message: 'Address name can only have letters and numbers.',
-      });
-    }
-
-    if (!fullName) {
-      return res.status(httpStatusCode.BAD_REQUEST.code).json({
-        success: false,
-        message: 'Full name is required',
-      });
-    }
-
-    if (fullName.length < 2) {
-      return res.status(httpStatusCode.BAD_REQUEST.code).json({
-        success: false,
-        message: 'Full name can not be less than 2 characters',
-      });
-    }
-
-    if (!/^[A-Za-z\s]+$/.test(fullName)) {
-      return res.status(httpStatusCode.BAD_REQUEST.code).json({
-        success: false,
-        message: 'Full name can only have letters.',
-      });
-    }
-
-    if (!phone) {
-      return res.status(httpStatusCode.BAD_REQUEST.code).json({
-        success: false,
-        message: 'Phone number is required',
-      });
-    }
-
-    if (phone.length != 10) {
-      return res.status(httpStatusCode.BAD_REQUEST.code).json({
-        success: false,
-        message: 'Phone number can not be less than 10 numbers',
-      });
-    }
-
-    if (!/^\+?[\d\s-()]{10,}$/.test(phone)) {
-      return res.status(httpStatusCode.BAD_REQUEST.code).json({
-        success: false,
-        message: 'Phone number can only have numbers and special characters.',
-      });
-    }
-
-    if (!pincode) {
-      return res.status(httpStatusCode.BAD_REQUEST.code).json({
-        success: false,
-        message: 'Pincode is required',
-      });
-    }
-
-    if (pincode.length < 6) {
-      return res.status(httpStatusCode.BAD_REQUEST.code).json({
-        success: false,
-        message: 'Pincode can not be less than 6 numbers',
-      });
-    }
-
-    if (!/^\d{6}$/.test(pincode)) {
-      return res.status(httpStatusCode.BAD_REQUEST.code).json({
-        success: false,
-        message: 'Pincode can only have numbers.',
-      });
-    }
-
-    if (!addressLine) {
-      return res.status(httpStatusCode.BAD_REQUEST.code).json({
-        success: false,
-        message: 'Address line is required',
-      });
-    }
-
-    if (addressLine.length < 2) {
-      return res.status(httpStatusCode.BAD_REQUEST.code).json({
-        success: false,
-        message: 'Address line can not be less than 2 characters',
-      });
-    }
-
-    if (!/^[A-Za-z0-9\s]+$/.test(addressLine)) {
-      return res.status(httpStatusCode.BAD_REQUEST.code).json({
-        success: false,
-        message: 'Address line can only have letters and numbers.',
-      });
-    }
-
-    if (!city) {
-      return res.status(httpStatusCode.BAD_REQUEST.code).json({
-        success: false,
-        message: 'City is required',
-      });
-    }
-
-    if (city.length < 2) {
-      return res.status(httpStatusCode.BAD_REQUEST.code).json({
-        success: false,
-        message: 'City can not be less than 2 characters',
-      });
-    }
-
-    if (!/^[A-Za-z\s]+$/.test(city)) {
-      return res.status(httpStatusCode.BAD_REQUEST.code).json({
-        success: false,
-        message: 'City can only have letters.',
-      });
-    }
-
-    if (!state) {
-      return res.status(httpStatusCode.BAD_REQUEST.code).json({
-        success: false,
-        message: 'State is required',
-      });
-    }
-
-    if (state.length < 2) {
-      return res.status(httpStatusCode.BAD_REQUEST.code).json({
-        success: false,
-        message: 'State can not be less than 2 characters',
-      });
-    }
-
-    if (!/^[A-Za-z\s]+$/.test(state)) {
-      return res.status(httpStatusCode.BAD_REQUEST.code).json({
-        success: false,
-        message: 'State can only have letters.',
-      });
-    }
-
-    if (!country) {
-      return res.status(httpStatusCode.BAD_REQUEST.code).json({
-        success: false,
-        message: 'Country is required',
-      });
-    }
-
-    if (country.length < 2) {
-      return res.status(httpStatusCode.BAD_REQUEST.code).json({
-        success: false,
-        message: 'Country can not be less than 2 characters',
-      });
-    }
-
-    if (!/^[A-Za-z\s]+$/.test(country)) {
-      return res.status(httpStatusCode.BAD_REQUEST.code).json({
-        success: false,
-        message: 'Country can only have letters.',
-      });
-    }
-
-    if (landmark && landmark.length < 2) {
-      return res.status(httpStatusCode.BAD_REQUEST.code).json({
-        success: false,
-        message: 'Landmark can not be less than 2 characters',
-      });
-    }
-
-    if (landmark && !/^[A-Za-z0-9\s]+$/.test(landmark)) {
-      return res.status(httpStatusCode.BAD_REQUEST.code).json({
-        success: false,
-        message: 'Landmark can only have letters and numbers.',
+        message: validationError
       });
     }
     const newAddress = await addAddressService(req.user._id, req.body)
@@ -366,7 +193,7 @@ export const addAddress = async (req, res) => {
       address: newAddress
     })
   } catch (error) {
-    console.log(error);
+    logger.info(error);
     res.status(httpStatusCode.INTERNAL_SERVER_ERROR.code).json({
       success: false,
       message: "Internal Server Error"
@@ -389,187 +216,11 @@ export const editAddress = async (req, res) => {
         message: "Something went wrong"
       })
     }
-    const { addressName, fullName, phone, pincode, addressLine, city, state, country, landmark } = req.body;
-
-    if (!addressName) {
+    const validationError = validateAddress(req.body);
+    if (validationError) {
       return res.status(httpStatusCode.BAD_REQUEST.code).json({
         success: false,
-        message: 'Address name is required',
-      });
-    }
-
-    if (addressName.length < 2) {
-      return res.status(httpStatusCode.BAD_REQUEST.code).json({
-        success: false,
-        message: 'Address name can not be less than 2 characters',
-      });
-    }
-
-    if (!/^[A-Za-z0-9\s]+$/.test(addressName)) {
-      return res.status(httpStatusCode.BAD_REQUEST.code).json({
-        success: false,
-        message: 'Address name can only have letters and numbers.',
-      });
-    }
-
-    if (!fullName) {
-      return res.status(httpStatusCode.BAD_REQUEST.code).json({
-        success: false,
-        message: 'Full name is required',
-      });
-    }
-
-    if (fullName.length < 2) {
-      return res.status(httpStatusCode.BAD_REQUEST.code).json({
-        success: false,
-        message: 'Full name can not be less than 2 characters',
-      });
-    }
-
-    if (!/^[A-Za-z\s]+$/.test(fullName)) {
-      return res.status(httpStatusCode.BAD_REQUEST.code).json({
-        success: false,
-        message: 'Full name can only have letters.',
-      });
-    }
-
-    if (!phone) {
-      return res.status(httpStatusCode.BAD_REQUEST.code).json({
-        success: false,
-        message: 'Phone number is required',
-      });
-    }
-
-    if (phone.length != 10) {
-      return res.status(httpStatusCode.BAD_REQUEST.code).json({
-        success: false,
-        message: 'Phone number can not be less than 10 numbers',
-      });
-    }
-
-    if (!/^\+?[\d\s-()]{10,}$/.test(phone)) {
-      return res.status(httpStatusCode.BAD_REQUEST.code).json({
-        success: false,
-        message: 'Phone number can only have numbers and special characters.',
-      });
-    }
-
-    if (!pincode) {
-      return res.status(httpStatusCode.BAD_REQUEST.code).json({
-        success: false,
-        message: 'Pincode is required',
-      });
-    }
-
-    if (pincode.length < 6) {
-      return res.status(httpStatusCode.BAD_REQUEST.code).json({
-        success: false,
-        message: 'Pincode can not be less than 6 numbers',
-      });
-    }
-
-    if (!/^\d{6}$/.test(pincode)) {
-      return res.status(httpStatusCode.BAD_REQUEST.code).json({
-        success: false,
-        message: 'Pincode can only have numbers.',
-      });
-    }
-
-    if (!addressLine) {
-      return res.status(httpStatusCode.BAD_REQUEST.code).json({
-        success: false,
-        message: 'Address line is required',
-      });
-    }
-
-    if (addressLine.length < 2) {
-      return res.status(httpStatusCode.BAD_REQUEST.code).json({
-        success: false,
-        message: 'Address line can not be less than 2 characters',
-      });
-    }
-
-    if (!/^[A-Za-z0-9\s]+$/.test(addressLine)) {
-      return res.status(httpStatusCode.BAD_REQUEST.code).json({
-        success: false,
-        message: 'Address line can only have letters and numbers.',
-      });
-    }
-
-    if (!city) {
-      return res.status(httpStatusCode.BAD_REQUEST.code).json({
-        success: false,
-        message: 'City is required',
-      });
-    }
-
-    if (city.length < 2) {
-      return res.status(httpStatusCode.BAD_REQUEST.code).json({
-        success: false,
-        message: 'City can not be less than 2 characters',
-      });
-    }
-
-    if (!/^[A-Za-z\s]+$/.test(city)) {
-      return res.status(httpStatusCode.BAD_REQUEST.code).json({
-        success: false,
-        message: 'City can only have letters.',
-      });
-    }
-
-    if (!state) {
-      return res.status(httpStatusCode.BAD_REQUEST.code).json({
-        success: false,
-        message: 'State is required',
-      });
-    }
-
-    if (state.length < 2) {
-      return res.status(httpStatusCode.BAD_REQUEST.code).json({
-        success: false,
-        message: 'State can not be less than 2 characters',
-      });
-    }
-
-    if (!/^[A-Za-z\s]+$/.test(state)) {
-      return res.status(httpStatusCode.BAD_REQUEST.code).json({
-        success: false,
-        message: 'State can only have letters.',
-      });
-    }
-
-    if (!country) {
-      return res.status(httpStatusCode.BAD_REQUEST.code).json({
-        success: false,
-        message: 'Country is required',
-      });
-    }
-
-    if (country.length < 2) {
-      return res.status(httpStatusCode.BAD_REQUEST.code).json({
-        success: false,
-        message: 'Country can not be less than 2 characters',
-      });
-    }
-
-    if (!/^[A-Za-z\s]+$/.test(country)) {
-      return res.status(httpStatusCode.BAD_REQUEST.code).json({
-        success: false,
-        message: 'Country can only have letters.',
-      });
-    }
-
-    if (landmark && landmark.length < 2) {
-      return res.status(httpStatusCode.BAD_REQUEST.code).json({
-        success: false,
-        message: 'Landmark can not be less than 2 characters',
-      });
-    }
-
-    if (landmark && !/^[A-Za-z0-9\s]+$/.test(landmark)) {
-      return res.status(httpStatusCode.BAD_REQUEST.code).json({
-        success: false,
-        message: 'Landmark can only have letters and numbers.',
+        message: validationError
       });
     }
     const editedAddress = await editAddressService(addressId, req.body);
@@ -579,7 +230,7 @@ export const editAddress = async (req, res) => {
       address: editedAddress
     });
   } catch (error) {
-    console.error("Error updating address:", error);
+    logger.error("Error updating address:", error);
     res.status(httpStatusCode.INTERNAL_SERVER_ERROR.code).json({
       success: false,
       message: "Internal Server Error"
@@ -606,7 +257,7 @@ export const editDefaultById = async (req, res) => {
       address
     })
   } catch (error) {
-    console.log(error);
+    logger.info(error);
     res.json({
       success: false,
       message: "Updation failed"
@@ -630,7 +281,7 @@ export const deleteAddress = async (req, res) => {
       address
     });
   } catch (error) {
-    console.error("Error deleting address:", error);
+    logger.error("Error deleting address:", error);
     res.status(httpStatusCode.INTERNAL_SERVER_ERROR.code).json({
       success: false,
       message: "Internal Server Error"
@@ -673,7 +324,7 @@ export const updateAvatarImage = async (req, res) => {
     });
 
   } catch (error) {
-    console.error('Error in updateAvatarImage:', error);
+    logger.error('Error in updateAvatarImage:', error);
     return res.status(httpStatusCode.INTERNAL_SERVER_ERROR.code).json({
       success: false,
       message: 'Something went wrong. Please try again later.'

@@ -4,14 +4,15 @@ import {
   postAddToCartService,
   removeCartService,
   updateCartService,
-} from "../../services/user/cartServices.js";
+} from "../../services/user/cartService.js";
 import httpStatusCode from "../../utils/httpStatusCode.js";
+import { logger } from '../../config/logger.js';
 
 export const getCartPage = async (req, res) => {
   try {
     res.status(httpStatusCode.OK.code).render("Layouts/users/cart");
   } catch (error) {
-    console.log(error);
+    logger.info(error);
     res.status(httpStatusCode.INTERNAL_SERVER_ERROR.code).json({
       success: false,
       message: "Something went wrong while loading the cart page.",
@@ -25,7 +26,7 @@ export const getCartProducts = async (req, res) => {
     const cart = await getCartedProducts(userId);
 
     // for (let i = 0; i < cart.items.length; i++) {
-    //   console.log(cart.items[i].offer);
+    //   logger.info(cart.items[i].offer);
     // }
 
     if (!cart || cart.items.length === 0) {
@@ -42,7 +43,7 @@ export const getCartProducts = async (req, res) => {
       cart,
     });
   } catch (error) {
-    console.error("Error fetching cart products:", error);
+    logger.error("Error fetching cart products:", error);
     res.status(httpStatusCode.INTERNAL_SERVER_ERROR.code).json({
       success: false,
       message: "Something went wrong while fetching cart products.",
@@ -67,7 +68,7 @@ export const getCartCount = async (req, res) => {
       count,
     });
   } catch (error) {
-    console.error("Error fetching cart count:", error);
+    logger.error("Error fetching cart count:", error);
     return res.status(httpStatusCode.INTERNAL_SERVER_ERROR.code).json({
       success: false,
       message: "Something went wrong while fetching cart count.",
@@ -162,7 +163,7 @@ export const removeFormCart = async (req, res) => {
       cart,
     });
   } catch (error) {
-    console.error("Error removing product from cart:", error);
+    logger.error("Error removing product from cart:", error);
     res.status(httpStatusCode.INTERNAL_SERVER_ERROR.code).json({
       success: false,
       message: "Something went wrong while removing the product from cart.",

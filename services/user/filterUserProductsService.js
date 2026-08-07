@@ -77,7 +77,7 @@ export const fetchFilteredProducts = async (filters) => {
     });
   }
 
-  // console.log(filtered);
+  // logger.info(filtered);
 
   const sort = filters.sort;
   if (sort === "price-low") {

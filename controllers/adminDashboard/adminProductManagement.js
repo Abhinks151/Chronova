@@ -1,10 +1,11 @@
 import httpStatusCode from '../../utils/httpStatusCode.js';
-import { addProductService, getCategories } from '../../services/productManagement/addProductServise.js';
-import { blockProductService } from '../../services/productManagement/blockProductServise.js';
-import { deleteProductService } from '../../services/productManagement/daleteProductServise.js';
+import { addProductService, getCategories } from '../../services/productManagement/addProductService.js';
+import { blockProductService } from '../../services/productManagement/blockProductService.js';
+import { deleteProductService } from '../../services/productManagement/deleteProductService.js';
 import { getCategory, paginationService } from '../../services/productManagement/paginationService.js';
 import { getProduct, updateProductService } from '../../services/productManagement/editProductService.js';
 import { findBestPriceForProduct } from '../../services/offers/bestOfferForProductService.js';
+import { logger } from '../../config/logger.js';
 
 
 export const getProductsPage = async (req, res) => {
@@ -34,7 +35,7 @@ export const getProductsPage = async (req, res) => {
       totalCount: paginated.totalCount,
     });
   } catch (error) {
-    console.error('Error loading products page:', error);
+    logger.error('Error loading products page:', error);
     res.status(httpStatusCode.INTERNAL_SERVER_ERROR.code).render('error', { error: 'Failed to load products' });
   }
 };
@@ -54,7 +55,7 @@ export const getFilteredProducts = async (req, res) => {
       })
     );
 
-    // console.log(productsWithPrice);
+    // logger.info(productsWithPrice);
 
     res.status(httpStatusCode.OK.code).json({
       success: true,
@@ -67,7 +68,7 @@ export const getFilteredProducts = async (req, res) => {
       totalCount: paginated.totalCount,
     });
   } catch (error) {
-    console.error('Error filtering products:', error);
+    logger.error('Error filtering products:', error);
     res.status(httpStatusCode.INTERNAL_SERVER_ERROR.code).json({
       success: false,
       message: 'Failed to fetch products',
@@ -83,7 +84,7 @@ export const getAddProducts = async (req, res) => {
       categories
     });
   } catch (error) {
-    console.log(error);
+    logger.info(error);
     res.status(httpStatusCode.INTERNAL_SERVER_ERROR.code).json({ message: 'Something went wrong' });
   }
 };
@@ -115,7 +116,7 @@ export const postAddProducts = async (req, res) => {
     });
 
   } catch (err) {
-    console.error('Error in postAddProducts:', err);
+    logger.error('Error in postAddProducts:', err);
     return res.status(httpStatusCode.INTERNAL_SERVER_ERROR.code).json({
       success: false,
       message: 'Something went wrong. Please try again later.'
@@ -175,7 +176,7 @@ export const getEditProducts = async (req, res) => {
     });
 
   } catch (error) {
-    console.error('Error fetching product for edit:', error);
+    logger.error('Error fetching product for edit:', error);
     res.status(httpStatusCode.INTERNAL_SERVER_ERROR.code).render('Layouts/adminDashboard/editProducts', {
       message: 'Server error while fetching product',
       categories: [],
@@ -190,7 +191,7 @@ export const patchEditProducts = async (req, res) => {
   try {
     const { id } = req.params;
     const { body, files } = req;
-    // console.log(body)
+    // logger.info(body)
     const result = await updateProductService(id, body, files);
 
     if (!result.success) {
@@ -208,7 +209,7 @@ export const patchEditProducts = async (req, res) => {
     });
 
   } catch (error) {
-    console.error('Unexpected error in patchEditProducts:', error);
+    logger.error('Unexpected error in patchEditProducts:', error);
     return res.status(httpStatusCode.INTERNAL_SERVER_ERROR.code).json({
       success: false,
       message: 'Error updating product. Please try again.'
@@ -228,7 +229,7 @@ export const blockProduct = async (req, res) => {
     });
 
   } catch (error) {
-    console.error(error);
+    logger.error(error);
     res.status(httpStatusCode.INTERNAL_SERVER_ERROR.code).json({ message: 'Something went wrong' });
   }
 };
@@ -244,7 +245,7 @@ export const deleteProduct = async (req, res) => {
     });
 
   } catch (error) {
-    console.error(error);
+    logger.error(error);
     res.status(httpStatusCode.INTERNAL_SERVER_ERROR.code).json({ message: 'Something went wrong' });
   }
 };

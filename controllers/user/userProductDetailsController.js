@@ -1,8 +1,9 @@
 import { findBestPriceForProduct } from "../../services/offers/bestOfferForProductService.js";
 import { getFeaturedProducts } from "../../services/user/featuredProduct.js";
 import { getProductDetails } from "../../services/user/productDetailsService.js";
-import { findWishlistByUserId } from "../../services/user/wishlistServices.js";
+import { findWishlistByUserId } from "../../services/user/wishlistService.js";
 import httpStatusCode from "../../utils/httpStatusCode.js";
+import { logger } from '../../config/logger.js';
 
 export const productDetails = async (req, res) => {
   try {
@@ -37,7 +38,7 @@ export const productDetails = async (req, res) => {
       price
     });
   } catch (error) {
-    console.error("Error in productDetails:", error.message);
+    logger.error("Error in productDetails:", error.message);
     
     res
       .status(httpStatusCode.INTERNAL_SERVER_ERROR.code)
@@ -73,7 +74,7 @@ export const featuredProducts = async (req, res) => {
       featuredProducts: updatedProducts,
     });
   } catch (error) {
-    console.error("Error in featuredProducts:", error);
+    logger.error("Error in featuredProducts:", error);
     res.status(httpStatusCode.INTERNAL_SERVER_ERROR.code).json({
       message: "Failed to fetch featured products",
       error: error.message || "Something went wrong",

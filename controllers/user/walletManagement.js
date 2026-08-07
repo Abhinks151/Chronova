@@ -1,11 +1,12 @@
 import { getFilteredWalletHistoryService, getWalletHistoryService } from "../../services/user/walletService.js";
 import httpStatusCode from '../../utils/httpStatusCode.js';
+import { logger } from '../../config/logger.js';
 
 export const getWalletPage = (req, res) => {
   try {
     res.render('Layouts/users/wallet');
   } catch (error) {
-    console.error("Error in getWalletPage:", error);
+    logger.error("Error in getWalletPage:", error);
     res.status(httpStatusCode.INTERNAL_SERVER_ERROR.code).json({ 
       message: "Internal Server Error",
       success: false 
@@ -44,7 +45,7 @@ export const getWalletHistory = async (req, res) => {
       success: true
     });
   } catch (error) {
-    console.error("Error in getWalletHistory:", error);
+    logger.error("Error in getWalletHistory:", error);
     res.status(httpStatusCode.INTERNAL_SERVER_ERROR.code).json({ 
       message: "Internal Server Error",
       success: false,
@@ -98,7 +99,7 @@ export const getFilteredWalletHistory = async (req, res) => {
       data
     });
   } catch (error) {
-    console.error("Error in getFilteredWalletHistory:", error);
+    logger.error("Error in getFilteredWalletHistory:", error);
     res.status(httpStatusCode.INTERNAL_SERVER_ERROR.code).json({ 
       message: error.message || "Internal Server Error",
       success: false,

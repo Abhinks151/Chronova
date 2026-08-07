@@ -1,5 +1,6 @@
 import mongoose from 'mongoose';
 import { Products } from '../../models/products.js';
+import { logger } from '../../config/logger.js';
 
 export const getFeaturedProducts = async (productId) => {
   try {
@@ -160,7 +161,7 @@ export const getFeaturedProducts = async (productId) => {
     return featuredProducts;
 
   } catch (error) {
-    console.error('Error in getFeaturedProducts:', error);
+    logger.error('Error in getFeaturedProducts:', error);
     throw error;
   }
 };

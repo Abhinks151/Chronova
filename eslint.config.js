@@ -4,18 +4,35 @@ import { defineConfig } from "eslint/config";
 
 export default defineConfig([
   {
+    // Backend server-side files — Node.js globals
     files: ["**/*.{js,mjs,cjs}"],
+    ignores: ["public/**"],
     languageOptions: {
       ecmaVersion: "latest",
       sourceType: "module",
-      globals: globals.browser,
+      globals: {
+        ...globals.node,
+      },
     },
     ...js.configs.recommended,
     rules: {
-      // Customize your rules here
+      "no-console": "warn",
+      "no-unused-vars": ["warn", { argsIgnorePattern: "^_", varsIgnorePattern: "^_" }],
+    },
+  },
+  {
+    // Frontend browser-side public scripts
+    files: ["public/**/*.js"],
+    languageOptions: {
+      ecmaVersion: "latest",
+      sourceType: "script",
+      globals: {
+        ...globals.browser,
+      },
+    },
+    rules: {
       "no-console": "off",
-      "no-unused-vars": "warn",
-      
+      "no-unused-vars": "off", // EJS-embedded functions called via inline HTML handlers
     },
   },
 ]);

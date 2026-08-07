@@ -1,4 +1,5 @@
 import { Category } from '../../models/category.js';
+import { logger } from '../../config/logger.js';
 
 export const deleteCategoryService = async (id) => {
   try {
@@ -12,7 +13,7 @@ export const deleteCategoryService = async (id) => {
 
     return category;
   } catch (error) {
-    console.error('Error:', error);
+    logger.error('Error:', error);
     throw error;
   }
 };

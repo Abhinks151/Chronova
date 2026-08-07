@@ -1,6 +1,7 @@
 import { User } from "../../models/userModels.js";
 import bcrypt from "bcryptjs";
 import { generateToken } from "../../utils/generateToken.js";
+import { logger } from '../../config/logger.js';
 
 export const loginUserService = async (email, password) => {
   try {
@@ -47,7 +48,7 @@ export const loginUserService = async (email, password) => {
     user.lastLogin = new Date();
     await user.save();
 
-    // console.log(user);
+    // logger.info(user);
 
     return {
       success: true,
@@ -60,7 +61,7 @@ export const loginUserService = async (email, password) => {
     };
 
   } catch (error) {
-    console.error('Service error during login:', error);
+    logger.error('Service error during login:', error);
     return {
       success: false,
       errors: { general: 'Internal server error. Please try again.' }

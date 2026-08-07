@@ -8,6 +8,7 @@ import {
   getOrderPaymentStatus as getOrderPaymentStatusService,
 } from '../../services/adminOrderManagementService/orderService.js';
 import httpStatusCode from "../../utils/httpStatusCode.js"
+import { logger } from '../../config/logger.js';
 
 
 export const getOrders = async (req, res) => {
@@ -76,7 +77,7 @@ export const getOrders = async (req, res) => {
       limit,
     })
   } catch (error) {
-    console.error("Error fetching orders:", error)
+    logger.error("Error fetching orders:", error)
     res.status(httpStatusCode.INTERNAL_SERVER_ERROR.code).render("error", { message: "Error fetching orders" })
   }
 }
@@ -133,7 +134,7 @@ export const getOrdersData = async (req, res) => {
       limit,
     });
   } catch (error) {
-    console.error("Error fetching orders (API):", error);
+    logger.error("Error fetching orders (API):", error);
     res.status(httpStatusCode.INTERNAL_SERVER_ERROR.code).json({ error: "Failed to fetch orders" });
   }
 };
@@ -165,7 +166,7 @@ export const getOrderDetails = async (req, res) => {
       returnRequestedItems,
     })
   } catch (error) {
-    console.error("Error fetching order details:", error)
+    logger.error("Error fetching order details:", error)
     res.status(httpStatusCode.INTERNAL_SERVER_ERROR.code).json({ error: "Error fetching order details" })
   }
 }
@@ -239,7 +240,7 @@ export const updateOrderStatus = async (req, res) => {
       order,
     });
   } catch (error) {
-    console.error("Error updating order status:", error);
+    logger.error("Error updating order status:", error);
     return res.status(httpStatusCode.INTERNAL_SERVER_ERROR.code).json({ error: "Internal server error while updating order status" });
   }
 };
@@ -300,7 +301,7 @@ export const updateItemStatus = async (req, res) => {
 
     res.json({ message: "Item status updated successfully", order })
   } catch (error) {
-    console.error("Error updating item status:", error)
+    logger.error("Error updating item status:", error)
     res.status(httpStatusCode.INTERNAL_SERVER_ERROR.code).json({ error: "Error updating item status" })
   }
 }
@@ -309,7 +310,7 @@ export const approveReturn = async (req, res) => {
   try {
     const { orderId, itemId } = req.params;
     
-    // console.log("Incoming orderId:", orderId, "| itemId:", itemId);
+    // logger.info("Incoming orderId:", orderId, "| itemId:", itemId);
 
     if (!orderId || !itemId) {
       return res.status(httpStatusCode.BAD_REQUEST.code).json({ error: "Order ID and Item ID are required" });
@@ -360,7 +361,7 @@ export const approveReturn = async (req, res) => {
     await order.save();
 
 
-    // console.log(item.price, item.discount, item.quantity,item.finalPrice);
+    // logger.info(item.price, item.discount, item.quantity,item.finalPrice);
 
     const refundAmount = item.netItemTotal * item.quantity;
     let wallet = await Wallet.findOne({ userId: order.userId._id });
@@ -402,7 +403,7 @@ export const approveReturn = async (req, res) => {
       orderStatus: order.orderStatus,
     });
   } catch (error) {
-    console.error("Error approving return:", error);
+    logger.error("Error approving return:", error);
     return res.status(httpStatusCode.INTERNAL_SERVER_ERROR.code).json({ error: "Internal server error during return approval" });
   }
 };
@@ -461,7 +462,7 @@ export const rejectReturn = async (req, res) => {
       rejectionReason: rejectionReason,
     })
   } catch (error) {
-    console.error("Error rejecting return:", error)
+    logger.error("Error rejecting return:", error)
     return res.status(httpStatusCode.INTERNAL_SERVER_ERROR.code).json({ error: "Internal server error during return rejection" })
   }
 }
@@ -517,7 +518,7 @@ export const cancelOrder = async (req, res) => {
 
     res.json({ message: "Order cancelled successfully", order })
   } catch (error) {
-    console.error("Error cancelling order:", error)
+    logger.error("Error cancelling order:", error)
     res.status(httpStatusCode.INTERNAL_SERVER_ERROR.code).json({ error: "Error cancelling order" })
   }
 }
@@ -693,7 +694,7 @@ export const updateOrderPaymentStatus = async (req, res) => {
       },
     })
   } catch (error) {
-    console.error("Error updating order payment status:", error)
+    logger.error("Error updating order payment status:", error)
     res.status(httpStatusCode.INTERNAL_SERVER_ERROR.code).json({
       success: false,
       error: "Internal server error while updating payment status",
@@ -743,7 +744,7 @@ export const updateItemPaymentStatus = async (req, res) => {
       },
     })
   } catch (error) {
-    console.error("Error updating item payment status:", error)
+    logger.error("Error updating item payment status:", error)
     res.status(httpStatusCode.INTERNAL_SERVER_ERROR.code).json({
       success: false,
       error: "Internal server error while updating item payment status",
@@ -776,7 +777,7 @@ export const getOrderPaymentStatusController = async (req, res) => {
       data: result.data,
     })
   } catch (error) {
-    console.error("Error fetching order payment status:", error)
+    logger.error("Error fetching order payment status:", error)
     res.status(httpStatusCode.INTERNAL_SERVER_ERROR.code).json({
       success: false,
       error: "Internal server error while fetching payment status",

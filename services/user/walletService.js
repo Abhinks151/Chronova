@@ -1,11 +1,12 @@
 import Wallet from '../../models/wallet.js'
+import { logger } from '../../config/logger.js';
 
 export const getFilteredWalletHistoryService = async (userId, { page, limit, search, type, sort }) => {
   try {
     const wallet = await Wallet.findOne({ userId });
     if (!wallet) {
       // Create wallet if it doesn't exist
-      const newWallet = await Wallet.create({
+      await Wallet.create({
         userId,
         balance: 0,
         transactions: []
@@ -30,7 +31,7 @@ export const getFilteredWalletHistoryService = async (userId, { page, limit, sea
     // Filter by search if specified (search in description)
     if (search && search.trim()) {
       const searchTerm = search.trim().toLowerCase();
-      filtered = filtered.filter(txn => 
+      filtered = filtered.filter(txn =>
         txn.description.toLowerCase().includes(searchTerm)
       );
     }
@@ -55,7 +56,7 @@ export const getFilteredWalletHistoryService = async (userId, { page, limit, sea
       balance: wallet.balance,
     };
   } catch (error) {
-    console.error("Error in getFilteredWalletHistoryService:", error);
+    logger.error("Error in getFilteredWalletHistoryService:", error);
     throw new Error("Failed to retrieve filtered wallet history");
   }
 };
@@ -75,7 +76,7 @@ export const getWalletHistoryService = async (userId) => {
 
     return data;
   } catch (error) {
-    console.error("Error in getWalletHistory:", error);
+    logger.error("Error in getWalletHistory:", error);
     throw new Error("Failed to retrieve wallet history");
   }
 }

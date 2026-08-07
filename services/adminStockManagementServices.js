@@ -2,6 +2,7 @@ import { Order } from "../models/order.js";
 import { Products } from "../models/products.js";
 import { Category } from "../models/category.js";
 import { stockRegistry } from "../models/stockRegistry.js";
+import { logger } from '../config/logger.js';
 
 export const getActiveCategories = async () => {
     try {
@@ -13,7 +14,7 @@ export const getActiveCategories = async () => {
         .sort({ categoryName: 1 })
         .lean();
     } catch (error) {
-        console.error("Error fetching active categories:", error);
+        logger.error("Error fetching active categories:", error);
         throw new Error("Failed to fetch categories");
     }
 };
@@ -25,7 +26,7 @@ export const getStockRegistryByProductId = async (productId) => {
             .limit(100) 
             .lean();
     } catch (error) {
-        console.error("Error fetching stock registry:", error);
+        logger.error("Error fetching stock registry:", error);
         throw new Error("Failed to fetch stock registry");
     }
 };
@@ -180,7 +181,7 @@ export const getStockData = async (filters = {}) => {
             },
         };
     } catch (error) {
-        console.error("Error in getStockData service:", error);
+        logger.error("Error in getStockData service:", error);
         throw new Error("Failed to fetch stock data");
     }
 };

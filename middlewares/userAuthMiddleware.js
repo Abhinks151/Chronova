@@ -2,6 +2,7 @@ import dotenv from "dotenv";
 import jwt from "jsonwebtoken";
 import { User } from "../models/userModels.js";
 import httpStatusCode from "../utils/httpStatusCode.js";
+import { logger } from '../config/logger.js';
 
 dotenv.config();
 
@@ -73,7 +74,7 @@ export const authenticateUser = async (req, res, next) => {
     req.user = user;
     next();
   } catch (error) {
-    console.error("JWT Auth Error:", error.message);
+    logger.error("JWT Auth Error:", error.message);
 
     const renderData = createRenderData(
       'Login',
@@ -97,7 +98,9 @@ export const preventLoggedInAccess = (req, res, next) => {
     if (decoded) {
       return res.redirect('/user/home');
     }
-  } catch (err) {
+    // eslint-disable-next-line no-unused-vars
+  } catch (_err) {
+    // Token invalid/expired — allow through to next()
   }
 
   next();

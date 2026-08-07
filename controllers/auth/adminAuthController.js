@@ -2,6 +2,7 @@ import httpStatusCode from "../../utils/httpStatusCode.js";
 import { validationResult } from 'express-validator';
 import dotenv from "dotenv";
 import { adminLoginService } from "../../services/auth/adminService.js";
+import { logger } from '../../config/logger.js';
 // import validate from "../../utils/validateRules.js";
 
 dotenv.config();
@@ -11,7 +12,7 @@ export const getAdminLogin = (req, res) => {
   try {
     res.status(httpStatusCode.OK.code).render("Layouts/adminLogin", { title: "Admin Login" });
   } catch (error) {
-    console.log(error.message);
+    logger.info(error.message);
     res.status(httpStatusCode.NOT_FOUND.code).json({ message: "admin login page not fount" })
   }
 };
@@ -49,7 +50,7 @@ export const postAdminLogin = async (req, res) => {
     });
 
   } catch (err) {
-    console.error('Admin login error:', err);
+    logger.error('Admin login error:', err);
     res
       .status(httpStatusCode.INTERNAL_SERVER_ERROR.code)
       .json({ message: 'Server error' });
@@ -62,7 +63,7 @@ export const adminLogout = async (req, res) => {
     res.clearCookie("adminToken");
     res.status(httpStatusCode.OK.code).redirect('/admin/login');
   } catch (error) {
-    console.log(error.message)
+    logger.info(error.message)
     res.status(httpStatusCode.INTERNAL_SERVER_ERROR.code).json({ message: "error clearing cookie ie,logout of admi" })
   }
 };

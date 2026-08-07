@@ -1,11 +1,12 @@
 import httpStatusCode from "../../utils/httpStatusCode.js";
 import { generatePDFReportService, generateExcelReportService, getSalesReportService } from "../../services/adminSalesService/adminSalesService.js";
+import { logger } from '../../config/logger.js';
 
 export const getSalesReport = async (req, res) => {
   try {
     res.status(httpStatusCode.OK.code).render("Layouts/adminDashboard/salesReport");
   } catch (error) {
-    console.error(error);
+    logger.error(error);
     res.status(httpStatusCode.INTERNAL_SERVER_ERROR.code).json({ error: error.message });
   }
 };
@@ -20,7 +21,7 @@ export const getSalesReportData = async (req, res) => {
       pagination: result.pagination,
     });
   } catch (error) {
-    console.error(error);
+    logger.error(error);
     res.status(httpStatusCode.INTERNAL_SERVER_ERROR.code).json({ error: error.message });
   }
 };
@@ -35,7 +36,7 @@ export const downloadSalesReportPDF = async (req, res) => {
     res.setHeader("Content-Length", pdfBuffer.length);
     res.send(pdfBuffer);
   } catch (error) {
-    console.error(error);
+    logger.error(error);
     res.status(httpStatusCode.INTERNAL_SERVER_ERROR.code).json({
       message: "Failed to generate PDF",
       error: error.message,
@@ -52,7 +53,7 @@ export const downloadSalesReportExcel = async (req, res) => {
     res.setHeader("Content-Disposition", `attachment; filename="${filename}"`);
     res.send(buffer);
   } catch (error) {
-    console.error(error);
+    logger.error(error);
     res.status(httpStatusCode.INTERNAL_SERVER_ERROR.code).json({
       message: "Failed to generate Excel report",
       error: error.message,

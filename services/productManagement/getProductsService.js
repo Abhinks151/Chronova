@@ -1,7 +1,7 @@
 import { Products } from "../../models/products.js";
 
-export const getProductsServise = async () => {
-  const products = await Products.find({isDeleted : false}).sort({ createdAt: -1 }).lean();
+export const getProductsService = async () => {
+  const products = await Products.find({ isDeleted: false }).sort({ createdAt: -1 }).lean();
 
   const updatedProducts = products.map(product => {
     return {

@@ -1,11 +1,12 @@
 import { User } from "../../models/userModels.js";
 import httpStatusCode from '../../utils/httpStatusCode.js';
 import bcrypt from 'bcrypt';
+import { logger } from '../../config/logger.js';
 const SALT = 10;
 
 
 export const resetPassword = async ({ body }) => {
-  // console.log(body)
+  // logger.info(body)
   const { token } = body;
   const user = await User.findOne({
     resetPasswordToken: token,
@@ -74,8 +75,8 @@ export const handlePasswordReset = async (body) => {
   user.resetPasswordToken = undefined;
   user.resetPasswordExpire = undefined;
   await user.save();
-  console.log("Resetting password for:", user.email);
-  console.log("New hashed password:", user.password);
+  logger.info("Resetting password for:", user.email);
+  logger.info("New hashed password:", user.password);
 
   return {
     status: httpStatusCode.OK.code,

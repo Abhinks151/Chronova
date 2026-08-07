@@ -7,6 +7,7 @@ import { handleResendVerification } from "../../services/auth/resendVerification
 import { forgotPassword } from "../../services/auth/forgotPasswordService.js";
 import { handlePasswordReset, resetPassword } from "../../services/auth/resetPasswordService.js";
 import { loginUserService } from '../../services/auth/userLoginService.js';
+import { logger } from '../../config/logger.js';
 
 dotenv.config();
 
@@ -46,7 +47,7 @@ dotenv.config();
 
 
 export const getUserRegister = async (req, res) => {
-  // console.log(renderData)
+  // logger.info(renderData)
 
   try {
     res.status(httpStatusCode.OK.code).render('Layouts/userRegister', {
@@ -54,7 +55,7 @@ export const getUserRegister = async (req, res) => {
       successMessage: null
     });
   } catch (error) {
-    console.log(error);
+    logger.info(error);
     res.status(httpStatusCode.BAD_REQUEST.code).json({
       error
     })
@@ -65,25 +66,25 @@ export const getUserRegister = async (req, res) => {
 export const postUserRegister = async (req, res) => {
   try {
     const errors = validationResult(req);
-    // console.log(errors);
+    // logger.info(errors);
     if (!errors.isEmpty()) {
       const formattedErrors = {};
       errors.array().forEach(err => {
         formattedErrors[err.path] = err.msg;
       });
-      // console.log('Stored session email:', req.session.emailForVerification);
+      // logger.info('Stored session email:', req.session.emailForVerification);
 
       return res.status(httpStatusCode.BAD_REQUEST.code).json({
         success: false,
         errors: formattedErrors
       });
     }
-    // console.log(req.body);
+    // logger.info(req.body);
     const response = await registerUser(req, req.body);
     return res.status(response.status).json(response.body);
 
   } catch (error) {
-    console.error('Registration error:', error);
+    logger.error('Registration error:', error);
     return res.status(httpStatusCode.INTERNAL_SERVER_ERROR.code).json({
       success: false,
       errors: {
@@ -97,7 +98,7 @@ export const postUserRegister = async (req, res) => {
 
 export const getVerifyUserOTP = async (req, res) => {
   const email = req.session.emailForVerification || 'dsfs';
-  // console.log(email);
+  // logger.info(email);
   try {
     res.status(httpStatusCode.OK.code).render('Layouts/userVerify', {
       title: "Verify account",
@@ -108,7 +109,7 @@ export const getVerifyUserOTP = async (req, res) => {
       successMessage: null
     })
   } catch (error) {
-    console.log(error);
+    logger.info(error);
     res.status(httpStatusCode.BAD_REQUEST.code).json({
       error
     })
@@ -139,7 +140,7 @@ export const postVerifyUserOTP = async (req, res) => {
       ...(result.redirect && { redirect: result.redirect })
     });
   } catch (error) {
-    console.error('Verify OTP Controller Error:', error);
+    logger.error('Verify OTP Controller Error:', error);
     return res.status(httpStatusCode.INTERNAL_SERVER_ERROR.code).json({
       message: 'Internal server error during OTP verification.'
     });
@@ -157,7 +158,7 @@ export const resendVerificationCode = async (req, res) => {
     });
 
   } catch (error) {
-    console.error('Resend Verification Error:', error);
+    logger.error('Resend Verification Error:', error);
     return res.status(httpStatusCode.INTERNAL_SERVER_ERROR.code).json({
       message: 'Unable to send verification code. Please try again later.'
     });
@@ -175,7 +176,7 @@ export const getForgotPassord = async (req, res) => {
       successMessage: null
     })
   } catch (error) {
-    console.log(error);
+    logger.info(error);
     res.status(httpStatusCode.BAD_REQUEST.code).json({
       error
     })
@@ -186,7 +187,7 @@ export const postForgotPassword = async (req, res) => {
   try {
 
     const email = req.body.email;
-    console.log(email)
+    logger.info(email)
     await forgotPassword(email);
 
     return res.status(httpStatusCode.INTERNAL_SERVER_ERROR.code).render('Layouts/userLogin', {
@@ -196,7 +197,7 @@ export const postForgotPassword = async (req, res) => {
     });
 
   } catch (error) {
-    console.error('Forgot Password Error:', error);
+    logger.error('Forgot Password Error:', error);
     res.status(httpStatusCode.INTERNAL_SERVER_ERROR.code).json({
       message: 'Something went wrong. Please try again later.'
     });
@@ -231,7 +232,7 @@ export const getResetPassword = async (req, res) => {
     });
 
   } catch (error) {
-    console.error("Error in getResetPassword:", error);
+    logger.error("Error in getResetPassword:", error);
     return res.status(httpStatusCode.INTERNAL_SERVER_ERROR.code).render("Layouts/userResetPassword", {
       token: '',
       error: "Internal server error."
@@ -250,7 +251,7 @@ export const postResetPassword = async (req, res) => {
     });
 
   } catch (error) {
-    console.error('Reset Password Error:', error);
+    logger.error('Reset Password Error:', error);
     return res.status(httpStatusCode.INTERNAL_SERVER_ERROR.code).render('Layouts/userResetPassword', {
       token: req.body.token,
       error: 'Something went wrong. Please try again later.'
@@ -270,7 +271,7 @@ export const getUserLogin = async (req, res) => {
       successMessage: null
     })
   } catch (error) {
-    console.error('Error rendering login page:', error);
+    logger.error('Error rendering login page:', error);
     res.status(httpStatusCode.INTERNAL_SERVER_ERROR.code).json({
       error: 'Something went wrong. Please try again later.'
     });
@@ -284,9 +285,9 @@ export const postUserLogin = async (req, res) => {
     const { email, password } = req.body;
 
     
-    // console.log('Login attempt with email:', email);
-    // console.log('Validation errors:', errors.array());
-    // console.log(password);
+    // logger.info('Login attempt with email:', email);
+    // logger.info('Validation errors:', errors.array());
+    // logger.info(password);
 
 
     if (!errors.isEmpty()) {
@@ -335,7 +336,7 @@ export const postUserLogin = async (req, res) => {
     return res.redirect('/user/products');
 
   } catch (error) {
-    console.error('Login error:', error);
+    logger.error('Login error:', error);
 
     const fallback = {
       success: false,

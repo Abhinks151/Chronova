@@ -9,6 +9,7 @@ import {
 } from '../../services/offers/adminCategoryOfferService.js';
 import { getActiveCategories } from '../../services/user/getUserProductService.js';
 import httpStatusCode from '../../utils/httpStatusCode.js';
+import { logger } from '../../config/logger.js';
 
 export const getCategoryOfferManagementPage = async (req, res) => {
   try {
@@ -29,7 +30,7 @@ export const getCategoryOfferManagementPage = async (req, res) => {
     });
 
   } catch (error) {
-    console.error("Error in getCategoryOfferManagementPage:", error.message);
+    logger.error("Error in getCategoryOfferManagementPage:", error.message);
     return res.status(httpStatusCode.INTERNAL_SERVER_ERROR.code).json({
       success: false,
       message: error.message || "Something went wrong"
@@ -51,8 +52,8 @@ export const getCategoryOfferManagementPageData = async (req, res) => {
     });
 
     const categories = await getActiveCategories();
-    // console.log('Data::',data)
-    // console.log('Category::',categories)
+    // logger.info('Data::',data)
+    // logger.info('Category::',categories)
     return res.status(httpStatusCode.OK.code).json({
       success: true,
       ...data,
@@ -60,7 +61,7 @@ export const getCategoryOfferManagementPageData = async (req, res) => {
     });
 
   } catch (error) {
-    console.error("Error in getCategoryOfferManagementPageData:", error.message);
+    logger.error("Error in getCategoryOfferManagementPageData:", error.message);
     return res.status(httpStatusCode.INTERNAL_SERVER_ERROR.code).json({
       success: false,
       message: error.message || "Something went wrong"
@@ -70,7 +71,7 @@ export const getCategoryOfferManagementPageData = async (req, res) => {
 
 export const addCategoryOffer = async (req, res) => {
   try {
-    // console.log(req.body);
+    // logger.info(req.body);
     const data = await addCategoryOfferService(req.body);
     return res.status(httpStatusCode.CREATED.code).json({
       message: "Category offer added successfully",
@@ -78,7 +79,7 @@ export const addCategoryOffer = async (req, res) => {
       data
     });
   } catch (error) {
-    console.error("Error in addCategoryOffer:", error.message);
+    logger.error("Error in addCategoryOffer:", error.message);
     return res.status(httpStatusCode.BAD_REQUEST.code).json({
       success: false,
       message: error.message || "Something went wrong"
@@ -96,7 +97,7 @@ export const editCategoryOffers = async (req, res) => {
       data
     });
   } catch (error) {
-    console.error("Error in editCategoryOffers:", error.message);
+    logger.error("Error in editCategoryOffers:", error.message);
     return res.status(httpStatusCode.BAD_REQUEST.code).json({
       success: false,
       message: error.message || "Something went wrong"
@@ -113,7 +114,7 @@ export const getCategoryOfferById = async (req, res) => {
       data
     });
   } catch (error) {
-    console.error("Error in getCategoryOfferById:", error.message);
+    logger.error("Error in getCategoryOfferById:", error.message);
     return res.status(httpStatusCode.BAD_REQUEST.code).json({
       success: false,
       message: error.message || "Something went wrong"
@@ -133,7 +134,7 @@ export const toggleCategoryOfferStatus = async (req, res) => {
       data: updatedOffer,
     });
   } catch (error) {
-    console.error("Error toggling category offer status:", error.message);
+    logger.error("Error toggling category offer status:", error.message);
 
     let statusCode;
     if (error.message === "Category offer not found") {
@@ -160,7 +161,7 @@ export const deleteCategoryOffer = async (req, res) => {
       message: "Category offer deleted successfully",
     });
   } catch (error) {
-    console.error("Error deleting category offer:", error.message);
+    logger.error("Error deleting category offer:", error.message);
     return res.status(httpStatusCode.INTERNAL_SERVER_ERROR.code).json({
       success: false,
       message: error.message || "Something went wrong",

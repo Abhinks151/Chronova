@@ -1,5 +1,5 @@
 import { Order } from "../../models/order.js";
-import { getCartedProducts } from "../../services/user/cartServices.js";
+import { getCartedProducts } from "../../services/user/cartService.js";
 import {
   getSingleOrderService,
   orderListByUserId,
@@ -25,7 +25,7 @@ export const verifyRazorpayPayment = async (req, res) => {
     const result = await verifyRazorpayPaymentService(req.body);
     return res.status(httpStatusCode.OK.code).json(result);
   } catch (err) {
-    console.error("Error verifying Razorpay payment:", err);
+    logger.error("Error verifying Razorpay payment:", err);
     return res
       .status(err.statusCode || httpStatusCode.INTERNAL_SERVER_ERROR.code)
       .json({
@@ -43,7 +43,7 @@ export const getCheckoutPage = (req, res) => {
       user: req.user,
     });
   } catch (error) {
-    console.error("Error rendering checkout page:", error);
+    logger.error("Error rendering checkout page:", error);
     res.status(httpStatusCode.INTERNAL_SERVER_ERROR.code).json({
       success: false,
       message: "Something went wrong while rendering the checkout page.",
@@ -72,7 +72,7 @@ export const getCheckoutPageData = async (req, res) => {
     });
   } catch (error) {
     logger.error('Error fetching checkout page data:', error);
-    console.error("Error fetching checkout page data:", error);
+    logger.error("Error fetching checkout page data:", error);
     res.status(httpStatusCode.INTERNAL_SERVER_ERROR.code).json({
       success: false,
       message: "Something went wrong while fetching checkout page data.",
@@ -103,7 +103,7 @@ export const placeOrder = async (req, res) => {
     });
   } catch (error) {
     logger.error("Error placing order:", error);
-    console.log("Error placing order:", error);
+    logger.info("Error placing order:", error);
     return res.status(httpStatusCode.INTERNAL_SERVER_ERROR.code).json({
       success: false,
       message: "Something went wrong while placing the order.",
@@ -121,7 +121,7 @@ export const getConformPage = (req, res) => {
     });
   } catch (error) {
     logger.error('Error rendering order confirmation page:', error);
-    console.error("Error rendering order confirmation page:", error);
+    logger.error("Error rendering order confirmation page:", error);
     res.status(httpStatusCode.INTERNAL_SERVER_ERROR.code).json({
       success: false,
       message:
@@ -132,10 +132,10 @@ export const getConformPage = (req, res) => {
 
 export const getOrderMangementPage = (req, res) => {
   try {
-    res.render("Layouts/users/orders",{ orders: [] });
+    res.render("Layouts/users/orders", { orders: [] });
   } catch (error) {
     logger.error('Error rendering order management page:', error);
-    console.error("Error rendering order management page:", error);
+    logger.error("Error rendering order management page:", error);
     res.status(httpStatusCode.INTERNAL_SERVER_ERROR.code).json({
       success: false,
       message:
@@ -147,7 +147,7 @@ export const getOrderMangementPage = (req, res) => {
 export const getOrderMangementPageData = async (req, res) => {
   try {
     const userId = req.user._id || req.user.id;
-    
+
     if (!userId) {
       return res.status(httpStatusCode.UNAUTHORIZED.code).json({
         success: false,
@@ -169,7 +169,7 @@ export const getOrderMangementPageData = async (req, res) => {
     });
   } catch (error) {
     logger.error('Error fetching orders:', error);
-    console.error("Error fetching orders:", error);
+    logger.error("Error fetching orders:", error);
     res.status(httpStatusCode.INTERNAL_SERVER_ERROR.code).json({
       success: false,
       message: "Something went wrong while fetching orders.",
@@ -198,7 +198,7 @@ export const getSingleOrderController = async (req, res) => {
     });
   } catch (error) {
     logger.error('Error fetching single order:', error);
-    console.error("Error fetching single order:", error);
+    logger.error("Error fetching single order:", error);
     res.status(httpStatusCode.INTERNAL_SERVER_ERROR.code).json({
       success: false,
       message: error.message,
@@ -312,7 +312,7 @@ export const viewInvoiceController = async (req, res) => {
       .render("Layouts/PDFs/userOrderInvoice", { order });
   } catch (error) {
     logger.error("View Invoice Controller Error:", error);
-    console.log(error)
+    logger.info(error)
     const status = error.statusCode || httpStatusCode.INTERNAL_SERVER_ERROR.code;
     return res.status(status).json({
       success: false,
@@ -334,7 +334,7 @@ export const downloadInvoiceController = async (req, res) => {
     res.status(httpStatusCode.OK.code).send(pdfBuffer);
   } catch (error) {
     logger.error("Download Invoice Controller Error:", error);
-    console.log(error);
+    logger.info(error);
     res
       .status(httpStatusCode.INTERNAL_SERVER_ERROR.code)
       .send("Error generating invoice");
@@ -393,7 +393,7 @@ export const retryPaymentController = async (req, res) => {
       razorpayKey: process.env.RAZORPAY_KEY_ID,
     });
   } catch (err) {
-    console.error("Retry Payment Error:", err);
+    logger.error("Retry Payment Error:", err);
     res.status(httpStatusCode.INTERNAL_SERVER_ERROR.code).json({ success: false, message: "Something went wrong" });
   }
 };
